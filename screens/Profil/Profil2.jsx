@@ -28,6 +28,7 @@ const UserProfile = () => {
         {/* Personal Info */}
         <View style={styles.infoSection}>
           <Text style={styles.sectionTitle}>Personal Info</Text>
+
           <TouchableOpacity>
             <Text style={styles.editText}>Edit</Text>
           </TouchableOpacity>
