@@ -94,29 +94,25 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
   },
-  bio: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-  },
-  active: {
-    fontSize: 12,
-    color: '#aaa',
-    marginBottom: 20,
-  },
-  infoSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    padding: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  editText: {
-    color: '#007bff',
-  },
+  
+//   active: {
+//     fontSize: 12,
+//     color: '#aaa',
+//     marginBottom: 20,
+//   },
+//   infoSection: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     width: '100%',
+//     padding: 10,
+//   },
+//   sectionTitle: {
+//     fontSize: 18,
+//     fontWeight: 'bold',
+//   },
+//   editText: {
+//     color: '#007bff',
+//   },
   infoItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',

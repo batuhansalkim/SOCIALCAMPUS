@@ -11,10 +11,13 @@
   "dependencies": {
     "@react-navigation/bottom-tabs": "^6.6.1",
     "@react-navigation/native": "^6.1.18",
+    "@react-navigation/stack": "^6.4.1",
     "expo": "~51.0.28",
     "expo-status-bar": "~1.12.1",
+    "ionicons": "^7.4.0",
     "react": "18.2.0",
     "react-native": "0.74.5",
+    "react-native-gesture-handler": "^2.20.0",
     "react-native-safe-area-context": "^4.11.0",
     "react-native-screens": "^3.34.0",
     "react-native-vector-icons": "^10.2.0"
