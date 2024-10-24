@@ -1,0 +1,36 @@
+ { id: 7, department: 'Yazılım', bookImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2aMtzbQLlvqHnIS5QJkvRtfScsVNcCpOZ5g&s', price: '30', instagram: '@kitapci1', instagramLink: 'https://www.instagram.com/kitapci1/' },
+    { id: 8, department: 'Hemşirelik', bookImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsl7xrMEQ3nLpgfvJVrp9LNZqlzuS1ZAXoXw&s', price: '45', instagram: '@kitapci2', instagramLink: 'https://www.instagram.com/kitapci2/' },
+    { id: 9, department: 'Makine', bookImage: 'https://cdn.kitabinabak.com/anaresim/d7b1b4c71a1b44cc8b60d7d117d8abffS.jpg', price: '50', instagram: '@kitapci3', instagramLink: 'https://www.instagram.com/kitapci3/' },
+    { id: 10, department: 'Matematik', bookImage: 'https://platincdn.com/1955/pictures/thumb/500X-500X-PDAEXFZDYN116201619532_11.jpg', price: '60', instagram: '@kitapci4', instagramLink: 'https://www.instagram.com/kitapci4/' },
+    { id: 11, department: 'Edebiyat', bookImage: 'https://cdn.dsmcdn.com/ty1543/product/media/images/ty1543/prod/QC/20240914/00/80f91b93-bad3-37a0-906f-4086bb4d8801/1_org_zoom.jpg', price: '25', instagram: '@kitapci5', instagramLink: 'https://www.instagram.com/kitapci5/' },
+    { id: 12, department: 'Sosyoloji', bookImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSe7ExK9xbzFipmHx86Pm0z0L0-NjUodmrJg&s', price: '80', instagram: '@kitapci6', instagramLink: 'https://www.instagram.com/kitapci6/' },
+
+    { id: 13, department: 'Yazılım', bookImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2aMtzbQLlvqHnIS5QJkvRtfScsVNcCpOZ5g&s', price: '30', instagram: '@kitapci1', instagramLink: 'https://www.instagram.com/kitapci1/' },
+    { id: 14, department: 'Hemşirelik', bookImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsl7xrMEQ3nLpgfvJVrp9LNZqlzuS1ZAXoXw&s', price: '45', instagram: '@kitapci2', instagramLink: 'https://www.instagram.com/kitapci2/' },
+    { id: 15, department: 'Makine', bookImage: 'https://cdn.kitabinabak.com/anaresim/d7b1b4c71a1b44cc8b60d7d117d8abffS.jpg', price: '50', instagram: '@kitapci3', instagramLink: 'https://www.instagram.com/kitapci3/' },
+    { id: 16, department: 'Matematik', bookImage: 'https://platincdn.com/1955/pictures/thumb/500X-500X-PDAEXFZDYN116201619532_11.jpg', price: '60', instagram: '@kitapci4', instagramLink: 'https://www.instagram.com/kitapci4/' },
+    { id: 17, department: 'Edebiyat', bookImage: 'https://cdn.dsmcdn.com/ty1543/product/media/images/ty1543/prod/QC/20240914/00/80f91b93-bad3-37a0-906f-4086bb4d8801/1_org_zoom.jpg', price: '25', instagram: '@kitapci5', instagramLink: 'https://www.instagram.com/kitapci5/' },
+    { id: 18, department: 'Sosyoloji', bookImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSe7ExK9xbzFipmHx86Pm0z0L0-NjUodmrJg&s', price: '80', instagram: '@kitapci6', instagramLink: 'https://www.instagram.com/kitapci6/' },
+
+    { id: 19, department: 'Yazılım', bookImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2aMtzbQLlvqHnIS5QJkvRtfScsVNcCpOZ5g&s', price: '30', instagram: '@kitapci1', instagramLink: 'https://www.instagram.com/kitapci1/' },
+    { id: 20, department: 'Hemşirelik', bookImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsl7xrMEQ3nLpgfvJVrp9LNZqlzuS1ZAXoXw&s', price: '45', instagram: '@kitapci2', instagramLink: 'https://www.instagram.com/kitapci2/' },
+    { id: 21, department: 'Makine', bookImage: 'https://cdn.kitabinabak.com/anaresim/d7b1b4c71a1b44cc8b60d7d117d8abffS.jpg', price: '50', instagram: '@kitapci3', instagramLink: 'https://www.instagram.com/kitapci3/' },
+    { id: 22, department: 'Matematik', bookImage: 'https://platincdn.com/1955/pictures/thumb/500X-500X-PDAEXFZDYN116201619532_11.jpg', price: '60', instagram: '@kitapci4', instagramLink: 'https://www.instagram.com/kitapci4/' },
+    { id: 23, department: 'Edebiyat', bookImage: 'https://cdn.dsmcdn.com/ty1543/product/media/images/ty1543/prod/QC/20240914/00/80f91b93-bad3-37a0-906f-4086bb4d8801/1_org_zoom.jpg', price: '25', instagram: '@kitapci5', instagramLink: 'https://www.instagram.com/kitapci5/' },
+    { id: 24, department: 'Sosyoloji', bookImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSe7ExK9xbzFipmHx86Pm0z0L0-NjUodmrJg&s', price: '80', instagram: '@kitapci6', instagramLink: 'https://www.instagram.com/kitapci6/' },
+
+
+    { id: 25, department: 'Yazılım', bookImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2aMtzbQLlvqHnIS5QJkvRtfScsVNcCpOZ5g&s', price: '30', instagram: '@kitapci1', instagramLink: 'https://www.instagram.com/kitapci1/' },
+    { id: 26, department: 'Hemşirelik', bookImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsl7xrMEQ3nLpgfvJVrp9LNZqlzuS1ZAXoXw&s', price: '45', instagram: '@kitapci2', instagramLink: 'https://www.instagram.com/kitapci2/' },
+    { id: 27, department: 'Makine', bookImage: 'https://cdn.kitabinabak.com/anaresim/d7b1b4c71a1b44cc8b60d7d117d8abffS.jpg', price: '50', instagram: '@kitapci3', instagramLink: 'https://www.instagram.com/kitapci3/' },
+    { id: 28, department: 'Matematik', bookImage: 'https://platincdn.com/1955/pictures/thumb/500X-500X-PDAEXFZDYN116201619532_11.jpg', price: '60', instagram: '@kitapci4', instagramLink: 'https://www.instagram.com/kitapci4/' },
+    { id: 29, department: 'Edebiyat', bookImage: 'https://cdn.dsmcdn.com/ty1543/product/media/images/ty1543/prod/QC/20240914/00/80f91b93-bad3-37a0-906f-4086bb4d8801/1_org_zoom.jpg', price: '25', instagram: '@kitapci5', instagramLink: 'https://www.instagram.com/kitapci5/' },
+    { id: 30, department: 'Sosyoloji', bookImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSe7ExK9xbzFipmHx86Pm0z0L0-NjUodmrJg&s', price: '80', instagram: '@kitapci6', instagramLink: 'https://www.instagram.com/kitapci6/' },
+
+
+    { id: 31, department: 'Yazılım', bookImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2aMtzbQLlvqHnIS5QJkvRtfScsVNcCpOZ5g&s', price: '30', instagram: '@kitapci1', instagramLink: 'https://www.instagram.com/kitapci1/' },
+    { id: 32, department: 'Hemşirelik', bookImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsl7xrMEQ3nLpgfvJVrp9LNZqlzuS1ZAXoXw&s', price: '45', instagram: '@kitapci2', instagramLink: 'https://www.instagram.com/kitapci2/' },
+    { id: 33, department: 'Makine', bookImage: 'https://cdn.kitabinabak.com/anaresim/d7b1b4c71a1b44cc8b60d7d117d8abffS.jpg', price: '50', instagram: '@kitapci3', instagramLink: 'https://www.instagram.com/kitapci3/' },
+    { id: 34, department: 'Matematik', bookImage: 'https://platincdn.com/1955/pictures/thumb/500X-500X-PDAEXFZDYN116201619532_11.jpg', price: '60', instagram: '@kitapci4', instagramLink: 'https://www.instagram.com/kitapci4/' },
+    { id: 35, department: 'Edebiyat', bookImage: 'https://cdn.dsmcdn.com/ty1543/product/media/images/ty1543/prod/QC/20240914/00/80f91b93-bad3-37a0-906f-4086bb4d8801/1_org_zoom.jpg', price: '25', instagram: '@kitapci5', instagramLink: 'https://www.instagram.com/kitapci5/' },
+    { id: 36, department: 'Sosyoloji', bookImage: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSe7ExK9xbzFipmHx86Pm0z0L0-NjUodmrJg&s', price: '80', instagram: '@kitapci6', instagramLink: 'https://www.instagram.com/kitapci6/' },

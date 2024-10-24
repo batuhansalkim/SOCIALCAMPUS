@@ -13,7 +13,7 @@ const Tab = createBottomTabNavigator();
 
 export default function Navigator() {
   return (
-    <Tab.Navigator initialRouteName="Profil" screenOptions={{
+    <Tab.Navigator initialRouteName="Satis" screenOptions={{
         headerShown:false,
         tabBarShowLabel:false,
     }}>
