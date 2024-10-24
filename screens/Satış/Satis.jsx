@@ -1,189 +1,207 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  FlatList,
-  Image,
-  StyleSheet,
-  Modal,
-  ScrollView,
-  SafeAreaView,
-} from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
+import React, { useState, useRef } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, Image, FlatList, Modal, TextInput, ScrollView, Animated, Easing } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 
-function AddBookModal({ visible, onClose, onAdd }) {
-  const [imageUri, setImageUri] = useState('');
-  const [name, setName] = useState('');
-  const [chapter, setChapter] = useState('');
-  const [price, setPrice] = useState('');
-  const [instagram, setInstagram] = useState('');
-
-  const handleAdd = () => {
-    if (name && price) {
-      onAdd({
-        imageUri: imageUri || 'https://via.placeholder.com/100x150',
-        name,
-        chapter,
-        price,
-        instagram,
-      });
-      setImageUri('');
-      setName('');
-      setChapter('');
-      setPrice('');
-      setInstagram('');
-      onClose();
-    }
-  };
-
-  const selectImage = () => {
-  const options = {
-    mediaType: 'photo',
-  };
-  launchImageLibrary(options, (response) => {
-    if (response.didCancel) {
-      console.log('User cancelled image picker');
-    } else if (response.error) {
-      console.log('ImagePicker Error: ', response.error);
-    } else {
-      console.log('Image selected: ', response.uri);
-    }
-  });
-};
-
-  return (
-    <Modal visible={visible} transparent={true} animationType="slide">
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Add New Book</Text>
-          
-          <TouchableOpacity style={styles.imagePicker} onPress={selectImage}>
-            <Text>Select Book Image</Text>
-          </TouchableOpacity>
-          {imageUri ? (
-            <Image source={{ uri: imageUri }} style={styles.previewImage} />
-          ) : null}
-
-          <TextInput
-            style={styles.input}
-            placeholder="Book Name"
-            value={name}
-            onChangeText={setName}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Chapter Name (optional)"
-            value={chapter}
-            onChangeText={setChapter}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Price"
-            value={price}
-            onChangeText={setPrice}
-            keyboardType="numeric"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Instagram Handle (optional)"
-            value={instagram}
-            onChangeText={setInstagram}
-          />
-          <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-            <Text style={styles.buttonText}>Add Book</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-            <Text style={styles.buttonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
-function BookSalesPage() {
+export default function BookSellingPage() {
   const [books, setBooks] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [newBook, setNewBook] = useState({ name: '', section: '', price: '', instagram: '', photoUri: '' });
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const addBook = (newBook) => {
-    const bookWithId = { ...newBook, id: Date.now().toString() };
-    setBooks([...books, bookWithId]);
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setNewBook(prev => ({ ...prev, photoUri: result.assets[0].uri }));
+    }
   };
+
+  const handleInputChange = (name, value) => {
+    setNewBook(prev => ({ ...prev, [name]: value }));
+  };
+
+  const saveBook = () => {
+    setBooks(prev => [...prev, newBook]);
+    setNewBook({ name: '', section: '', price: '', instagram: '', photoUri: '' });
+    closeModal();
+  };
+
+  const openModal = () => {
+    setModalVisible(true);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeModal = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 300,
+      easing: Easing.in(Easing.cubic),
+      useNativeDriver: true,
+    }).start(() => setModalVisible(false));
+  };
+
+  const renderBookItem = ({ item }) => (
+    <View style={styles.bookCard}>
+      <Image source={{ uri: item.photoUri || 'https://via.placeholder.com/150' }} style={styles.bookImage} />
+      <Text style={styles.bookTitle}>{item.name}</Text>
+      <Text style={styles.bookSection}>{item.section}</Text>
+      <Text style={styles.bookPrice}>{item.price} TL</Text>
+      <View style={styles.instagramContainer}>
+        <Ionicons name="logo-instagram" size={16} color="#E4405F" />
+        <Text style={styles.instagramText}>{item.instagram}</Text>
+      </View>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Book Sales Page</Text>
+      <Text style={styles.header}>Book Selling App</Text>
+      
+      <FlatList
+        data={books}
+        renderItem={renderBookItem}
+        keyExtractor={(item, index) => index.toString()}
+        numColumns={2}
+        contentContainerStyle={styles.bookList}
+      />
 
-      <ScrollView contentContainerStyle={styles.bookList}>
-        {books.map((book) => (
-          <View style={styles.bookItem} key={book.id}>
-            <Image source={{ uri: book.imageUri }} style={styles.bookImage} />
-            <View style={styles.bookInfo}>
-              <Text style={styles.bookName}>{book.name}</Text>
-              {book.chapter && <Text style={styles.bookChapter}>Chapter: {book.chapter}</Text>}
-              <Text style={styles.bookPrice}>${book.price}</Text>
-              {book.instagram && (
-                <Text style={styles.bookInstagram}>Instagram: @{book.instagram}</Text>
-              )}
-            </View>
-          </View>
-        ))}
-      </ScrollView>
-
-      <TouchableOpacity
-        style={styles.addBookButton}
-        onPress={() => setModalVisible(true)}
-      >
-        <Text style={styles.buttonText}>Add New Book</Text>
+      <TouchableOpacity style={styles.addButton} onPress={openModal}>
+        <Ionicons name="add" size={24} color="white" />
       </TouchableOpacity>
 
-      <AddBookModal
+      <Modal
+        animationType="none"
+        transparent={true}
         visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onAdd={addBook}
-      />
+        onRequestClose={closeModal}
+      >
+        <BlurView intensity={100} style={StyleSheet.absoluteFill} />
+        <Animated.View style={[styles.modalContainer, { opacity: fadeAnim }]}>
+          <ScrollView contentContainerStyle={styles.modalContent}>
+            <Text style={styles.modalHeader}>Add New Book</Text>
+
+            <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+              {newBook.photoUri ? (
+                <Image source={{ uri: newBook.photoUri }} style={styles.pickedImage} />
+              ) : (
+                <Ionicons name="camera" size={40} color="#666" />
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.inputContainer}>
+              <Ionicons name="book" size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Book Name"
+                placeholderTextColor="#999"
+                value={newBook.name}
+                onChangeText={(text) => handleInputChange('name', text)}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Ionicons name="list" size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Section"
+                placeholderTextColor="#999"
+                value={newBook.section}
+                onChangeText={(text) => handleInputChange('section', text)}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Ionicons name="pricetag" size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Price"
+                placeholderTextColor="#999"
+                value={newBook.price}
+                onChangeText={(text) => handleInputChange('price', text)}
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Ionicons name="logo-instagram" size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Instagram"
+                placeholderTextColor="#999"
+                value={newBook.instagram}
+                onChangeText={(text) => handleInputChange('instagram', text)}
+              />
+            </View>
+
+            <TouchableOpacity style={styles.saveButton} onPress={saveBook}>
+              <Text style={styles.saveButtonText}>Save Book</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.cancelButton} onPress={closeModal}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </Animated.View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: '#f0f0f0',
     flex: 1,
+    backgroundColor: '#f0f0f0',
   },
-  title: {
+  header: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 20,
+    marginVertical: 20,
+    color: '#333',
   },
   bookList: {
-    flexGrow: 1,
+    paddingHorizontal: 10,
   },
-  bookItem: {
-    flexDirection: 'row',
+  bookCard: {
     backgroundColor: 'white',
-    marginBottom: 10,
+    borderRadius: 10,
     padding: 10,
-    borderRadius: 5,
+    margin: 5,
+    flex: 1,
+    maxWidth: '47%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   bookImage: {
-    width: 80,
-    height: 120,
-    marginRight: 10,
+    width: '100%',
+    height: 150,
+    borderRadius: 5,
+    marginBottom: 10,
   },
-  bookInfo: {
-    justifyContent: 'center',
-  },
-  bookName: {
-    fontSize: 18,
+  bookTitle: {
+    fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 5,
+    color: '#333',
   },
-  bookChapter: {
+  bookSection: {
     fontSize: 14,
     color: '#666',
     marginBottom: 5,
@@ -191,77 +209,106 @@ const styles = StyleSheet.create({
   bookPrice: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#007bff',
+    color: '#E53935',
     marginBottom: 5,
   },
-  bookInstagram: {
-    fontSize: 14,
+  instagramContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  instagramText: {
+    fontSize: 12,
+    marginLeft: 5,
     color: '#666',
+  },
+  addButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    backgroundColor: '#2196F3',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
     backgroundColor: 'white',
+    borderRadius: 20,
     padding: 20,
-    borderRadius: 10,
-    width: '80%',
+    width: '90%',
+    maxWidth: 400,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  modalTitle: {
-    fontSize: 20,
+  modalHeader: {
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 15,
-    textAlign: 'center',
+    marginBottom: 20,
+    color: '#333',
   },
   imagePicker: {
-    padding: 10,
-    borderColor: '#007bff',
-    borderWidth: 1,
-    borderRadius: 5,
-    marginBottom: 10,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 20,
   },
-  previewImage: {
-    width: 100,
-    height: 150,
-    marginBottom: 10,
+  pickedImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
   },
-  input: {
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
+    borderRadius: 10,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    backgroundColor: '#f9f9f9',
   },
-  addButton: {
-    backgroundColor: '#007bff',
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginBottom: 10,
+  inputIcon: {
+    marginRight: 10,
   },
-  cancelButton: {
-    backgroundColor: '#dc3545',
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
+  input: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#333',
   },
-  addBookButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    backgroundColor: '#007bff',
-    padding: 15,
-    borderRadius: 50,
-    alignItems: 'center',
+  saveButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    marginTop: 10,
   },
-  buttonText: {
+  saveButtonText: {
     color: 'white',
     fontWeight: 'bold',
+    fontSize: 16,
+  },
+  cancelButton: {
+    marginTop: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+  },
+  cancelButtonText: {
+    color: '#666',
+    fontSize: 16,
   },
 });
-
-export default BookSalesPage;

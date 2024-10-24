@@ -1,4 +1,4 @@
-<key>NSCameraUsageDescription</key>
-<string>Camera access is required to take photos.</string>
 <key>NSPhotoLibraryUsageDescription</key>
-<string>Photo library access is required to select photos.</string>
+<string>Fotoğraflara erişim izni gerekli.</string>
+<key>NSCameraUsageDescription</key>
+<string>Kamera izni gerekli.</string>
