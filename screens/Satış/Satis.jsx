@@ -3,7 +3,6 @@ import { StyleSheet, View, Text, TouchableOpacity, Image, FlatList, Modal, TextI
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
 
 export default function BookSellingPage() {
   const [books, setBooks] = useState([]);
@@ -88,73 +87,74 @@ export default function BookSellingPage() {
         visible={modalVisible}
         onRequestClose={closeModal}
       >
-        <BlurView intensity={100} style={StyleSheet.absoluteFill} />
-        <Animated.View style={[styles.modalContainer, { opacity: fadeAnim }]}>
-          <ScrollView contentContainerStyle={styles.modalContent}>
-            <Text style={styles.modalHeader}>Add New Book</Text>
+        <View style={styles.modalOverlay}>
+          <Animated.View style={[styles.modalContainer, { opacity: fadeAnim }]}>
+            <ScrollView contentContainerStyle={styles.modalContent}>
+              <Text style={styles.modalHeader}>Add New Book</Text>
 
-            <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-              {newBook.photoUri ? (
-                <Image source={{ uri: newBook.photoUri }} style={styles.pickedImage} />
-              ) : (
-                <Ionicons name="camera" size={40} color="#666" />
-              )}
-            </TouchableOpacity>
+              <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+                {newBook.photoUri ? (
+                  <Image source={{ uri: newBook.photoUri }} style={styles.pickedImage} />
+                ) : (
+                  <Ionicons name="camera" size={40} color="#666" />
+                )}
+              </TouchableOpacity>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="book" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Book Name"
-                placeholderTextColor="#999"
-                value={newBook.name}
-                onChangeText={(text) => handleInputChange('name', text)}
-              />
-            </View>
+              <View style={styles.inputContainer}>
+                <Ionicons name="book" size={20} color="#666" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Book Name"
+                  placeholderTextColor="#999"
+                  value={newBook.name}
+                  onChangeText={(text) => handleInputChange('name', text)}
+                />
+              </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="list" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Section"
-                placeholderTextColor="#999"
-                value={newBook.section}
-                onChangeText={(text) => handleInputChange('section', text)}
-              />
-            </View>
+              <View style={styles.inputContainer}>
+                <Ionicons name="list" size={20} color="#666" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Section"
+                  placeholderTextColor="#999"
+                  value={newBook.section}
+                  onChangeText={(text) => handleInputChange('section', text)}
+                />
+              </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="pricetag" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Price"
-                placeholderTextColor="#999"
-                value={newBook.price}
-                onChangeText={(text) => handleInputChange('price', text)}
-                keyboardType="numeric"
-              />
-            </View>
+              <View style={styles.inputContainer}>
+                <Ionicons name="pricetag" size={20} color="#666" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Price"
+                  placeholderTextColor="#999"
+                  value={newBook.price}
+                  onChangeText={(text) => handleInputChange('price', text)}
+                  keyboardType="numeric"
+                />
+              </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="logo-instagram" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Instagram"
-                placeholderTextColor="#999"
-                value={newBook.instagram}
-                onChangeText={(text) => handleInputChange('instagram', text)}
-              />
-            </View>
+              <View style={styles.inputContainer}>
+                <Ionicons name="logo-instagram" size={20} color="#666" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Instagram"
+                  placeholderTextColor="#999"
+                  value={newBook.instagram}
+                  onChangeText={(text) => handleInputChange('instagram', text)}
+                />
+              </View>
 
-            <TouchableOpacity style={styles.saveButton} onPress={saveBook}>
-              <Text style={styles.saveButtonText}>Save Book</Text>
-            </TouchableOpacity>
+              <TouchableOpacity style={styles.saveButton} onPress={saveBook}>
+                <Text style={styles.saveButtonText}>Save Book</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity style={styles.cancelButton} onPress={closeModal}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </Animated.View>
+              <TouchableOpacity style={styles.cancelButton} onPress={closeModal}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </Animated.View>
+        </View>
       </Modal>
     </SafeAreaView>
   );
@@ -233,23 +233,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 5,
   },
-  modalContainer: {
+  modalOverlay: {
     flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  modalContent: {
+  modalContainer: {
     backgroundColor: 'white',
     borderRadius: 20,
     padding: 20,
     width: '90%',
     maxWidth: 400,
+    maxHeight: '80%',
+  },
+  modalContent: {
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   modalHeader: {
     fontSize: 24,
@@ -280,6 +279,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     paddingHorizontal: 10,
     backgroundColor: '#f9f9f9',
+    width: '100%',
   },
   inputIcon: {
     marginRight: 10,
