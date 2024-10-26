@@ -137,6 +137,7 @@ export default function Component() {
           {formatDate(filteredList[0]?.tarih)} - {formatDate(filteredList[4]?.tarih)}
         </Text>
       </LinearGradient>
+      
       <Animated.FlatList
         ref={flatListRef}
         data={filteredList}
@@ -233,7 +234,7 @@ const styles = StyleSheet.create({
     padding: 20,
     marginVertical: 10,
     alignItems: 'flex-start',
-    height: 500, // Fixed height for consistent card size
+    height: 400, // Fixed height for consistent card size
   },
   dateContainer: {
     flexDirection: 'row',
@@ -253,7 +254,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFD700',
   },
   mealScrollView: {
-    maxHeight: 350, // Adjust this value as needed
+    maxHeight: 250, // Adjust this value as needed
     width: '100%',
   },
   yemekContainer: {
@@ -284,7 +285,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 15,
     width: '100%',
   },
   leftButtons: {
@@ -335,7 +335,8 @@ const styles = StyleSheet.create({
     height: 10,
     width: 10,
     borderRadius: 5,
-    backgroundColor: '#FFD700',
+    backgroundColor: 'black',
     marginHorizontal: 8,
+    marginBottom:20,
   },
 });
