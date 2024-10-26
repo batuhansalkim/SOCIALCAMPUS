@@ -1,5 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, FlatList, StyleSheet, Animated, Dimensions, TouchableOpacity, ImageBackground } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  Animated,
+  Dimensions,
+  TouchableOpacity,
+  ImageBackground,
+  ScrollView,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
@@ -15,7 +25,7 @@ const yemekListesi = [
   { tarih: '2024-04-26', yemekler: ['Izgara Köfte', 'Patates Püresi', 'Ayran', 'Meyve'], ratings: [4.6, 4.0, 3.7, 3.9] }
 ];
 
-const YemekListesi = () => {
+export default function Component() {
   const [currentDate, setCurrentDate] = useState('');
   const [filteredList, setFilteredList] = useState([]);
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -24,10 +34,7 @@ const YemekListesi = () => {
 
   useEffect(() => {
     const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const year = today.getFullYear();
-    const formattedDate = `${year}-${month}-${day}`;
+    const formattedDate = today.toISOString().split('T')[0];
     setCurrentDate(formattedDate);
 
     const weekdays = yemekListesi.filter(item => {
@@ -36,7 +43,6 @@ const YemekListesi = () => {
     });
     setFilteredList(weekdays);
 
-    // Scroll to current day
     const currentIndex = weekdays.findIndex(item => item.tarih === formattedDate);
     if (currentIndex !== -1 && flatListRef.current) {
       flatListRef.current.scrollToIndex({ index: currentIndex, animated: false });
@@ -74,25 +80,31 @@ const YemekListesi = () => {
             <Text style={styles.dateText}>{formatDate(item.tarih)}</Text>
             {isCurrentDay && <View style={styles.currentDayIndicator} />}
           </View>
-          {item.yemekler.map((yemek, idx) => (
-            <View key={idx} style={styles.yemekContainer}>
-              <Ionicons name={getIconForMeal(idx)} size={28} color="#FFF" style={styles.yemekIcon} />
-              <View style={styles.yemekDetails}>
-                <Text style={styles.yemekText}>{yemek}</Text>
-                <View style={styles.ratingContainer}>
-                  <Ionicons name="star" size={16} color="#FFD700" />
-                  <Text style={styles.ratingText}>{item.ratings[idx].toFixed(1)}</Text>
+          <ScrollView style={styles.mealScrollView}>
+            {item.yemekler.map((yemek, idx) => (
+              <View key={idx} style={styles.yemekContainer}>
+                <Ionicons name={getIconForMeal(idx)} size={28} color="#FFF" style={styles.yemekIcon} />
+                <View style={styles.yemekDetails}>
+                  <Text style={styles.yemekText}>{yemek}</Text>
+                  <View style={styles.ratingContainer}>
+                    <Ionicons name="star" size={16} color="#FFD700" />
+                    <Text style={styles.ratingText}>{item.ratings[idx].toFixed(1)}</Text>
+                  </View>
                 </View>
               </View>
-            </View>
-          ))}
+            ))}
+          </ScrollView>
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.likeButton}>
-              <Ionicons name="heart" size={20} color="#fff" />
-              <Text style={styles.feedbackText}>Beğen</Text>
-            </TouchableOpacity>
+            <View style={styles.leftButtons}>
+              <TouchableOpacity style={styles.likeButton}>
+                <Ionicons name="thumbs-up" size={20} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.dislikeButton}>
+                <Ionicons name="thumbs-down" size={20} color="#fff" />
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity style={styles.feedbackButton}>
-              <Ionicons name="alert-circle" size={20} color="#fff" />
+              <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
               <Text style={styles.feedbackText}>Geri Bildirim</Text>
             </TouchableOpacity>
           </View>
@@ -140,12 +152,45 @@ const YemekListesi = () => {
         contentContainerStyle={styles.flatListContent}
         style={styles.flatList}
       />
+
+      {/* Animated Slider */}
+      <View style={styles.pagination}>
+        {filteredList.map((_, i) => {
+          const scale = scrollX.interpolate({
+            inputRange: [
+              (i - 1) * screenWidth,
+              i * screenWidth,
+              (i + 1) * screenWidth,
+            ],
+            outputRange: [0.8, 1.4, 0.8],
+            extrapolate: 'clamp',
+          });
+          const opacity = scrollX.interpolate({
+            inputRange: [
+              (i - 1) * screenWidth,
+              i * screenWidth,
+              (i + 1) * screenWidth,
+            ],
+            outputRange: [0.3, 1, 0.3],
+            extrapolate: 'clamp',
+          });
+          return (
+            <Animated.View
+              key={i}
+              style={[styles.dot, { transform: [{ scale }], opacity }]}
+            />
+          );
+        })}
+      </View>
+
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Günün Sözü: <Text style={styles.gununSozu}>{gununSozu}</Text></Text>
+        <Text style={styles.footerText}>
+          Günün Sözü: <Text style={styles.gununSozu}>{gununSozu}</Text>
+        </Text>
       </View>
     </ImageBackground>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -176,18 +221,19 @@ const styles = StyleSheet.create({
   },
   flatListContent: {
     paddingVertical: 40,
-    alignItems: 'center', // Yemeklerin ortalanması için
+    alignItems: 'center',
   },
   cardContainer: {
     width: screenWidth,
     paddingHorizontal: 20,
-    justifyContent: 'center', // Kartın içeriğinin ortalanması için
+    justifyContent: 'center',
   },
   card: {
     borderRadius: 20,
     padding: 20,
     marginVertical: 10,
     alignItems: 'flex-start',
+    height: 500, // Fixed height for consistent card size
   },
   dateContainer: {
     flexDirection: 'row',
@@ -205,6 +251,10 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     backgroundColor: '#FFD700',
+  },
+  mealScrollView: {
+    maxHeight: 350, // Adjust this value as needed
+    width: '100%',
   },
   yemekContainer: {
     flexDirection: 'row',
@@ -233,12 +283,21 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: 15,
+    width: '100%',
+  },
+  leftButtons: {
+    flexDirection: 'row',
   },
   likeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 10,
+    marginRight: 10,
+  },
+  dislikeButton: {
+    backgroundColor: '#FF5252',
     padding: 10,
     borderRadius: 10,
   },
@@ -267,6 +326,16 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     color: '#FFD700',
   },
+  pagination: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  dot: {
+    height: 10,
+    width: 10,
+    borderRadius: 5,
+    backgroundColor: '#FFD700',
+    marginHorizontal: 8,
+  },
 });
-
-export default YemekListesi;
