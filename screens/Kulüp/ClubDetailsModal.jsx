@@ -1,144 +1,156 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, FlatList, Linking, Modal, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome'; // FontAwesome ikonları
+import { View, Text, Image, StyleSheet, Linking, Modal, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { Ionicons } from '@expo/vector-icons';
+
+const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
 
 const ClubDetailsModal = ({ visible, club, onClose }) => {
   if (!club) return null;
-const getIconStyle = (platform) => {
-  switch(platform.toLowerCase()) {
-    case 'instagram':
-      return { name: 'instagram', color: '#E1306C' };
-    case 'facebook':
-      return { name: 'facebook', color: '#4267B2' };
-    case 'twitter':
-      return { name: 'twitter', color: '#1DA1F2' };
-    case 'linkedin':
-      return { name: 'linkedin', color: '#2867B2' };
-    default:
-      return { name: 'globe', color: '#333' }; // Varsayılan
-  }
-};
-  const renderSocialMedia = ({ item }) => {
-  const { name, color } = getIconStyle(item.platform);
-  
-  return (
-    <View style={styles.socialMediaContainer}>
-      <Icon name={name} size={24} color={color} />
-      <Text style={styles.link} onPress={() => Linking.openURL(item.link)}>
-        {item.platform} 
-      </Text>
-    </View>
-  );
-};
+
+  const instagramLink = club.socialMedia.find(item => item.platform.toLowerCase() === 'instagram')?.link;
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Text style={styles.closeButtonText}>X</Text>
-          </TouchableOpacity>
-          <Image source={{ uri: club.image }} style={styles.image} />
-          <Text style={styles.name}>{club.name}</Text>
-          <Text style={styles.detail}><Text style={styles.detailx}>Başkan</Text>: {club.president}</Text>
-          <Text style={styles.detail}><Text style={styles.detailx}>Danışman</Text>: {club.advisor}</Text>
-          <Text style={styles.header}>Sosyal Medya:</Text>
-          <FlatList
-            data={club.socialMedia}
-            renderItem={renderSocialMedia}
-            keyExtractor={(item) => item.platform}
-            numColumns={2} // 2 sütun yapar
-            columnWrapperStyle={styles.row} // Satırları düzgün hizalamak için
-/>
-        </View>
+      <View style={styles.modalOverlay}>
+        <LinearGradient
+          colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0.7)']}
+          style={styles.modalContainer}
+        >
+          <BlurView intensity={100} tint="dark" style={styles.modalContent}>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Ionicons name="close" size={24} color="#4ECDC4" />
+            </TouchableOpacity>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+              <Image source={{ uri: club.image }} style={styles.image} />
+              <Text style={styles.name}>{club.name}</Text>
+              <View style={styles.detailsContainer}>
+                <View style={styles.detailRow}>
+                  <Ionicons name="person" size={24} color="#4ECDC4" />
+                  <Text style={styles.detail}>
+                    <Text style={styles.detailLabel}>Başkan: </Text>
+                    {club.president}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Ionicons name="school" size={24} color="#4ECDC4" />
+                  <Text style={styles.detail}>
+                    <Text style={styles.detailLabel}>Danışman: </Text>
+                    {club.advisor}
+                  </Text>
+                </View>
+              </View>
+              {instagramLink && (
+                <TouchableOpacity 
+                  style={styles.instagramButton} 
+                  onPress={() => Linking.openURL(instagramLink)}
+                >
+                  <LinearGradient
+                    colors={['#405DE6', '#5851DB', '#833AB4', '#C13584', '#E1306C', '#FD1D1D']}
+                    start={{x: 0, y: 0}}
+                    end={{x: 1, y: 1}}
+                    style={styles.instagramGradient}
+                  >
+                    <Ionicons name="logo-instagram" size={24} color="#fff" />
+                    <Text style={styles.instagramText}>Bizi Instagram'da Takip Et</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
+            </ScrollView>
+          </BlurView>
+        </LinearGradient>
       </View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Daha soft arka plan rengi
   },
-  detailx:{
-    fontWeight:"bold",
-  },
-  socialMediaContainer: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginVertical: 5,
-},
-link: {
-  marginLeft: 25, // Metin ile ikon arasında daha fazla boşluk
-  fontSize: 18,
-  color: '#007bff',
-},
-
   modalContent: {
-    width: '85%', // Genişlik artırıldı
-    backgroundColor: '#ffffff', // Arka plan rengi
-    borderRadius: 15, // Daha yuvarlak kenarlar
-    padding: 25, // Daha fazla padding
+    width: '90%',
+    maxHeight: '80%',
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  scrollContent: {
     alignItems: 'center',
-    elevation: 10, // Gölgelendirme
+    paddingVertical: 30,
+    paddingHorizontal: 20,
   },
-  
-link: {
-  marginLeft: 10, // İkon ile metin arasına boşluk
-  fontSize: 18,
-  color: '#007bff',
-},
   closeButton: {
-    alignSelf: 'flex-end',
-    marginBottom: 10,
-  },
-  closeButtonText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#ff0000', // Kırmızı renk
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
   },
   image: {
-    width: 220, // Genişlik artırıldı
-    height: 220, // Yükseklik artırıldı
-    borderRadius: 110, // Daire biçimi
-    marginBottom: 15,
+    width: screenWidth * 0.5,
+    height: screenWidth * 0.5,
+    borderRadius: screenWidth * 0.25,
+    marginBottom: 20,
+    borderWidth: 4,
+    borderColor: '#4ECDC4',
   },
   name: {
-    fontSize: 26,
+    fontSize: screenWidth * 0.07,
     fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333', // Daha koyu renk
+    marginBottom: 20,
+    color: '#4ECDC4',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: {width: -1, height: 1},
+    textShadowRadius: 10
+  },
+  detailsContainer: {
+    width: '100%',
+    marginBottom: 30,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    backgroundColor: 'rgba(78,205,196,0.1)',
+    borderRadius: 15,
+    padding: 15,
   },
   detail: {
-    fontSize: 18,
-    marginBottom: 5,
-    color: '#555', // Daha açık gri
+    fontSize: screenWidth * 0.045,
+    marginLeft: 15,
+    color: '#fff',
   },
-  header: {
-    fontSize: 22,
+  detailLabel: {
     fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
+    color: '#4ECDC4',
   },
-  link: {
-    fontSize: 18,
-    color: '#007bff', // Daha dikkat çekici mavi
-    marginVertical: 5,
-    paddingVertical: 5, // Bağlantılar arasında mesafe
-    paddingHorizontal: 10, // Yan kenar boşlukları
-    borderRadius: 5, // Yuvarlatılmış kenarlar
-    backgroundColor: '#e7f1ff', // Arka plan rengi
-    margin:15
+  instagramButton: {
+    width: '100%',
+    overflow: 'hidden',
+    borderRadius: 15,
   },
-  row: {
-    width:"100%",
-  justifyContent: 'space-around', // Öğeler arasında daha fazla boşluk
-  marginVertical: 10,
-  marginHorizontal: 10, // Kenarlardan boşluk
-},
+  instagramGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+  },
+  instagramText: {
+    color: '#fff',
+    fontSize: screenWidth * 0.045,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
 });
 
 export default ClubDetailsModal;

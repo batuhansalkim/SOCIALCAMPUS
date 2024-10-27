@@ -101,7 +101,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
 export default function Navigator() {
   return (
     <Tab.Navigator
-      initialRouteName="Satis"
+      initialRouteName="YemekListesi"
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,

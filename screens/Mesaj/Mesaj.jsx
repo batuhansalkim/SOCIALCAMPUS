@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
-import { View, FlatList, Text, TextInput, StyleSheet, TouchableOpacity, Image, Animated } from 'react-native';
+import { View, FlatList, Text, TextInput, StyleSheet, TouchableOpacity, Image, Animated, Dimensions } from 'react-native';
 import { IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+
+const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
 
 export default function MessageScreen() {
   const [newMessage, setNewMessage] = useState('');
@@ -130,7 +135,7 @@ export default function MessageScreen() {
 
   const renderItem = ({ item }) => (
     <TouchableOpacity onPress={() => openComments(item)}>
-      <View style={styles.messageContainer}>
+      <BlurView intensity={80} tint="dark" style={styles.messageContainer}>
         <Image source={{ uri: item.profileImage }} style={styles.profileImage} />
         <View style={styles.messageContent}>
           <View style={styles.headerRow}>
@@ -149,12 +154,12 @@ export default function MessageScreen() {
             <Text style={styles.actionText}>💬 {item.comments}</Text>
           </View>
         </View>
-      </View>
+      </BlurView>
     </TouchableOpacity>
   );
 
   const renderCommentItem = ({ item }) => (
-    <View style={styles.commentContainer}>
+    <BlurView intensity={80} tint="dark" style={styles.commentContainer}>
       <Image source={{ uri: item.profileImage }} style={styles.commentProfileImage} />
       <View style={styles.commentContent}>
         <View style={styles.commentHeader}>
@@ -171,110 +176,117 @@ export default function MessageScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </BlurView>
   );
 
   if (showComments && selectedMessage) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.commentsHeader}>
-          <TouchableOpacity onPress={() => setShowComments(false)} style={styles.backButton}>
-            <MaterialIcons name="arrow-back" size={24} color="#2196F3" />
-          </TouchableOpacity>
-          <Text style={styles.commentsTitle}>Yorumlar</Text>
-        </View>
-        <View style={styles.selectedMessageContainer}>
-          <Image source={{ uri: selectedMessage.profileImage }} style={styles.selectedMessageProfileImage} />
-          <View style={styles.selectedMessageContent}>
-            <Text style={styles.selectedMessageUsername}>{selectedMessage.user}</Text>
-            <Text style={styles.selectedMessageText}>{selectedMessage.text}</Text>
-          </View>
-        </View>
-        <FlatList
-          data={selectedMessage.commentList}
-          renderItem={renderCommentItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.commentsList}
-        />
-        <View style={styles.commentInputContainer}>
-          <TextInput
-            style={styles.commentInput}
-            placeholder="Yorum ekleyin..."
-            placeholderTextColor="#aaa"
-            value={newComment}
-            onChangeText={setNewComment}
+      <LinearGradient
+        colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']}
+        style={styles.container}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <BlurView intensity={100} tint="dark" style={styles.commentsHeader}>
+            <TouchableOpacity onPress={() => setShowComments(false)} style={styles.backButton}>
+              <MaterialIcons name="arrow-back" size={24} color="#4ECDC4" />
+            </TouchableOpacity>
+            <Text style={styles.commentsTitle}>Yorumlar</Text>
+          </BlurView>
+          <BlurView intensity={80} tint="dark" style={styles.selectedMessageContainer}>
+            <Image source={{ uri: selectedMessage.profileImage }} style={styles.selectedMessageProfileImage} />
+            <View style={styles.selectedMessageContent}>
+              <Text style={styles.selectedMessageUsername}>{selectedMessage.user}</Text>
+              <Text style={styles.selectedMessageText}>{selectedMessage.text}</Text>
+            </View>
+          </BlurView>
+          <FlatList
+            data={selectedMessage.commentList}
+            renderItem={renderCommentItem}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.commentsList}
           />
-          <TouchableOpacity style={styles.commentButton} onPress={handleAddComment}>
-            <Text style={styles.commentButtonText}>Ekle</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+          <BlurView intensity={100} tint="dark" style={styles.commentInputContainer}>
+            <TextInput
+              style={styles.commentInput}
+              placeholder="Yorum ekleyin..."
+              placeholderTextColor="#aaa"
+              value={newComment}
+              onChangeText={setNewComment}
+            />
+            <TouchableOpacity style={styles.commentButton} onPress={handleAddComment}>
+              <Text style={styles.commentButtonText}>Ekle</Text>
+            </TouchableOpacity>
+          </BlurView>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.agendaContainer}>
-        <Text style={styles.agendaTitle}>📅 Üniversite Gündemi</Text>
-        <Text style={styles.agendaText}>Bu haftanın gündemi:</Text>
-        <View style={styles.eventList}>
-          <View style={styles.eventItem}>
-            <MaterialIcons name="event" size={20} color="#fff" />
-            <Text style={styles.eventText}>📍 Öğrenci Topluluğu Tanıtım Günü - 21 Ekim</Text>
+    <LinearGradient
+      colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']}
+      style={styles.container}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <BlurView intensity={80} tint="dark" style={styles.agendaContainer}>
+          <Text style={styles.agendaTitle}>📅 Üniversite Gündemi</Text>
+          <Text style={styles.agendaText}>Bu haftanın gündemi:</Text>
+          <View style={styles.eventList}>
+            <View style={styles.eventItem}>
+              <MaterialIcons name="event" size={20} color="#4ECDC4" />
+              <Text style={styles.eventText}>📍 Öğrenci Topluluğu Tanıtım Günü - 21 Ekim</Text>
+            </View>
           </View>
-        </View>
-      </View>
-      
-      <FlatList
-        data={messages}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.messageList}
-      />
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Mesajınızı yazın..."
-          placeholderTextColor="#aaa"
-          value={newMessage}
-          onChangeText={setNewMessage}
+        </BlurView>
+        
+        <FlatList
+          data={messages}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.messageList}
         />
-        <IconButton
-          icon="send"
-          size={24}
-          color="#2196F3"
-          onPress={handleSend}
-        />
-      </View>
-    </SafeAreaView>
+        <BlurView intensity={100} tint="dark" style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Mesajınızı yazın..."
+            placeholderTextColor="#aaa"
+            value={newMessage}
+            onChangeText={setNewMessage}
+          />
+          <IconButton
+            icon="send"
+            size={24}
+            color="#4ECDC4"
+            onPress={handleSend}
+          />
+        </BlurView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f2f5',
+  },
+  safeArea: {
+    flex: 1,
   },
   agendaContainer: {
-    backgroundColor: '#2196F3',
     padding: 15,
     borderRadius: 10,
     margin: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    overflow: 'hidden',
   },
   agendaTitle: {
-    fontSize: 22,
-    color: '#fff',
+    fontSize: screenWidth * 0.055,
+    color: '#4ECDC4',
     fontWeight: 'bold',
     marginBottom: 5,
   },
   agendaText: {
-    fontSize: 16,
-    color: '#e3f2fd',
+    fontSize: screenWidth * 0.04,
+    color: '#fff',
     marginBottom: 10,
   },
   eventList: {
@@ -283,14 +295,14 @@ const styles = StyleSheet.create({
   eventItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(78,205,196,0.1)',
     padding: 10,
     borderRadius: 5,
   },
   eventText: {
     color: '#fff',
     marginLeft: 10,
-    fontSize: 14,
+    fontSize: screenWidth * 0.035,
   },
   messageList: {
     paddingHorizontal: 10,
@@ -298,19 +310,14 @@ const styles = StyleSheet.create({
   messageContainer: {
     flexDirection: 'row',
     padding: 15,
-    backgroundColor: '#fff',
     borderRadius: 10,
     marginVertical: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    overflow: 'hidden',
   },
   profileImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: screenWidth * 0.12,
+    height: screenWidth * 0.12,
+    borderRadius: screenWidth * 0.06,
     marginRight: 15,
   },
   messageContent: {
@@ -324,16 +331,16 @@ const styles = StyleSheet.create({
   },
   username: {
     fontWeight: 'bold',
-    fontSize: 16,
-    color: '#333',
+    fontSize: screenWidth * 0.04,
+    color: '#4ECDC4',
   },
   timestamp: {
-    color: '#888',
-    fontSize: 12,
+    color: '#aaa',
+    fontSize: screenWidth * 0.03,
   },
   messageText: {
-    fontSize: 14,
-    color: '#333',
+    fontSize: screenWidth * 0.035,
+    color: '#fff',
     marginBottom: 10,
   },
   actionRow: {
@@ -341,56 +348,53 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   actionText: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: screenWidth * 0.035,
+    color: '#aaa',
   },
   liked: {
-    color: '#e91e63',
+    color: '#4ECDC4',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
     padding: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
   },
   input: {
     flex: 1,
-    backgroundColor: '#f0f2f5',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 20,
     paddingHorizontal: 15,
     paddingVertical: 10,
-    fontSize: 16,
-    color: '#333',
+    fontSize: screenWidth * 0.04,
+    color: '#fff',
   },
   commentsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    backgroundColor: '#fff',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   backButton: {
     marginRight: 15,
   },
   commentsTitle: {
-    fontSize: 18,
+    fontSize: screenWidth * 0.045,
     fontWeight: 'bold',
-    color: '#333',
+    color:  '#4ECDC4',
   },
   selectedMessageContainer: {
     flexDirection: 'row',
     padding: 15,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   selectedMessageProfileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: screenWidth * 0.1,
+    height: screenWidth * 0.1,
+    borderRadius: screenWidth * 0.05,
     marginRight: 10,
   },
   selectedMessageContent: {
@@ -398,13 +402,13 @@ const styles = StyleSheet.create({
   },
   selectedMessageUsername: {
     fontWeight: 'bold',
-    fontSize: 16,
-    color: '#333',
+    fontSize: screenWidth * 0.04,
+    color: '#4ECDC4',
     marginBottom: 5,
   },
   selectedMessageText: {
-    fontSize: 14,
-    color: '#333',
+    fontSize: screenWidth * 0.035,
+    color: '#fff',
   },
   commentsList: {
     paddingHorizontal: 15,
@@ -412,17 +416,17 @@ const styles = StyleSheet.create({
   commentContainer: {
     flexDirection: 'row',
     marginVertical: 10,
+    borderRadius: 10,
+    overflow: 'hidden',
   },
   commentProfileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: screenWidth * 0.1,
+    height: screenWidth * 0.1,
+    borderRadius: screenWidth * 0.05,
     marginRight: 10,
   },
   commentContent: {
-    flex:  1,
-    backgroundColor: '#f0f2f5',
-    borderRadius: 10,
+    flex: 1,
     padding: 10,
   },
   commentHeader: {
@@ -432,47 +436,47 @@ const styles = StyleSheet.create({
   },
   commentUsername: {
     fontWeight: 'bold',
-    color: '#333',
+    color: '#4ECDC4',
+    fontSize: screenWidth * 0.035,
   },
   commentTimestamp: {
-    fontSize: 12,
-    color: '#888',
+    fontSize: screenWidth * 0.03,
+    color: '#aaa',
   },
   commentText: {
-    fontSize: 14,
-    color: '#333',
+    fontSize: screenWidth * 0.035,
+    color: '#fff',
     marginBottom: 5,
   },
   commentLikeButton: {
     alignSelf: 'flex-start',
   },
   commentLikeText: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: screenWidth * 0.035,
+    color: '#aaa',
   },
   commentLiked: {
-    color: '#e91e63',
+    color: '#4ECDC4',
   },
   commentInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
-    backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: 'rgba(255,255,255,0.1)',
   },
   commentInput: {
     flex: 1,
-    backgroundColor: '#f0f2f5',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 20,
     paddingHorizontal: 15,
     paddingVertical: 10,
-    fontSize: 14,
-    color: '#333',
+    fontSize: screenWidth * 0.035,
+    color: '#fff',
   },
   commentButton: {
     marginLeft: 10,
-    backgroundColor: '#2196F3',
+    backgroundColor: '#4ECDC4',
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 15,
@@ -480,5 +484,6 @@ const styles = StyleSheet.create({
   commentButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: screenWidth * 0.035,
   },
 });

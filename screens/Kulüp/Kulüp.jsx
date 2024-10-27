@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, TextInput, KeyboardAvoidingView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, TextInput, KeyboardAvoidingView, Dimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { Ionicons } from '@expo/vector-icons';
 import ClubDetailsModal from './ClubDetailsModal';
 
 const clubs = require('../../Clubs.json');
+
+const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
 
 const Kulüp = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,21 +30,30 @@ const Kulüp = () => {
   );
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.card} onPress={() => handleClubPress(item)}>
-      <Image source={{ uri: item.image }} style={styles.image} />
-      <Text style={styles.name}>{item.name}</Text>
+    <TouchableOpacity onPress={() => handleClubPress(item)}>
+      <BlurView intensity={80} tint="dark" style={styles.card}>
+        <Image source={{ uri: item.image }} style={styles.image} />
+        <Text style={styles.name}>{item.name}</Text>
+      </BlurView>
     </TouchableOpacity>
   );
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior="padding" >
-      <View style={styles.innerContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Kulüp Ara..."
-          value={searchQuery}
-          onChangeText={(text) => setSearchQuery(text)}
-        />
+    <LinearGradient
+      colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']}
+      style={styles.container}
+    >
+      <KeyboardAvoidingView style={styles.innerContainer} behavior="padding">
+        <BlurView intensity={100} tint="dark" style={styles.searchContainer}>
+          <Ionicons name="search" size={24} color="#4ECDC4" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Kulüp Ara..."
+            placeholderTextColor="#aaa"
+            value={searchQuery}
+            onChangeText={(text) => setSearchQuery(text)}
+          />
+        </BlurView>
         <FlatList
           data={filteredClubs}
           renderItem={renderItem}
@@ -48,29 +63,36 @@ const Kulüp = () => {
           contentContainerStyle={styles.listContent}
         />
         <ClubDetailsModal visible={modalVisible} club={selectedClub} onClose={closeModal} />
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   innerContainer: {
-    paddingHorizontal: 15, // Kenar boşlukları
-    flex: 1, // Alt içeriği kapsar
+    paddingHorizontal: 15,
+    flex: 1,
+    paddingTop: 80,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 25,
+    paddingHorizontal: 15,
+    marginBottom: 20,
+    overflow: 'hidden',
+  },
+  searchIcon: {
+    marginRight: 10,
   },
   searchInput: {
+    flex: 1,
     height: 45,
-    borderColor: '#007bff',
-    borderWidth: 1,
-    borderRadius: 25,
-    paddingHorizontal: 20,
-    marginTop: 80,
-    marginBottom:20, // Arama çubuğunu aşağı kaydır
-    fontSize: 16,
+    fontSize: screenWidth * 0.04,
+    color: '#fff',
   },
   list: {
     flex: 1,
@@ -81,28 +103,24 @@ const styles = StyleSheet.create({
   card: {
     marginVertical: 10,
     marginHorizontal: 5,
-    padding: 10,
-    backgroundColor: 'white',
+    padding: 15,
     borderRadius: 15,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e0e0e0', // Sınır rengi
+    overflow: 'hidden',
   },
   image: {
-    width: 120,
-    height: 120,
-    borderRadius: 60, // Daire biçimi
-    marginBottom: 5,
+    width: screenWidth * 0.3,
+    height: screenWidth * 0.3,
+    borderRadius: screenWidth * 0.15,
+    marginBottom: 10,
+    borderWidth: 2,
+    borderColor: '#4ECDC4',
   },
   name: {
-    marginTop: 5,
-    fontSize: 20,
+    fontSize: screenWidth * 0.045,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
+    textAlign: 'center',
   },
 });
 

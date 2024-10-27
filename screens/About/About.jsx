@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, } from 'react-native';
-import aboutData from "../../aboutData.json";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, Dimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import aboutData from "../../aboutData.json";
+
+const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
 
 export default function AboutScreen({ modalVisible, setModalVisible }) {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    // Bilgileri yükle
     setData(aboutData);
   }, []);
 
@@ -18,121 +22,101 @@ export default function AboutScreen({ modalVisible, setModalVisible }) {
       visible={modalVisible}
       onRequestClose={() => setModalVisible(false)}
     >
-      <View style={styles.modalView}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{data?.title}</Text>
+      <LinearGradient
+        colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']}
+        style={styles.modalView}
+      >
+        <BlurView intensity={100} tint="dark" style={styles.blurContainer}>
+          <View style={styles.header}>
+            <Text style={styles.title}>{data?.title}</Text>
             <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
-            <Ionicons name="close" style={styles.closeButtonX} size={25} color="red" /> 
-          </TouchableOpacity>
-        </View>
+              <Ionicons name="close" style={styles.closeButtonX} size={25} color="#4ECDC4" />
+            </TouchableOpacity>
+          </View>
 
-        <ScrollView style={styles.content}>
-          <Text style={styles.textTitle}>{data?.welcome}</Text>
-          <Text style={styles.text}>{data?.description}</Text>
-          <Text style={styles.text}>{data?.developer}</Text>
+          <ScrollView style={styles.content}>
+            <Text style={styles.textTitle}>{data?.welcome}</Text>
+            <Text style={styles.text}>{data?.description}</Text>
+            <Text style={styles.text}>{data?.developer}</Text>
 
-          <Text style={styles.subtitle}>Özellikler</Text>
-          <Text style={styles.subtitle}>Yemekhane Bilgileri</Text>
-          <Text style={styles.text}>{data?.features.foodInfo}</Text>
+            <Text style={styles.subtitle}>Özellikler</Text>
+            <Text style={styles.subtitle}>Yemekhane Bilgileri</Text>
+            <Text style={styles.text}>{data?.features.foodInfo}</Text>
 
-          <Text style={styles.subtitle}>Kulüp Bilgileri</Text>
-          <Text style={styles.text}>{data?.features.clubsInfo}</Text>
+            <Text style={styles.subtitle}>Kulüp Bilgileri</Text>
+            <Text style={styles.text}>{data?.features.clubsInfo}</Text>
 
-          <Text style={styles.subtitle}>Sosyalleşme</Text>
-          <Text style={styles.text}>{data?.features.socialInfo}</Text>
+            <Text style={styles.subtitle}>Sosyalleşme</Text>
+            <Text style={styles.text}>{data?.features.socialInfo}</Text>
 
-          <Text style={styles.subtitle}>Satış</Text>
-          <Text style={styles.text}>{data?.features.salesInfo}</Text>
+            <Text style={styles.subtitle}>Satış</Text>
+            <Text style={styles.text}>{data?.features.salesInfo}</Text>
 
-          <Text style={styles.subtitle}>Kulüp Bilgileri</Text>
-          <Text style={styles.text}>{data?.features.clubsInfo}</Text>
-        </ScrollView>
-      </View>
+            <Text style={styles.subtitle}>Kulüp Bilgileri</Text>
+            <Text style={styles.text}>{data?.features.clubsInfo}</Text>
+          </ScrollView>
+        </BlurView>
+      </LinearGradient>
     </Modal>
   );
 }
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  openModalButton: {
-    fontSize: 18,
-    color: '#007bff',
-    marginVertical: 20,
-  },
   modalView: {
     flex: 1,
     margin: 20,
-    backgroundColor: 'white',
     borderRadius: 20,
+    overflow: 'hidden',
+  },
+  blurContainer: {
+    flex: 1,
     padding: 25,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
   },
-   header: {
+  header: {
     flexDirection: 'row',
-    justifyContent: 'space-between', // Sol ve sağa yay
-    alignItems:"center",
-
-  },
-  backButton: {
-    fontSize: 16,
-    color: '#007bff',
+    justifyContent: 'space-between',
+    alignItems: "center",
+    marginBottom: 20,
   },
   title: {
-    fontSize: 18,
+    fontSize: screenWidth * 0.05,
     fontWeight: 'bold',
-    marginRight: 70,
+    color: '#fff',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: {width: -1, height: 1},
+    textShadowRadius: 10
   },
   content: {
-    marginTop: 20,
+    flex: 1,
   },
   textTitle: {
-    fontSize: 16,
+    fontSize: screenWidth * 0.045,
     fontWeight: 'bold',
+    color: '#4ECDC4',
+    marginBottom: 16,
+    marginTop: 16,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: screenWidth * 0.04,
     fontWeight: 'bold',
-    marginTop: 15,
+    color: '#4ECDC4',
+    marginTop: 14,
+    marginBottom: 6,
   },
   text: {
-    fontSize: 14,
-    marginTop: 8,
-  },
-  textTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 16, // Alt boşluğu artır
-    marginTop: 16,    // Üst boşluk ekle
-  },
-  subtitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginTop: 14,    // Üst boşluk ekle
-    marginBottom: 6,   // Alt boşluğu artır
-  },
-  text: {
-    fontSize: 14,
-    marginTop: 10,    // Üst boşluk ekle
-    marginBottom: 14,  // Alt boşluğu artır
+    fontSize: screenWidth * 0.035,
+    color: '#fff',
+    marginTop: 10,
+    marginBottom: 14,
   },
   closeButton: {
     padding: 10,
-    marginLeft:50,
   },
-  closeButtonX:{
-    color:"white",
-    backgroundColor:"black",
-    borderRadius:20,
-    fontSize:27
+  closeButtonX: {
+    color: "#4ECDC4",
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderRadius: 20,
+    fontSize: 27,
+    padding: 5,
   }
 });
