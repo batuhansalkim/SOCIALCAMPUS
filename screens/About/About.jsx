@@ -23,7 +23,7 @@ export default function AboutScreen({ modalVisible, setModalVisible }) {
       onRequestClose={() => setModalVisible(false)}
     >
       <LinearGradient
-        colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']}
+        colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.9)', 'rgba(0,0,0,0.9)']}
         style={styles.modalView}
       >
         <BlurView intensity={100} tint="dark" style={styles.blurContainer}>
@@ -52,8 +52,7 @@ export default function AboutScreen({ modalVisible, setModalVisible }) {
             <Text style={styles.subtitle}>Satış</Text>
             <Text style={styles.text}>{data?.features.salesInfo}</Text>
 
-            <Text style={styles.subtitle}>Kulüp Bilgileri</Text>
-            <Text style={styles.text}>{data?.features.clubsInfo}</Text>
+            
           </ScrollView>
         </BlurView>
       </LinearGradient>

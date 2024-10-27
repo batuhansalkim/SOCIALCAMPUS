@@ -33,7 +33,7 @@ export default function Profil() {
   return (
     <SafeAreaView style={styles.safeContainer}>
       <LinearGradient
-        colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']}
+        colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0.7)']}
         style={styles.gradient}
       >
         <View style={styles.header}>
@@ -56,14 +56,16 @@ export default function Profil() {
           </View>
 
           <View style={styles.aboutContainer}>
+            
             <TouchableOpacity style={styles.linkButton} onPress={() => setAboutModalVisible(true)}>
-              <BlurView intensity={80} tint="dark" style={styles.blurView}>
+              <BlurView intensity={100} tint="dark" style={styles.blurView}>
                 <Ionicons name="information-circle-outline" size={24} color="#4ECDC4" />
                 <Text style={styles.linkText}>Uygulama Hakkında</Text>
               </BlurView>
             </TouchableOpacity>
+
             <TouchableOpacity style={styles.linkButton} onPress={handlePress}>
-              <BlurView intensity={80} tint="dark" style={styles.blurView}>
+              <BlurView intensity={100} tint="dark" style={styles.blurView}>
                 <Ionicons name="mail-outline" size={24} color="#4ECDC4" />
                 <Text style={styles.linkText}>İletişime Geç</Text>
               </BlurView>
@@ -169,7 +171,7 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     width: '90%',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
     borderRadius: 15,
     padding: 20,
     marginBottom: 20,
@@ -178,7 +180,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 15,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 10,
     padding: 10,
   },
@@ -261,7 +263,7 @@ const styles = StyleSheet.create({
   input: {
     width: '100%',
     padding: 12,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 8,
     marginBottom: 15,
     fontSize: screenWidth * 0.04,

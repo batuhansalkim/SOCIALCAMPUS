@@ -290,7 +290,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   bookList: {
-    paddingBottom: 20,
+    paddingBottom: 10,
+    paddingTop:100,
     flexDirection: 'column-reverse',
   },
   bookCardWrapper: {
@@ -299,7 +300,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   bookCard: {
-    padding: 15,
+    padding: 8,
     borderRadius: 20,
     alignItems: 'center',
     overflow: 'hidden',

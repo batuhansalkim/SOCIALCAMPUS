@@ -19,7 +19,7 @@ const CustomIcon = ({ name, color, size, isFocused }) => {
     const backgroundColor = interpolateColor(
       scale,
       [1, 1.2],
-      ['rgba(255, 255, 255, 0)', 'rgba(74, 144, 226, 0.1)']
+      ['rgba(255, 255, 255, 0)', 'rgba(78, 205, 196, 0.1)']
     );
 
     return {
@@ -31,7 +31,7 @@ const CustomIcon = ({ name, color, size, isFocused }) => {
   return (
     <Animated.View style={[styles.iconContainer, animatedStyles]}>
       <LinearGradient
-        colors={isFocused ? ['#4A90E2', '#5DADE2'] : ['#8E8E93', '#A9A9A9']}
+        colors={isFocused ? ['#4ECDC4', '#4ECDC4'] : ['#8E8E93', '#A9A9A9']}
         style={styles.iconBackground}
       >
         <Icon name={name} color={isFocused ? '#FFFFFF' : '#F0F0F0'} size={size} />
@@ -42,7 +42,10 @@ const CustomIcon = ({ name, color, size, isFocused }) => {
 
 const CustomTabBar = ({ state, descriptors, navigation }) => {
   return (
-    <View style={styles.tabBar}>
+    <LinearGradient
+      colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0.7)']}
+      style={styles.tabBar}
+    >
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const isFocused = state.index === index;
@@ -82,19 +85,15 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
             <Animated.View style={[styles.tabItemContent, animatedStyles]}>
               <CustomIcon
                 name={options.tabBarIcon({ focused: isFocused, color: '', size: 24 }).props.name}
-                color={isFocused ? '#4A90E2' : '#8E8E93'}
+                color={isFocused ? '#4ECDC4' : '#8E8E93'}
                 size={24}
                 isFocused={isFocused}
               />
-              {/* YAZILARI KALDIRDIK */}
-              {/* <Text style={[styles.tabLabel, { color: isFocused ? '#4A90E2' : '#8E8E93' }]}>
-                {label}
-              </Text> */}
             </Animated.View>
           </TouchableOpacity>
         );
       })}
-    </View>
+    </LinearGradient>
   );
 };
 
@@ -112,7 +111,7 @@ export default function Navigator() {
         component={Satis} 
         options={{
           tabBarIcon: ({color, size}) => <Icon name="sale" color={color} size={size}/>,
-          tabBarLabel: null // YAZILARI KALDIRDIK
+          tabBarLabel: null
         }}
       />
       <Tab.Screen 
@@ -120,7 +119,7 @@ export default function Navigator() {
         component={Kulüp} 
         options={{
           tabBarIcon: ({color, size}) => <Icon name="account-group" color={color} size={size}/>,
-          tabBarLabel: null // YAZILARI KALDIRDIK
+          tabBarLabel: null
         }}
       />
       <Tab.Screen 
@@ -128,7 +127,7 @@ export default function Navigator() {
         component={YemekListesi} 
         options={{
           tabBarIcon: ({size, color}) => <Icon name="food-fork-drink" size={size} color={color}/>,
-          tabBarLabel: null // YAZILARI KALDIRDIK
+          tabBarLabel: null
         }}
       />
       <Tab.Screen 
@@ -136,7 +135,7 @@ export default function Navigator() {
         component={Mesaj} 
         options={{
           tabBarIcon: ({size, color}) => <Icon size={size} color={color} name="message"/>,
-          tabBarLabel: null // YAZILARI KALDIRDIK
+          tabBarLabel: null
         }}
       />
       <Tab.Screen 
@@ -144,7 +143,7 @@ export default function Navigator() {
         component={Profil} 
         options={{
           tabBarIcon: ({size, color}) => <Icon size={size} color={color} name="account"/>,
-          tabBarLabel: null // YAZILARI KALDIRDIK
+          tabBarLabel: null
         }}
       />
     </Tab.Navigator>
@@ -154,18 +153,9 @@ export default function Navigator() {
 const styles = StyleSheet.create({
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
     height: 60,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   tabItem: {
     flex: 1,
@@ -175,11 +165,6 @@ const styles = StyleSheet.create({
   tabItemContent: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  tabLabel: {
-    fontSize: 10,
-    marginTop: 4,
-    fontWeight: '600',
   },
   iconContainer: {
     padding: 8,

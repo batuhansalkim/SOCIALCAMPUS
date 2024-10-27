@@ -17,7 +17,7 @@ export default function MessageScreen() {
   const [messages, setMessages] = useState([
     {
       id: '1',
-      user: 'Haticehj',
+      user: 'aysebi',
       text: 'KLUCAMPUS uygulaması sayesinde kampüsteki tüm etkinliklerden haberdar olabiliyorum. Gerçekten çok faydalı!',
       likes: 10,
       comments: 2,
@@ -253,12 +253,17 @@ export default function MessageScreen() {
             value={newMessage}
             onChangeText={setNewMessage}
           />
-          <IconButton
+          <TouchableOpacity style={styles.commentButtonx} onPress={handleAddComment}>
+              {/* <Text style={styles.commentButtonText}>Ekle</Text> */}
+              <IconButton
             icon="send"
             size={24}
-            color="#4ECDC4"
+            // color="#4ECDC4"
+            style={styles.commentButtonTextx}
             onPress={handleSend}
           />
+            </TouchableOpacity>
+          
         </BlurView>
       </SafeAreaView>
     </LinearGradient>
@@ -481,9 +486,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 15,
   },
+  
   commentButtonText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: screenWidth * 0.035,
   },
+  commentButtonTextx:{
+    backgroundColor:"#4ECDC4"
+  }
 });
