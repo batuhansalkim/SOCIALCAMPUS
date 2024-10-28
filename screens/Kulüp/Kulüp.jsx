@@ -1,19 +1,61 @@
-import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, TextInput, KeyboardAvoidingView, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, TextInput, KeyboardAvoidingView, Dimensions, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
+import cheerio from 'cheerio-without-node-native';
 import ClubDetailsModal from './ClubDetailsModal';
-
-const clubs = require('../../Clubs.json');
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 const Kulüp = () => {
+  const [clubs, setClubs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClub, setSelectedClub] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+
+  useEffect(() => {
+    fetchClubs();
+  }, []);
+
+  const fetchClubs = async () => {
+    try {
+      console.log('Fetching clubs...');
+      const response = await axios.get('https://ogrkulup.klu.edu.tr/');
+      console.log('Response received:', response.status);
+      const $ = cheerio.load(response.data);
+      const clubsData = [];
+
+      $('.col-lg-4').each((index, element) => {
+        const name = $(element).find('h3 a').text().trim();
+        const image = $(element).find('img').attr('src');
+        const details = $(element).find('.card-text').text().trim().split('\n');
+        const president = details[0].replace('Kulüp Başkanı:', '').trim();
+        const advisor = details[1].replace('Kulüp Danışmanı:', '').trim();
+        const instagramLink = $(element).find('a.btn-instagram').attr('href');
+        
+        clubsData.push({ 
+          name, 
+          image: image.startsWith('http') ? image : `https://ogrkulup.klu.edu.tr${image}`,
+          president, 
+          advisor, 
+          instagram: instagramLink 
+        });
+      });
+
+      console.log('Clubs found:', clubsData.length);
+      setClubs(clubsData);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching clubs:', err);
+      setError('Kulüp verileri yüklenirken bir hata oluştu: ' + err.message);
+      setLoading(false);
+    }
+  };
 
   const handleClubPress = (club) => {
     setSelectedClub(club);
@@ -37,6 +79,22 @@ const Kulüp = () => {
       </BlurView>
     </TouchableOpacity>
   );
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4ECDC4" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <LinearGradient
@@ -120,6 +178,23 @@ const styles = StyleSheet.create({
     fontSize: screenWidth * 0.045,
     fontWeight: 'bold',
     color: '#fff',
+    textAlign: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.8)',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.8)',
+  },
+  errorText: {
+    color: '#ff0000',
+    fontSize: 18,
     textAlign: 'center',
   },
 });

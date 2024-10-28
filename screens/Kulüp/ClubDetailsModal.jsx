@@ -5,12 +5,15 @@ import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
 
 const ClubDetailsModal = ({ visible, club, onClose }) => {
   if (!club) return null;
 
-  const instagramLink = club.socialMedia.find(item => item.platform.toLowerCase() === 'instagram')?.link;
+  const handleInstagramPress = () => {
+    if (club.instagram) {
+      Linking.openURL(club.instagram).catch((err) => console.error('An error occurred', err));
+    }
+  };
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
@@ -42,10 +45,10 @@ const ClubDetailsModal = ({ visible, club, onClose }) => {
                   </Text>
                 </View>
               </View>
-              {instagramLink && (
+              {club.instagram && (
                 <TouchableOpacity 
                   style={styles.instagramButton} 
-                  onPress={() => Linking.openURL(instagramLink)}
+                  onPress={handleInstagramPress}
                 >
                   <LinearGradient
                     colors={['#405DE6', '#5851DB', '#833AB4', '#C13584', '#E1306C', '#FD1D1D']}

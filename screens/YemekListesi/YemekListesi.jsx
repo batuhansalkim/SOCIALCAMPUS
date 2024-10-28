@@ -9,45 +9,51 @@ import {
   TouchableOpacity,
   ImageBackground,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import axios from 'axios';
 
 const screenWidth = Dimensions.get('window').width;
 
-// Yemek verileri (örnek)
-const yemekListesi = [
-  { tarih: '2024-04-22', yemekler: ['Kuru Fasulye', 'Pilav', 'Ayran', 'Baklava'], ratings: [4.5, 4.2, 3.8, 4.7] },
-  { tarih: '2024-04-23', yemekler: ['Mercimek Çorbası', 'Tavuk Şiş', 'Salata', 'Sütlaç'], ratings: [4.0, 4.5, 3.5, 4.3] },
-  { tarih: '2024-04-24', yemekler: ['Etli Nohut', 'Bulgur Pilavı', 'Cacık', 'Revani'], ratings: [4.2, 3.9, 4.0, 4.6] },
-  { tarih: '2024-04-25', yemekler: ['Balık', 'Şehriyeli Pilav', 'Limonata', 'Kadayıf'], ratings: [4.7, 4.1, 4.3, 4.4] },
-  { tarih: '2024-04-26', yemekler: ['Izgara Köfte', 'Patates Püresi', 'Ayran', 'Meyve'], ratings: [4.6, 4.0, 3.7, 3.9] }
-];
-
-export default function Component() {
-  const [currentDate, setCurrentDate] = useState('');
-  const [filteredList, setFilteredList] = useState([]);
+export default function MealSchedule() {
+  const [mealList, setMealList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef(null);
-  const [gununSozu, setGununSozu] = useState('Başarı, sabır ve azimle gelir.');
+  const [gununSozu] = useState('Başarı, sabır ve azimle gelir.');
 
   useEffect(() => {
-    const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0];
-    setCurrentDate(formattedDate);
-
-    const weekdays = yemekListesi.filter(item => {
-      const dayOfWeek = new Date(item.tarih).getDay();
-      return dayOfWeek !== 6 && dayOfWeek !== 0;
-    });
-    setFilteredList(weekdays);
-
-    const currentIndex = weekdays.findIndex(item => item.tarih === formattedDate);
-    if (currentIndex !== -1 && flatListRef.current) {
-      flatListRef.current.scrollToIndex({ index: currentIndex, animated: false });
-    }
+    fetchMealData();
   }, []);
+
+  const fetchMealData = async () => {
+    try {
+      console.log('Fetching meal data...');
+      const response = await axios.get('https://sks.klu.edu.tr/Takvimler/73-yemek-takvimi.klu');
+      console.log('Response received:', response.status);
+
+      const htmlContent = response.data;
+      const jsonDataMatch = htmlContent.match(/<textarea[^>]*>(.*?)<\/textarea>/s);
+      
+      if (jsonDataMatch && jsonDataMatch[1]) {
+        const jsonData = JSON.parse(jsonDataMatch[1]);
+        console.log('Parsed JSON data:', jsonData);
+        setMealList(jsonData.slice(0, 5)); // Get only the first 5 days
+      } else {
+        throw new Error('Yemek listesi verisi bulunamadı.');
+      }
+
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching meal data:', err);
+      setError('Yemek verileri yüklenirken bir hata oluştu: ' + (err instanceof Error ? err.message : String(err)));
+      setLoading(false);
+    }
+  };
 
   const renderItem = ({ item, index }) => {
     const inputRange = [
@@ -68,7 +74,7 @@ export default function Component() {
       extrapolate: 'clamp',
     });
 
-    const isCurrentDay = item.tarih === currentDate;
+    const isCurrentDay = new Date(item.start).toDateString() === new Date().toDateString();
 
     return (
       <Animated.View style={[styles.cardContainer, { transform: [{ scale }], opacity }]}>
@@ -77,32 +83,20 @@ export default function Component() {
           style={styles.card}
         >
           <View style={styles.dateContainer}>
-            <Text style={styles.dateText}>{formatDate(item.tarih)}</Text>
+            <Text style={styles.dateText}>{formatDate(item.start)}</Text>
             {isCurrentDay && <View style={styles.currentDayIndicator} />}
           </View>
           <ScrollView style={styles.mealScrollView}>
-            {item.yemekler.map((yemek, idx) => (
+            {item.aciklama.split(',').map((meal, idx) => (
               <View key={idx} style={styles.yemekContainer}>
                 <Ionicons name={getIconForMeal(idx)} size={28} color="#FFF" style={styles.yemekIcon} />
                 <View style={styles.yemekDetails}>
-                  <Text style={styles.yemekText}>{yemek}</Text>
-                  <View style={styles.ratingContainer}>
-                    <Ionicons name="star" size={16} color="#FFD700" />
-                    <Text style={styles.ratingText}>{item.ratings[idx].toFixed(1)}</Text>
-                  </View>
+                  <Text style={styles.yemekText}>{meal.trim()}</Text>
                 </View>
               </View>
             ))}
           </ScrollView>
           <View style={styles.buttonContainer}>
-            <View style={styles.leftButtons}>
-              <TouchableOpacity style={styles.likeButton}>
-                <Ionicons name="thumbs-up" size={20} color="#fff" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.dislikeButton}>
-                <Ionicons name="thumbs-down" size={20} color="#fff" />
-              </TouchableOpacity>
-            </View>
             <TouchableOpacity style={styles.feedbackButton}>
               <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
               <Text style={styles.feedbackText}>Geri Bildirim</Text>
@@ -124,6 +118,37 @@ export default function Component() {
     return icons[index] || 'restaurant';
   };
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4ECDC4" />
+        <Text style={styles.loadingText}>Yemek listesi yükleniyor...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchMealData}>
+          <Text style={styles.retryButtonText}>Tekrar Dene</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (mealList.length === 0) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Yemek listesi bulunamadı.</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchMealData}>
+          <Text style={styles.retryButtonText}>Tekrar Dene</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <ImageBackground
       source={{ uri: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/food-pattern-background-8Wd9Hy0Ue5Ue9Ue9Ue9Ue9Ue9Ue9.png' }}
@@ -134,15 +159,15 @@ export default function Component() {
         <Ionicons name="restaurant" size={40} color="#FFD700" style={styles.headerIcon} />
         <Text style={styles.headerText}>Okul Yemek Listesi</Text>
         <Text style={styles.subHeaderText}>
-          {formatDate(filteredList[0]?.tarih)} - {formatDate(filteredList[4]?.tarih)}
+          {formatDate(mealList[0]?.start)} - {formatDate(mealList[4]?.start)}
         </Text>
       </LinearGradient>
       
       <Animated.FlatList
         ref={flatListRef}
-        data={filteredList}
+        data={mealList}
         renderItem={renderItem}
-        keyExtractor={item => item.tarih}
+        keyExtractor={(item) => item.id}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
@@ -154,9 +179,8 @@ export default function Component() {
         style={styles.flatList}
       />
 
-      {/* Animated Slider */}
       <View style={styles.pagination}>
-        {filteredList.map((_, i) => {
+        {mealList.map((_, i) => {
           const scale = scrollX.interpolate({
             inputRange: [
               (i - 1) * screenWidth,
@@ -234,7 +258,7 @@ const styles = StyleSheet.create({
     padding: 20,
     marginVertical: 10,
     alignItems: 'flex-start',
-    height: 400, // Fixed height for consistent card size
+    height: 400,
   },
   dateContainer: {
     flexDirection: 'row',
@@ -254,7 +278,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFD700',
   },
   mealScrollView: {
-    maxHeight: 250, // Adjust this value as needed
+    maxHeight: 250,
     width: '100%',
   },
   yemekContainer: {
@@ -272,34 +296,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#fff',
   },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  ratingText: {
-    fontSize: 14,
-    color: '#FFD700',
-    marginLeft: 5,
-  },
   buttonContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-  },
-  leftButtons: {
-    flexDirection: 'row',
-  },
-  likeButton: {
-    backgroundColor: '#4CAF50',
-    padding: 10,
-    borderRadius: 10,
-    marginRight: 10,
-  },
-  dislikeButton: {
-    backgroundColor: '#FF5252',
-    padding: 10,
-    borderRadius: 10,
+    marginTop: 10,
   },
   feedbackButton: {
     flexDirection: 'row',
@@ -337,6 +339,40 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: 'black',
     marginHorizontal: 8,
-    marginBottom:20,
+    marginBottom: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.8)',
+  },
+  loadingText: {
+    color: '#fff',
+    fontSize: 18,
+    marginTop: 10,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.8)',
+  },
+  errorText: {
+    color: '#ff0000',
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#4ECDC4',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
