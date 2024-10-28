@@ -42,7 +42,24 @@ export default function MealSchedule() {
       if (jsonDataMatch && jsonDataMatch[1]) {
         const jsonData = JSON.parse(jsonDataMatch[1]);
         console.log('Parsed JSON data:', jsonData);
-        setMealList(jsonData.slice(0, 5)); // Get only the first 5 days
+        
+        // Sort the data by date
+        const sortedData = jsonData.sort((a, b) => new Date(a.start) - new Date(b.start));
+        
+        // Find the index of today or the next available day
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const startIndex = sortedData.findIndex(item => new Date(item.start) >= today);
+        
+        // Get 5 days starting from today or the next available day
+        let selectedData = sortedData.slice(startIndex, startIndex + 5);
+        
+        // If we don't have 5 days, add days from the beginning of the list
+        if (selectedData.length < 5) {
+          selectedData = [...selectedData, ...sortedData.slice(0, 5 - selectedData.length)];
+        }
+        
+        setMealList(selectedData);
       } else {
         throw new Error('Yemek listesi verisi bulunamadı.');
       }
@@ -74,7 +91,7 @@ export default function MealSchedule() {
       extrapolate: 'clamp',
     });
 
-    const isCurrentDay = new Date(item.start).toDateString() === new Date().toDateString();
+    const isCurrentDay = index === 0;
 
     return (
       <Animated.View style={[styles.cardContainer, { transform: [{ scale }], opacity }]}>
