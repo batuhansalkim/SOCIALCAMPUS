@@ -53,7 +53,7 @@ const CustomButton = ({ handlePress, buttonVal, isLastScreen }) => {
       <Animated.View style={[styles.container, animatedColor, buttonAnimationStyle]}>
         {isLastScreen ? (
           <Animated.Text style={[styles.textButton, textAnimationStyle]}>
-            Keşfetmeye Başla
+            Giriş Sayfası
           </Animated.Text>
         ) : (
           <Animated.Image

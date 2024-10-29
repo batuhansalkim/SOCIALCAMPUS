@@ -1,241 +1,410 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
-  ScrollView, 
-  Switch, 
-  Modal, 
-  SafeAreaView,
-  Platform,
-  StatusBar,
-  KeyboardAvoidingView,
-  Dimensions
-} from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import TermsScreen from "../../components/TermsScreen";
+    import React, { useState } from 'react';
+    import { 
+    View, 
+    Text, 
+    TextInput, 
+    TouchableOpacity, 
+    StyleSheet, 
+    ScrollView, 
+    Switch, 
+    Modal, 
+    SafeAreaView,
+    Platform,
+    StatusBar,
+    KeyboardAvoidingView,
+    Dimensions
+    } from 'react-native';
+    import { Picker } from '@react-native-picker/picker';
+    import TermsScreen from "../../components/TermsScreen";
 
-export default function LoginScreen() {
-  const [name, setName] = useState('');
-  const [surname, setSurname] = useState('');
-  const [faculty, setFaculty] = useState('');
-  const [department, setDepartment] = useState('');
-  const [email, setEmail] = useState('');
-  const [city, setCity] = useState('');
-  const [birthDate, setBirthDate] = useState('');
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [eulaAccepted, setEulaAccepted] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
+    const faculties = {
+    medicine: {
+        name: "Tıp Fakültesi",
+        departments: [
+        "Tıp bölümü"
+        ]
+    },
+    literature: {
+        name: "Fen Edebiyat Fakültesi",
+        departments: [
+        "Batı Dilleri ve Edebiyatları Bölümü",
+        "Çağdaş Lehçeleri ve Edebiyatları Bölümü",
+        "Eğitim Bilimleri Bölümü",
+        "Felsefe Bölümü",
+        "Fizik Bölümü",
+        "Kimya Bölümü",
+        "Matematik Bölümü",
+        "Moleküler Biyoloji ve Genetik Bölümü",
+        "Mütercim Tercümanlık Bölümü",
+        "Psikoloji Bölümü",
+        "Sosyoloji Bölümü",
+        "Tarih Bölümü",
+        "Türk Dili ve Edebiyatı Bölümü"
+        ]
+    },
+    economics: {
+        name: "İktisadi ve İdari Bilimler Fakültesi",
+        departments: [
+        "Çalışma Ekonomisi ve Endüstri İlişkileri Bölümü",
+        "Ekonometri Bölümü",
+        "İktisat Bölümü",
+        "İktisat (İngilizce) Programı",
+        "İşletme Bölümü",
+        "İnsan Kaynakları Bölümü",
+        "Maliye Bölümü",
+        "Siyaset Bilimi ve Kamu Yönetimi Bölümü",
+        "Uluslararası İlişkiler Bölümü",
+        "Yönetim Bilişim Sistemleri"
+        ]
+    },
+    law: {
+        name: "Hukuk Fakültesi",
+        departments: [
+        "Hukuk Bölümü"
+        ]
+    },
+    engineering: {
+        name: "Mühendislik Fakültesi",
+        departments: [
+        "Elektrik Elektronik Mühendisliği",
+        "Endüstri Mühendisliği",
+        "Gıda Mühendisliği",
+        "İnşaat Mühendisliği",
+        "Makine Mühendisliği",
+        "Yazılım Mühendisliği"
+        ]
+    },
+    technology: {
+        name: "Teknoloji Fakültesi",
+        departments: [
+        "Enerji Sistemleri Mühendisliği",
+        "Mekatronik Mühendisliği"
+        ]
+    },
+    aviation: {
+        name: "Lüleburgaz Havacılık ve Uzay Bilimleri Fakültesi",
+        departments: [
+        "Havacılık Yönetimi Bölümü",
+        "Uçak Bakım ve Onarım Bölümü",
+        "Pilotaj Bölümü",
+        "Havacılık ve Uzay Mühendisliği Bölümü",
+        "Havacılık Elektrik ve Elektroniği"
+        ]
+    },
+    theology: {
+        name: "İlahiyat Fakültesi",
+        departments: [
+        "İlahiyat Bölümü"
+        ]
+    },
+    architecture: {
+        name: "Mimarlık Fakültesi",
+        departments: [
+        "Mimarlık Bölümü",
+        "Şehir ve Bölge Planlama Bölümü",
+        "Peyzaj Mimarlığı Bölümü",
+        "İç Mimarlık Bölümü"
+        ]
+    },
+    tourism: {
+        name: "Turizm Fakültesi",
+        departments: [
+        "Turizm İşletmeciliği",
+        "Turizm Rehberliği",
+        "Rekreasyon Yönetimi",
+        "Gastronomi ve Mutfak Sanatları"
+        ]
+    },
+    applied_sciences: {
+        name: "Uygulamalı Bilimler Fakültesi",
+        departments: [
+        "Finans ve Bankacılık",
+        "Muhasebe ve Finans Yönetimi",
+        "Uluslararası Ticaret ve Lojistik"
+        ]
+    }
+    };
 
-  const isFormValid = termsAccepted && eulaAccepted && name && surname && email.includes('@') && city && birthDate;
+    export default function LoginScreen() {
+    const [name, setName] = useState('');
+    const [surname, setSurname] = useState('');
+    const [faculty, setFaculty] = useState('');
+    const [department, setDepartment] = useState('');
+    const [email, setEmail] = useState('');
+    const [city, setCity] = useState('');
+    const [birthDate, setBirthDate] = useState('');
+    const [termsAccepted, setTermsAccepted] = useState(false);
+    const [eulaAccepted, setEulaAccepted] = useState(false);
+    const [showTerms, setShowTerms] = useState(false);
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.container}
-      >
-        <ScrollView contentContainerStyle={styles.scrollViewContent}>
-          <Text style={styles.title}>Hoşgeldiniz</Text>
-          <View style={styles.formContainer}>
-            <Text style={styles.subtitle}>Bilgilerinizi doldurunuz.</Text>
+    const isFormValid = termsAccepted && eulaAccepted && name && surname && email.includes('@') && city && birthDate;
 
-            <Text style={styles.label}>İsim</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="İsminizi giriniz"
-              value={name}
-              onChangeText={setName}
-            />
-
-            <Text style={styles.label}>Soyisim</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Soyisminizi giriniz"
-              value={surname}
-              onChangeText={setSurname}
-            />
-
-            <Text style={styles.label}>Fakülte</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                style={styles.picker}
-                selectedValue={faculty}
-                onValueChange={(itemValue) => setFaculty(itemValue)}
-              >
-                <Picker.Item label="Fakülte Seçin" value="" />
-                <Picker.Item label="Mühendislik" value="engineering" />
-                <Picker.Item label="Tıp" value="medicine" />
-                <Picker.Item label="Edebiyat" value="literature" />
-              </Picker>
+    return (
+        <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView 
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.container}
+        >
+            <ScrollView contentContainerStyle={styles.scrollViewContent}>
+            <View style={styles.headerContainer}>
+                <Text style={styles.title}>Hoşgeldiniz</Text>
+                <Text style={styles.subtitle}>Bilgilerinizi doldurunuz.</Text>
             </View>
+            
+            <View style={styles.formContainer}>
+                {/* Previous form fields remain the same, just styled differently */}
+                <View style={styles.inputGroup}>
+                <Text style={styles.label}>İsim</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="İsminizi giriniz"
+                    value={name}
+                    onChangeText={setName}
+                    placeholderTextColor="#999"
+                />
+                </View>
 
-            <Text style={styles.label}>Bölüm</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                style={styles.picker}
-                selectedValue={department}
-                onValueChange={(itemValue) => setDepartment(itemValue)}
-              >
-                <Picker.Item label="Bölüm Seçin" value="" />
-                <Picker.Item label="Bilgisayar Mühendisliği" value="computer_science" />
-                <Picker.Item label="Hemşirelik" value="nursing" />
-              </Picker>
-            </View>
+                <View style={styles.inputGroup}>
+                <Text style={styles.label}>Soyisim</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Soyisminizi giriniz"
+                    value={surname}
+                    onChangeText={setSurname}
+                    placeholderTextColor="#999"
+                />
+                </View>
 
-            <Text style={styles.label}>E-posta</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="E-posta adresinizi giriniz"
-              keyboardType="email-address"
-              value={email}
-              onChangeText={setEmail}
-            />
+                <View style={styles.inputGroup}>
+                <Text style={styles.label}>Fakülte</Text>
+                <View style={styles.pickerContainer}>
+                    <Picker
+                    style={styles.picker}
+                    selectedValue={faculty}
+                    onValueChange={(itemValue) => {
+                        setFaculty(itemValue);
+                        setDepartment('');
+                    }}
+                    >
+                    <Picker.Item label="Fakülte Seçin" value="" />
+                    {Object.entries(faculties).map(([key, value]) => (
+                        <Picker.Item key={key} label={value.name} value={key} />
+                    ))}
+                    </Picker>
+                </View>
+                </View>
 
-            <Text style={styles.label}>Şehir</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Şehrinizi giriniz"
-              value={city}
-              onChangeText={setCity}
-            />
+                <View style={styles.inputGroup}>
+                <Text style={styles.label}>Bölüm</Text>
+                <View style={styles.pickerContainer}>
+                    <Picker
+    style={styles.picker}
+    selectedValue={department}
+    onValueChange={(itemValue) => setDepartment(itemValue)}
+    enabled={!!faculty}
+>
+    <Picker.Item label="Bölüm Seçin" value="" />
+    {(faculties[faculty]?.departments || []).map((dept, index) => (
+        <Picker.Item key={index} label={dept} value={dept} />
+    ))}
+</Picker>
 
-            <Text style={styles.label}>Doğum Tarihi</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="GG/AA/YYYY"
-              keyboardType="numeric"
-              value={birthDate}
-              onChangeText={setBirthDate}
-            />
+                </View>
+                </View>
 
-            <View style={styles.switchContainer}>
-              <Switch
-                value={termsAccepted}
-                onValueChange={(value) => setTermsAccepted(value)}
-                trackColor={{ false: "#767577", true: "#00FFFF" }}
-                thumbColor={termsAccepted ? "#f4f3f4" : "#f4f3f4"}
-              />
-              <TouchableOpacity onPress={() => setShowTerms(true)} style={styles.switchLabel}>
-                <Text style={styles.underlinedText}>
-                  Şartlar ve Koşulları Kabul Ediyorum
+                <View style={styles.inputGroup}>
+                <Text style={styles.label}>E-posta</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="E-posta adresinizi giriniz"
+                    keyboardType="email-address"
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholderTextColor="#999"
+                    autoCapitalize="none"
+                />
+                </View>
+
+                <View style={styles.inputGroup}>
+                <Text style={styles.label}>Şehir</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Şehrinizi giriniz"
+                    value={city}
+                    onChangeText={setCity}
+                    placeholderTextColor="#999"
+                />
+                </View>
+
+                <View style={styles.inputGroup}>
+                <Text style={styles.label}>Doğum Tarihi</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="GG/AA/YYYY"
+                    keyboardType="numeric"
+                    value={birthDate}
+                    onChangeText={setBirthDate}
+                    placeholderTextColor="#999"
+                />
+                </View>
+
+                <View style={styles.termsContainer}>
+                <View style={styles.switchContainer}>
+                    <Switch
+                    value={termsAccepted}
+                    onValueChange={(value) => setTermsAccepted(value)}
+                    trackColor={{ false: "#E0E0E0", true: "#4CAF50" }}
+                    thumbColor={termsAccepted ? "#FFFFFF" : "#F5F5F5"}
+                    ios_backgroundColor="#E0E0E0"
+                    />
+                    <TouchableOpacity onPress={() => setShowTerms(true)} style={styles.switchLabel}>
+                    <Text style={styles.underlinedText}>
+                        Şartlar ve Koşulları Kabul Ediyorum
+                    </Text>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.switchContainer}>
+                    <Switch
+                    value={eulaAccepted}
+                    onValueChange={setEulaAccepted}
+                    trackColor={{ false: "#E0E0E0", true: "#4CAF50" }}
+                    thumbColor={eulaAccepted ? "#FFFFFF" : "#F5F5F5"}
+                    ios_backgroundColor="#E0E0E0"
+                    />
+                    <Text style={styles.switchLabel}>
+                    Son Kullanıcı Lisans Sözleşmesini (EULA) onaylıyorum.
+                    </Text>
+                </View>
+                </View>
+
+                <TouchableOpacity 
+                style={[
+                    styles.button,
+                    { backgroundColor: isFormValid ? "#4CAF50" : "#E0E0E0" }
+                ]}
+                disabled={!isFormValid}
+                onPress={() => console.log('Form Submitted')}
+                >
+                <Text style={[
+                    styles.buttonText,
+                    { color: isFormValid ? "#FFFFFF" : "#999999" }
+                ]}>
+                    Gönder
                 </Text>
-              </TouchableOpacity>
+                </TouchableOpacity>
             </View>
+            </ScrollView>
+        </KeyboardAvoidingView>
 
-            <View style={styles.switchContainer}>
-              <Switch
-                value={eulaAccepted}
-                onValueChange={setEulaAccepted}
-                trackColor={{ false: "#767577", true: "#00FFFF" }}
-                thumbColor={eulaAccepted ? "#f4f3f4" : "#f4f3f4"}
-              />
-              <Text style={styles.switchLabel}>Son Kullanıcı Lisans Sözleşmesini (EULA) onaylıyorum.</Text>
-            </View>
+        <Modal visible={showTerms} animationType="slide">
+            <TermsScreen onClose={() => setShowTerms(false)} />
+        </Modal>
+        </SafeAreaView>
+    );
+    }
 
-            <TouchableOpacity 
-              style={[styles.button, { opacity: isFormValid ? 1 : 0.5 }]} 
-              disabled={!isFormValid}
-            >
-              <Text style={styles.buttonText}>Başla</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      <Modal visible={showTerms} animationType="slide" onRequestClose={() => setShowTerms(false)}>
-        <TermsScreen 
-          onAccept={() => { setTermsAccepted(true); setShowTerms(false); }} 
-          onClose={() => setShowTerms(false)} 
-        />
-      </Modal>
-    </SafeAreaView>
-  );
-}
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#000033',
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-  },
-  container: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 36,
-    color: '#00FFFF',
-    marginBottom: 20,
-  },
-  formContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
-    width: '100%',
-    maxWidth: 400,
-  },
-  subtitle: {
-    fontSize: 24,
-    color: '#000033',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  label: {
-    fontSize: 16,
-    color: '#666666',
-    marginBottom: 5,
-  },
-  underlinedText: {
-    textDecorationLine: 'underline',
-    fontSize: 15,
-    color: '#000033',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#CCCCCC',
-    borderRadius: 25,
-    padding: 10,
-    marginBottom: 15,
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#CCCCCC',
-    borderRadius: 25,
-    marginBottom: 15,
-    overflow: 'hidden',
-  },
-  picker: {
-    height: 50,
-  },
-  switchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    marginBottom: 10,
-  },
-  switchLabel: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#000033',
-    flex: 1,
-  },
-  button: {
-    backgroundColor: '#00FFFF',
-    borderRadius: 25,
-    padding: 15,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-  },
-});
+    const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#F5F5F5',
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    },
+    container: {
+        flex: 1,
+    },
+    scrollViewContent: {
+        flexGrow: 1,
+        paddingHorizontal: 20,
+        paddingVertical: 24,
+    },
+    headerContainer: {
+        marginBottom: 24,
+        alignItems: 'center',
+    },
+    title: {
+        fontSize: 32,
+        fontWeight: '700',
+        color: '#2C3E50',
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    subtitle: {
+        fontSize: 18,
+        color: '#7F8C8D',
+        textAlign: 'center',
+    },
+    formContainer: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 24,
+        shadowColor: '#000',
+        shadowOffset: {
+        width: 0,
+        height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+    inputGroup: {
+        marginBottom: 20,
+    },
+    label: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#2C3E50',
+        marginBottom: 8,
+    },
+    input: {
+        backgroundColor: '#F8F9FA',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        borderRadius: 12,
+        padding: 12,
+        fontSize: 16,
+        color: '#2C3E50',
+    },
+    pickerContainer: {
+        backgroundColor: '#F8F9FA',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    picker: {
+        height: 48,
+    },
+    termsContainer: {
+        marginTop: 8,
+        marginBottom: 24,
+    },
+    switchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+        paddingVertical: 4,
+    },
+    switchLabel: {
+        flex: 1,
+        marginLeft: 12,
+        fontSize: 14,
+        color: '#2C3E50',
+    },
+    underlinedText: {
+        textDecorationLine: 'underline',
+        color: '#3498DB',
+        fontSize: 14,
+    },
+    button: {
+        borderRadius: 12,
+        paddingVertical: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    buttonText: {
+        fontSize: 18,
+        fontWeight: '600',
+        
+    },
+    });
