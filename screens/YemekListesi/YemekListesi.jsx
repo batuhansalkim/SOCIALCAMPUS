@@ -46,17 +46,28 @@ export default function MealSchedule() {
         // Sort the data by date
         const sortedData = jsonData.sort((a, b) => new Date(a.start) - new Date(b.start));
         
-        // Find the index of today or the next available day
+        // Get the current date
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const startIndex = sortedData.findIndex(item => new Date(item.start) >= today);
         
-        // Get 5 days starting from today or the next available day
-        let selectedData = sortedData.slice(startIndex, startIndex + 5);
+        // Find the index of the 22nd of the month
+        const currentMonthDay22 = new Date(today.getFullYear(), today.getMonth(), 22);
+        const day22Index = sortedData.findIndex(item => new Date(item.start).getTime() === currentMonthDay22.getTime());
         
-        // If we don't have 5 days, add days from the beginning of the list
-        if (selectedData.length < 5) {
-          selectedData = [...selectedData, ...sortedData.slice(0, 5 - selectedData.length)];
+        // Get 2 days before and 2 days after the 22nd
+        const startIndex = Math.max(0, day22Index - 2);
+        const endIndex = Math.min(sortedData.length, day22Index + 3);
+        let selectedData = sortedData.slice(startIndex, endIndex);
+        
+        // If we don't have 5 days, add days from the beginning or end of the list
+        while (selectedData.length < 5) {
+          if (startIndex > 0) {
+            selectedData.unshift(sortedData[startIndex - 1]);
+          } else if (endIndex < sortedData.length) {
+            selectedData.push(sortedData[endIndex]);
+          } else {
+            break;
+          }
         }
         
         setMealList(selectedData);
@@ -91,12 +102,15 @@ export default function MealSchedule() {
       extrapolate: 'clamp',
     });
 
-    const isCurrentDay = index === 0;
+    const date = new Date(item.start);
+    const isCurrentDay = index === 2; // The middle item (index 2) is the current day
+    const isPastDay = index < 2;
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
     return (
       <Animated.View style={[styles.cardContainer, { transform: [{ scale }], opacity }]}>
         <LinearGradient
-          colors={isCurrentDay ? ['#FF6B6B', '#FF8E53', '#FFAF40'] : ['#4ECDC4', '#45B7AF', '#2C7873']}
+          colors={isCurrentDay ? ['#FF6B6B', '#FF8E53', '#FFAF40'] : isPastDay ? ['#A9A9A9', '#808080', '#696969'] : ['#4ECDC4', '#45B7AF', '#2C7873']}
           style={styles.card}
         >
           <View style={styles.dateContainer}>
@@ -104,14 +118,18 @@ export default function MealSchedule() {
             {isCurrentDay && <View style={styles.currentDayIndicator} />}
           </View>
           <ScrollView style={styles.mealScrollView}>
-            {item.aciklama.split(',').map((meal, idx) => (
-              <View key={idx} style={styles.yemekContainer}>
-                <Ionicons name={getIconForMeal(idx)} size={28} color="#FFF" style={styles.yemekIcon} />
-                <View style={styles.yemekDetails}>
-                  <Text style={styles.yemekText}>{meal.trim()}</Text>
+            {isWeekend ? (
+              <Text style={styles.weekendText}>Haftasonu</Text>
+            ) : (
+              item.aciklama.split(',').map((meal, idx) => (
+                <View key={idx} style={styles.yemekContainer}>
+                  <Ionicons name={getIconForMeal(idx)} size={28} color="#FFF" style={styles.yemekIcon} />
+                  <View style={styles.yemekDetails}>
+                    <Text style={styles.yemekText}>{meal.trim()}</Text>
+                  </View>
                 </View>
-              </View>
-            ))}
+              ))
+            )}
           </ScrollView>
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.feedbackButton}>
@@ -176,7 +194,7 @@ export default function MealSchedule() {
         <Ionicons name="restaurant" size={40} color="#FFD700" style={styles.headerIcon} />
         <Text style={styles.headerText}>Okul Yemek Listesi</Text>
         <Text style={styles.subHeaderText}>
-          {formatDate(mealList[0]?.start)} - {formatDate(mealList[4]?.start)}
+          {formatDate(mealList[0]?.start)} - {formatDate(mealList[mealList.length - 1]?.start)}
         </Text>
       </LinearGradient>
       
@@ -194,6 +212,12 @@ export default function MealSchedule() {
         )}
         contentContainerStyle={styles.flatListContent}
         style={styles.flatList}
+        initialScrollIndex={2}
+        getItemLayout={(data, index) => ({
+          length: screenWidth,
+          offset: screenWidth * index,
+          index,
+        })}
       />
 
       <View style={styles.pagination}>
@@ -238,6 +262,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f0f0f0',
+  },
+  weekendText: {
+    fontSize: 20,
+    color: '#fff',
+    textAlign: 'center',
+    marginTop: 20,
   },
   header: {
     padding: 20,
@@ -360,7 +390,7 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent:  'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.8)',
   },

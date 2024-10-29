@@ -1,13 +1,29 @@
-import { PixelRatio, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import {
+  PixelRatio,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import React, { useRef, useState } from 'react';
-import data from '../../data/data';
-import RenderItem from '../../components/RenderItem';
-import CustomButton from '../../components/CustomButton';
-import { Canvas, Circle, Group, Image, Mask, makeImageFromView } from '@shopify/react-native-skia';
+import data from './src/data/data';
+import RenderItem from './src/components/RenderItem';
+import CustomButton from './src/components/CustomButton';
+import {
+  Canvas,
+  Circle,
+  Group,
+  Image,
+  Mask,
+  SkImage,
+  makeImageFromView,
+} from '@shopify/react-native-skia';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
-import Pagination from '../../components/Pagination';
+import Pagination from './src/components/Pagination';
+import { useNavigation } from '@react-navigation/native';
 
-const OnboardingScreen = ({ onDone }) => {  // Accept onDone as a prop
+const OnboardingScreen = () => {
+  const navigation = useNavigation();
   const pd = PixelRatio.get();
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const ref = useRef(null);
@@ -17,11 +33,12 @@ const OnboardingScreen = ({ onDone }) => {  // Accept onDone as a prop
   const mask = useSharedValue(0);
   const buttonVal = useSharedValue(0);
 
-  const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+  const wait = async (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   const handlePress = async () => {
     if (currentIndex === data.length - 1 && !active) {
-      onDone();  // Call onDone when finishing the last onboarding screen
+      console.log('END');
+      navigation.navigate('Home');
       return;
     }
     if (!active) {
@@ -55,18 +72,33 @@ const OnboardingScreen = ({ onDone }) => {  // Accept onDone as a prop
             mode="luminance"
             mask={
               <Group>
-                <Circle cx={SCREEN_WIDTH / 2} cy={SCREEN_HEIGHT - 160} r={SCREEN_HEIGHT} color="white" />
-                <Circle cx={SCREEN_WIDTH / 2} cy={SCREEN_HEIGHT - 160} r={mask} color="black" />
+                <Circle
+                  cx={SCREEN_WIDTH / 2}
+                  cy={SCREEN_HEIGHT - 160}
+                  r={SCREEN_HEIGHT}
+                  color="white"
+                />
+                <Circle
+                  cx={SCREEN_WIDTH / 2}
+                  cy={SCREEN_HEIGHT - 160}
+                  r={mask}
+                  color="black"
+                />
               </Group>
-            }
-          >
-            <Image image={overlay} x={0} y={0} width={overlay.width() / pd} height={overlay.height() / pd} />
+            }>
+            <Image
+              image={overlay}
+              x={0}
+              y={0}
+              width={overlay.width() / pd}
+              height={overlay.height() / pd}
+            />
           </Mask>
         </Canvas>
       )}
       <CustomButton handlePress={handlePress} buttonVal={buttonVal} />
       <Pagination data={data} buttonVal={buttonVal} />
-      <Text style={styles.credit}>Illustration by OlFi</Text>
+      <Text style={styles.credit}>Illustration by OlFi from Ouch!</Text>
     </View>
   );
 };
@@ -74,10 +106,13 @@ const OnboardingScreen = ({ onDone }) => {  // Accept onDone as a prop
 export default OnboardingScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container: {
+    flex: 1,
+    alignItems: 'center',
+  },
   credit: {
     position: 'absolute',
-    bottom: 40,
-    color: '#999',
+    bottom: 22,
+    color: 'white',
   },
 });
