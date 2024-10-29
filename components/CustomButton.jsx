@@ -1,15 +1,15 @@
-import { StyleSheet, TouchableWithoutFeedback, useWindowDimensions } from 'react-native';
+import { StyleSheet, TouchableWithoutFeedback, useWindowDimensions, Image } from 'react-native';
 import React from 'react';
 import Animated, { interpolateColor, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
 
-const CustomButton = ({ handlePress, buttonVal }) => {
+const CustomButton = ({ handlePress, buttonVal, isLastScreen }) => {
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
 
   const animatedColor = useAnimatedStyle(() => {
     const backgroundColor = interpolateColor(
       buttonVal.value,
       [0, SCREEN_HEIGHT, 2 * SCREEN_HEIGHT],
-      ['#fd94b2', '#f8dac2', '#154f40'],
+      ['#bfe8f2', '#bfe8f2', '#bfe8f2', '#bfe8f2']
     );
 
     return {
@@ -19,19 +19,19 @@ const CustomButton = ({ handlePress, buttonVal }) => {
 
   const buttonAnimationStyle = useAnimatedStyle(() => {
     return {
-      width: buttonVal.value === 2 * SCREEN_HEIGHT ? withSpring(150) : withSpring(80), // İleri butonunu biraz küçülttük
-      height: buttonVal.value === 2 * SCREEN_HEIGHT ? withSpring(50) : withSpring(80),
+      width: isLastScreen ? withSpring(180) : withSpring(90),
+      height: isLastScreen ? withSpring(70) : withSpring(90),
     };
   });
 
   const arrowAnimationStyle = useAnimatedStyle(() => {
     return {
-      width: 30,
-      height: 30,
-      opacity: buttonVal.value === 2 * SCREEN_HEIGHT ? withTiming(0) : withTiming(1),
+      width: 40,
+      height: 40,
+      opacity: isLastScreen ? withTiming(0) : withTiming(1),
       transform: [
         {
-          translateX: buttonVal.value === 2 * SCREEN_HEIGHT ? withTiming(100) : withTiming(0),
+          translateX: isLastScreen ? withTiming(100) : withTiming(0),
         },
       ],
     };
@@ -39,10 +39,10 @@ const CustomButton = ({ handlePress, buttonVal }) => {
 
   const textAnimationStyle = useAnimatedStyle(() => {
     return {
-      opacity: buttonVal.value === 2 * SCREEN_HEIGHT ? withTiming(1) : withTiming(0),
+      opacity: isLastScreen ? withTiming(1) : withTiming(0),
       transform: [
         {
-          translateX: buttonVal.value === 2 * SCREEN_HEIGHT ? withTiming(0) : withTiming(-100),
+          translateX: isLastScreen ? withTiming(0) : withTiming(-100),
         },
       ],
     };
@@ -51,13 +51,17 @@ const CustomButton = ({ handlePress, buttonVal }) => {
   return (
     <TouchableWithoutFeedback onPress={handlePress}>
       <Animated.View style={[styles.container, animatedColor, buttonAnimationStyle]}>
-        <Animated.Text style={[styles.textButton, textAnimationStyle]}>
-          Get Started
-        </Animated.Text>
-        <Animated.Image
-          source={require('../assets/images/ArrowIcon (1).png')}
-          style={arrowAnimationStyle}
-        />
+        {isLastScreen ? (
+          <Animated.Text style={[styles.textButton, textAnimationStyle]}>
+            Keşfetmeye Başla
+          </Animated.Text>
+        ) : (
+          <Animated.Image
+            source={require('../assets/images/ArrowIcon (1).png')}
+            style={arrowAnimationStyle}
+            tintColor="black"
+          />
+        )}
       </Animated.View>
     </TouchableWithoutFeedback>
   );
@@ -68,11 +72,11 @@ export default CustomButton;
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 100, // Noktalar ile buton arasındaki mesafeyi artırdık
+    bottom: 110,
     zIndex: 1,
     borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  textButton: { color: 'white', fontSize: 18, position: 'absolute' },
+  textButton: { color: 'black', fontSize: 17, position: 'absolute' },
 });

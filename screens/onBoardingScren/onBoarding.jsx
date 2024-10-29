@@ -7,7 +7,7 @@ import { Canvas, Circle, Group, Image, Mask, makeImageFromView } from '@shopify/
 import { useSharedValue, withTiming } from 'react-native-reanimated';
 import Pagination from '../../components/Pagination';
 
-const OnboardingScreen = ({ onDone }) => {  // Accept onDone as a prop
+const OnboardingScreen = ({ onDone }) => {
   const pd = PixelRatio.get();
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const ref = useRef(null);
@@ -21,7 +21,7 @@ const OnboardingScreen = ({ onDone }) => {  // Accept onDone as a prop
 
   const handlePress = async () => {
     if (currentIndex === data.length - 1 && !active) {
-      onDone();  // Call onDone when finishing the last onboarding screen
+      onDone();
       return;
     }
     if (!active) {
@@ -64,9 +64,12 @@ const OnboardingScreen = ({ onDone }) => {  // Accept onDone as a prop
           </Mask>
         </Canvas>
       )}
-      <CustomButton handlePress={handlePress} buttonVal={buttonVal} />
+      <CustomButton
+        handlePress={handlePress}
+        buttonVal={buttonVal}
+        isLastScreen={currentIndex === data.length - 1} // Son ekranda olduğunu belirtiyoruz
+      />
       <Pagination data={data} buttonVal={buttonVal} />
-      <Text style={styles.credit}>Illustration by OlFi</Text>
     </View>
   );
 };
@@ -75,9 +78,4 @@ export default OnboardingScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  credit: {
-    position: 'absolute',
-    bottom: 40,
-    color: '#999',
-  },
 });

@@ -42,7 +42,7 @@ const Dot = ({ index, buttonVal }) => {
     const backgroundColor = interpolateColor(
       buttonVal.value,
       [0, SCREEN_HEIGHT, 2 * SCREEN_HEIGHT],
-      ['#fd94b2', '#f8dac2', '#154f40'],
+      ['#bfe8f2', '#bfe8f2', '#bfe8f2'],
     );
 
     return {
