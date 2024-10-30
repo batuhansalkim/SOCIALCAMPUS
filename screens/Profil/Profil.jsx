@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Dimensions, StyleSheet, Linking, Image, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import AboutScreenModal from "../../screens/About/About";
+import AboutScreen from "../../screens/About/About";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -26,8 +26,15 @@ export default function Profil() {
     mail: "batuhansalkim11@gmail.com"
   });
 
-  const updateUserInfo = (key, value) => {
-    setUserInfo(prevState => ({ ...prevState, [key]: value }));
+  const [editedInfo, setEditedInfo] = useState({ ...userInfo });
+
+  const updateEditedInfo = (key, value) => {
+    setEditedInfo(prevState => ({ ...prevState, [key]: value }));
+  };
+
+  const saveChanges = () => {
+    setUserInfo(editedInfo);
+    setModalVisible(false);
   };
 
   return (
@@ -46,7 +53,7 @@ export default function Profil() {
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.infoContainer}>
-            {Object.entries(userInfo).map(([key, value], index) => (
+            {Object.entries(userInfo).map(([key, value]) => (
               <InfoItem key={key} icon={getIconForKey(key)} title={getTitleForKey(key)} value={value} />
             ))}
             <TouchableOpacity style={styles.editButton} onPress={() => setModalVisible(true)}>
@@ -56,7 +63,6 @@ export default function Profil() {
           </View>
 
           <View style={styles.aboutContainer}>
-            
             <TouchableOpacity style={styles.linkButton} onPress={() => setAboutModalVisible(true)}>
               <BlurView intensity={100} tint="dark" style={styles.blurView}>
                 <Ionicons name="information-circle-outline" size={24} color="#4ECDC4" />
@@ -74,30 +80,38 @@ export default function Profil() {
         </ScrollView>
       </LinearGradient>
 
-      <AboutScreenModal 
-        modalVisible={modalVisible} 
-        setModalVisible={setModalVisible}
-        content={
-          <BlurView intensity={100} tint="dark" style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Profili Düzenle</Text>
-            {Object.entries(userInfo).map(([key, value]) => (
-              <TextInput
-                key={key}
-                style={styles.input}
-                placeholder={getTitleForKey(key)}
-                value={value}
-                onChangeText={(text) => updateUserInfo(key, text)}
-                placeholderTextColor="#aaa"
-              />
-            ))}
-            <TouchableOpacity style={styles.saveButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.saveButtonText}>Kaydet</Text>
-            </TouchableOpacity>
-          </BlurView>
-        }
-      />
+      {/* Düzenleme Modali */}
+      {modalVisible && (
+        <BlurView intensity={100} tint="dark" style={[styles.modalContent, { backgroundColor: 'rgba(0, 0, 0, 0.8)' }]}>
+          {/* Sağ üst köşede X simgesi */}
+          <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+            <Ionicons name="close-outline" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
 
-      <AboutScreenModal modalVisible={aboutModalVisible} setModalVisible={setAboutModalVisible} />
+          <Text style={styles.modalTitle}>Profili Düzenle</Text>
+          {Object.entries(editedInfo).map(([key, value]) => (
+            <TextInput
+              key={key}
+              style={styles.input}
+              placeholder={getTitleForKey(key)}
+              value={value}
+              onChangeText={(text) => updateEditedInfo(key, text)}
+              placeholderTextColor="#aaa"
+            />
+          ))}
+          <TouchableOpacity style={styles.saveButton} onPress={saveChanges}>
+            <Text style={styles.saveButtonText}>Kaydet</Text>
+          </TouchableOpacity>
+        </BlurView>
+      )}
+
+      {/* Uygulama Hakkında Modali */}
+      {aboutModalVisible && (
+        <AboutScreen
+          modalVisible={aboutModalVisible}
+          setModalVisible={setAboutModalVisible}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -175,6 +189,12 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 20,
     marginBottom: 20,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    zIndex: 1,
   },
   infoItem: {
     flexDirection: 'row',

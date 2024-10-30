@@ -50,23 +50,38 @@ export default function MealSchedule() {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        // Find the index of the 22nd of the month
-        const currentMonthDay22 = new Date(today.getFullYear(), today.getMonth(), 22);
-        const day22Index = sortedData.findIndex(item => new Date(item.start).getTime() === currentMonthDay22.getTime());
-        
-        // Get 2 days before and 2 days after the 22nd
-        const startIndex = Math.max(0, day22Index - 2);
-        const endIndex = Math.min(sortedData.length, day22Index + 3);
-        let selectedData = sortedData.slice(startIndex, endIndex);
-        
-        // If we don't have 5 days, add days from the beginning or end of the list
-        while (selectedData.length < 5) {
-          if (startIndex > 0) {
-            selectedData.unshift(sortedData[startIndex - 1]);
-          } else if (endIndex < sortedData.length) {
-            selectedData.push(sortedData[endIndex]);
-          } else {
-            break;
+        // Find the index of today's date
+        const todayIndex = sortedData.findIndex(item => {
+          const itemDate = new Date(item.start);
+          return itemDate.getTime() === today.getTime();
+        });
+
+        // If today's date is found, start from there. Otherwise, start from the first weekday
+        let startIndex = todayIndex !== -1 ? todayIndex : sortedData.findIndex(item => {
+          const itemDate = new Date(item.start);
+          return itemDate >= today && itemDate.getDay() !== 0 && itemDate.getDay() !== 6;
+        });
+
+        // Get 5 weekdays starting from the found index
+        let selectedData = [];
+        let currentIndex = startIndex;
+        while (selectedData.length < 5 && currentIndex < sortedData.length) {
+          const itemDate = new Date(sortedData[currentIndex].start);
+          if (itemDate.getDay() !== 0 && itemDate.getDay() !== 6) {
+            selectedData.push(sortedData[currentIndex]);
+          }
+          currentIndex++;
+        }
+
+        // If we don't have 5 days, add days from the beginning of the next available weekdays
+        if (selectedData.length < 5) {
+          currentIndex = 0;
+          while (selectedData.length < 5 && currentIndex < sortedData.length) {
+            const itemDate = new Date(sortedData[currentIndex].start);
+            if (itemDate.getDay() !== 0 && itemDate.getDay() !== 6 && !selectedData.some(item => item.id === sortedData[currentIndex].id)) {
+              selectedData.push(sortedData[currentIndex]);
+            }
+            currentIndex++;
           }
         }
         
@@ -103,9 +118,10 @@ export default function MealSchedule() {
     });
 
     const date = new Date(item.start);
-    const isCurrentDay = index === 2; // The middle item (index 2) is the current day
-    const isPastDay = index < 2;
-    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isCurrentDay = date.getTime() === today.getTime();
+    const isPastDay = date < today;
 
     return (
       <Animated.View style={[styles.cardContainer, { transform: [{ scale }], opacity }]}>
@@ -118,18 +134,14 @@ export default function MealSchedule() {
             {isCurrentDay && <View style={styles.currentDayIndicator} />}
           </View>
           <ScrollView style={styles.mealScrollView}>
-            {isWeekend ? (
-              <Text style={styles.weekendText}>Haftasonu</Text>
-            ) : (
-              item.aciklama.split(',').map((meal, idx) => (
-                <View key={idx} style={styles.yemekContainer}>
-                  <Ionicons name={getIconForMeal(idx)} size={28} color="#FFF" style={styles.yemekIcon} />
-                  <View style={styles.yemekDetails}>
-                    <Text style={styles.yemekText}>{meal.trim()}</Text>
-                  </View>
+            {item.aciklama.split(',').map((meal, idx) => (
+              <View key={idx} style={styles.yemekContainer}>
+                <Ionicons name={getIconForMeal(idx)} size={28} color="#FFF" style={styles.yemekIcon} />
+                <View style={styles.yemekDetails}>
+                  <Text style={styles.yemekText}>{meal.trim()}</Text>
                 </View>
-              ))
-            )}
+              </View>
+            ))}
           </ScrollView>
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.feedbackButton}>
@@ -212,7 +224,7 @@ export default function MealSchedule() {
         )}
         contentContainerStyle={styles.flatListContent}
         style={styles.flatList}
-        initialScrollIndex={2}
+        initialScrollIndex={0}
         getItemLayout={(data, index) => ({
           length: screenWidth,
           offset: screenWidth * index,
@@ -257,6 +269,9 @@ export default function MealSchedule() {
     </ImageBackground>
   );
 }
+
+// ... styles remain unchanged
+
 
 const styles = StyleSheet.create({
   container: {
