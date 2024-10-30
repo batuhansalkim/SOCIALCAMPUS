@@ -125,7 +125,42 @@
     }
     };
 
-    export default function LoginScreen() {
+    const cities = [
+  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir",
+  "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli",
+  "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari",
+  "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
+  "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir",
+  "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat",
+  "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman",
+  "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
+].sort();
+
+    const validateDateFormat = (date) => {
+  // DD/MM/YYYY formatını kontrol et
+  const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+  if (!regex.test(date)) return false;
+
+  // Geçerli bir tarih olup olmadığını kontrol et
+  const [day, month, year] = date.split('/').map(Number);
+  const dateObj = new Date(year, month - 1, day);
+  return dateObj.getDate() === day &&
+         dateObj.getMonth() === month - 1 &&
+         dateObj.getFullYear() === year &&
+         year >= 1900 &&
+         year <= new Date().getFullYear();
+};
+
+const formatDateInput = (input) => {
+  // Sadece rakamları al
+  const numbers = input.replace(/\D/g, '');
+  
+  // DD/MM/YYYY formatına dönüştür
+  if (numbers.length <= 2) return numbers;
+  if (numbers.length <= 4) return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
+  return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+};
+    export default function LoginScreen({onLogin}) {
     const [name, setName] = useState('');
     const [surname, setSurname] = useState('');
     const [faculty, setFaculty] = useState('');
@@ -138,7 +173,10 @@
     const [showTerms, setShowTerms] = useState(false);
 
     const isFormValid = termsAccepted && eulaAccepted && name && surname && email.includes('@') && city && birthDate;
-
+const handleDateChange = (text) => {
+    const formatted = formatDateInput(text);
+    setBirthDate(formatted);
+  };
     return (
         <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView 
@@ -226,80 +264,89 @@
                 </View>
 
                 <View style={styles.inputGroup}>
-                <Text style={styles.label}>Şehir</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Şehrinizi giriniz"
-                    value={city}
-                    onChangeText={setCity}
-                    placeholderTextColor="#999"
-                />
-                </View>
+    <Text style={styles.label}>Şehir</Text>
+    <View style={styles.pickerContainer}>
+      <Picker
+        style={styles.picker}
+        selectedValue={city}
+        onValueChange={setCity}
+      >
+        <Picker.Item label="Şehir Seçin" value="" />
+        {cities.map((city, index) => (
+          <Picker.Item key={index} label={city} value={city} />
+        ))}
+      </Picker>
+    </View>
+  </View>
 
                 <View style={styles.inputGroup}>
-                <Text style={styles.label}>Doğum Tarihi</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="GG/AA/YYYY"
-                    keyboardType="numeric"
-                    value={birthDate}
-                    onChangeText={setBirthDate}
-                    placeholderTextColor="#999"
-                />
-                </View>
+    <Text style={styles.label}>Doğum Tarihi</Text>
+    <TextInput
+      style={[
+        styles.input,
+        !validateDateFormat(birthDate) && birthDate.length === 10 && styles.inputError
+      ]}
+      placeholder="GG/AA/YYYY"
+      keyboardType="numeric"
+      value={birthDate}
+      onChangeText={handleDateChange}
+      maxLength={10}
+      placeholderTextColor="#999"
+    />
+    {!validateDateFormat(birthDate) && birthDate.length === 10 && (
+      <Text style={styles.errorText}>Lütfen geçerli bir tarih giriniz</Text>
+    )}
+  </View>
 
                 <View style={styles.termsContainer}>
-                <View style={styles.switchContainer}>
-                    <Switch
-                    value={termsAccepted}
-                    onValueChange={(value) => setTermsAccepted(value)}
-                    trackColor={{ false: "#E0E0E0", true: "#4CAF50" }}
-                    thumbColor={termsAccepted ? "#FFFFFF" : "#F5F5F5"}
-                    ios_backgroundColor="#E0E0E0"
-                    />
-                    <TouchableOpacity onPress={() => setShowTerms(true)} style={styles.switchLabel}>
-                    <Text style={styles.underlinedText}>
-                        Şartlar ve Koşulları Kabul Ediyorum
-                    </Text>
-                    </TouchableOpacity>
-                </View>
+                            <View style={styles.switchContainer}>
+                                <Switch
+                                    value={termsAccepted}
+                                    onValueChange={setTermsAccepted}
+                                    trackColor={{ false: "#E0E0E0", true: "#4CAF50" }}
+                                    thumbColor={termsAccepted ? "#FFFFFF" : "#F5F5F5"}
+                                    ios_backgroundColor="#E0E0E0"
+                                />
+                                <TouchableOpacity onPress={() => setShowTerms(true)} style={styles.switchLabel}>
+                                    <Text style={styles.underlinedText}>
+                                        Şartlar ve Koşulları Kabul Ediyorum
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                            <View style={styles.switchContainer}>
+                                <Switch
+                                    value={eulaAccepted}
+                                    onValueChange={setEulaAccepted}
+                                    trackColor={{ false: "#E0E0E0", true: "#4CAF50" }}
+                                    thumbColor={eulaAccepted ? "#FFFFFF" : "#F5F5F5"}
+                                    ios_backgroundColor="#E0E0E0"
+                                />
+                                <Text style={styles.switchLabel}>
+                                    Son Kullanıcı Lisans Sözleşmesini (EULA) onaylıyorum.
+                                </Text>
+                            </View>
+                        </View>
+                        
+                        <TouchableOpacity 
+                            style={[styles.button, { backgroundColor: isFormValid ? "#4CAF50" : "#E0E0E0" }]}
+                            disabled={!isFormValid}
+                            onPress={onLogin}
+                        >
+                            <Text style={[styles.buttonText, { color: isFormValid ? "#FFFFFF" : "#999999" }]}>
+                                Gönder
+                            </Text>
+                        </TouchableOpacity>
 
-                <View style={styles.switchContainer}>
-                    <Switch
-                    value={eulaAccepted}
-                    onValueChange={setEulaAccepted}
-                    trackColor={{ false: "#E0E0E0", true: "#4CAF50" }}
-                    thumbColor={eulaAccepted ? "#FFFFFF" : "#F5F5F5"}
-                    ios_backgroundColor="#E0E0E0"
-                    />
-                    <Text style={styles.switchLabel}>
-                    Son Kullanıcı Lisans Sözleşmesini (EULA) onaylıyorum.
-                    </Text>
-                </View>
-                </View>
-
-                <TouchableOpacity 
-                style={[
-                    styles.button,
-                    { backgroundColor: isFormValid ? "#4CAF50" : "#E0E0E0" }
-                ]}
-                disabled={!isFormValid}
-                onPress={() => console.log('Form Submitted')}
-                >
-                <Text style={[
-                    styles.buttonText,
-                    { color: isFormValid ? "#FFFFFF" : "#999999" }
-                ]}>
-                    Gönder
-                </Text>
-                </TouchableOpacity>
             </View>
             </ScrollView>
         </KeyboardAvoidingView>
 
         <Modal visible={showTerms} animationType="slide">
-            <TermsScreen onClose={() => setShowTerms(false)} />
-        </Modal>
+                <TermsScreen onClose={() => setShowTerms(false)} onAccept={() => {
+                    setTermsAccepted(true);
+                    setShowTerms(false);
+                }} />
+            </Modal>
         </SafeAreaView>
     );
     }
@@ -313,6 +360,14 @@
     container: {
         flex: 1,
     },
+    inputError: {
+    borderColor: '#FF6B6B',
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 12,
+    marginTop: 4,
+  },
     scrollViewContent: {
         flexGrow: 1,
         paddingHorizontal: 20,
