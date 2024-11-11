@@ -360,14 +360,6 @@ const handleDateChange = (text) => {
     container: {
         flex: 1,
     },
-    inputError: {
-    borderColor: '#FF6B6B',
-  },
-  errorText: {
-    color: '#FF6B6B',
-    fontSize: 12,
-    marginTop: 4,
-  },
     scrollViewContent: {
         flexGrow: 1,
         paddingHorizontal: 20,
