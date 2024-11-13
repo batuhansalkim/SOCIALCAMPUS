@@ -10,7 +10,7 @@ export default function TermsScreen({ onAccept, onClose }) {
                     <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                         <Ionicons name="close-outline" size={30} color="#000033" />
                     </TouchableOpacity>
-                    <Ionicons name="document-text-outline" size={40} color="#00FFFF" />
+                    <Ionicons name="document-text-outline" size={40} color="black" />
                     <Text style={styles.title}>Şartlar ve Koşullar</Text>
                 </View>
                 <View style={styles.contentContainer}>
@@ -159,12 +159,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     buttonText: {
-        color: '#FFFFFF',
+        color: 'black',
         fontSize: 18,
         fontWeight: 'bold',
         marginRight: 10,
     },
     buttonIcon: {
         marginLeft: 5,
+        color:"black"
     },
 });

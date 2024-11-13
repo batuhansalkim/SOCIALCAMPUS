@@ -148,7 +148,7 @@ export default function LoginScreen({ onLogin }) {
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
                     style={styles.container}
                 >
-                    <ScrollView contentContainerStyle={styles.scrollViewContent}>
+                    <ScrollView contentContainerStyle={styles.scrollViewContent} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}>
                         <View style={styles.headerContainer}>
                             <Image
                                 source={require('../../assets/logo.png')}
