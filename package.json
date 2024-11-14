@@ -24,6 +24,7 @@
     "cheerio-without-node-native": "^0.20.2",
     "expo": "~51.0.28",
     "expo-blur": "^13.0.2",
+    "expo-haptics": "^14.0.0",
     "expo-image-picker": "^15.0.7",
     "expo-linear-gradient": "^13.0.2",
     "expo-status-bar": "~1.12.1",

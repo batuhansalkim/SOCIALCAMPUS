@@ -45,13 +45,13 @@ export default function Profil() {
       >
         <View style={styles.header}>
           <Image 
-            source={{ uri: "https://media.licdn.com/dms/image/C4D03AQEohqwLUIK0yg/profile-displayphoto-shrink_200_200/0/1605612813012?e=2147483647&v=beta&t=cQAcoeC5vRisT5thqzJCBRPx1UdY7EvYhjyYZVt0iFk" }} 
+            source={require('../../assets/logo.png')} 
             style={styles.profileImage} 
           />
           <Text style={styles.name}>Batuhan Salkım</Text>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.infoContainer}>
             {Object.entries(userInfo).map(([key, value]) => (
               <InfoItem key={key} icon={getIconForKey(key)} title={getTitleForKey(key)} value={value} />

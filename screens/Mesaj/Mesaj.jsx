@@ -1,36 +1,39 @@
-import React, { useState } from 'react';
-import { View, FlatList, Text, TextInput, StyleSheet, TouchableOpacity, Image, Animated, Dimensions } from 'react-native';
-import { IconButton } from 'react-native-paper';
+import React, { useState, useRef } from 'react';
+import { View, FlatList, Text, TextInput, StyleSheet, TouchableOpacity, Image, Animated, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 
-const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+const initialMessages = [
+  {
+    id: '1',
+    user: 'aysebi',
+    text: 'KLUCAMPUS uygulaması sayesinde kampüsteki tüm etkinliklerden haberdar olabiliyorum. Gerçekten çok faydalı!',
+    likes: 10,
+    comments: 2,
+    timestamp: '2024-10-14 12:30',
+    profileImage: 'https://randomuser.me/api/portraits/women/1.jpg',
+    commentList: [
+      { id: '2', user: 'AliVeli', text: 'Harika bir yorum!', profileImage: 'https://randomuser.me/api/portraits/men/2.jpg', timestamp: '2024-10-14 12:35', likes: 3, isLiked: false },
+      { id: '1', user: 'ZeynepS', text: 'Katılıyorum, çok kullanışlı bir uygulama.', profileImage: 'https://randomuser.me/api/portraits/women/3.jpg', timestamp: '2024-10-14 12:32', likes: 1, isLiked: false }
+    ],
+    isLiked: false,
+    scale: new Animated.Value(1),
+  },
+];
 
 export default function MessageScreen() {
+  const [messages, setMessages] = useState(initialMessages);
   const [newMessage, setNewMessage] = useState('');
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [newComment, setNewComment] = useState('');
   const [showComments, setShowComments] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      id: '1',
-      user: 'aysebi',
-      text: 'KLUCAMPUS uygulaması sayesinde kampüsteki tüm etkinliklerden haberdar olabiliyorum. Gerçekten çok faydalı!',
-      likes: 10,
-      comments: 2,
-      timestamp: '2024-10-14 12:30',
-      profileImage: 'https://randomuser.me/api/portraits/women/1.jpg',
-      commentList: [
-        { id: '2', user: 'AliVeli', text: 'Harika bir yorum!', profileImage: 'https://randomuser.me/api/portraits/men/2.jpg', timestamp: '2024-10-14 12:35', likes: 3, isLiked: false },
-        { id: '1', user: 'ZeynepS', text: 'Katılıyorum, çok kullanışlı bir uygulama.', profileImage: 'https://randomuser.me/api/portraits/women/3.jpg', timestamp: '2024-10-14 12:32', likes: 1, isLiked: false }
-      ],
-      isLiked: false,
-      scale: new Animated.Value(1),
-    },
-  ]);
+
+  const scrollViewRef = useRef(null);
 
   const handleSend = () => {
     if (newMessage.trim()) {
@@ -48,12 +51,14 @@ export default function MessageScreen() {
       };
       setMessages([newMsg, ...messages]);
       setNewMessage('');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
   };
 
   const openComments = (message) => {
     setSelectedMessage(message);
     setShowComments(true);
+    Haptics.selectionAsync();
   };
 
   const handleAddComment = () => {
@@ -80,24 +85,26 @@ export default function MessageScreen() {
       setMessages(updatedMessages);
       setNewComment('');
       setSelectedMessage(updatedMessages.find(msg => msg.id === selectedMessage.id));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
   };
 
   const handleLikeMessage = (message) => {
     const updatedMessages = messages.map((msg) => {
       if (msg.id === message.id) {
-        const newScale = msg.isLiked ? 1 : 1.5;
-        Animated.spring(msg.scale, {
-          toValue: newScale,
-          useNativeDriver: true,
-        }).start(() => {
-          if (msg.isLiked) {
-            Animated.spring(msg.scale, {
-              toValue: 1,
-              useNativeDriver: true,
-            }).start();
-          }
-        });
+        const newScale = msg.isLiked ? 1 : 1.2;
+        Animated.sequence([
+          Animated.spring(msg.scale, {
+            toValue: newScale,
+            useNativeDriver: true,
+            friction: 3,
+          }),
+          Animated.spring(msg.scale, {
+            toValue: 1,
+            useNativeDriver: true,
+            friction: 3,
+          }),
+        ]).start();
         
         return {
           ...msg,
@@ -108,6 +115,7 @@ export default function MessageScreen() {
       return msg;
     });
     setMessages(updatedMessages);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   const handleLikeComment = (messageId, commentId) => {
@@ -131,6 +139,7 @@ export default function MessageScreen() {
     if (selectedMessage && selectedMessage.id === messageId) {
       setSelectedMessage(updatedMessages.find(msg => msg.id === messageId));
     }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   const renderItem = ({ item }) => (
@@ -147,7 +156,7 @@ export default function MessageScreen() {
             <TouchableOpacity onPress={() => handleLikeMessage(item)}>
               <Animated.View style={{ transform: [{ scale: item.scale }] }}>
                 <Animated.Text style={[styles.actionText, item.isLiked ? styles.liked : null]}>
-                  ❤️ {item.likes}
+                  {item.isLiked ? '❤️' : '🤍'} {item.likes}
                 </Animated.Text>
               </Animated.View>
             </TouchableOpacity>
@@ -172,39 +181,42 @@ export default function MessageScreen() {
           onPress={() => handleLikeComment(selectedMessage.id, item.id)}
         >
           <Text style={[styles.commentLikeText, item.isLiked ? styles.commentLiked : null]}>
-            ❤️ {item.likes}
+            {item.isLiked ? '❤️' : '🤍'} {item.likes}
           </Text>
         </TouchableOpacity>
       </View>
     </BlurView>
   );
 
-  if (showComments && selectedMessage) {
-    return (
-      <LinearGradient
-        colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']}
-        style={styles.container}
-      >
-        <SafeAreaView style={styles.safeArea}>
-          <BlurView intensity={100} tint="dark" style={styles.commentsHeader}>
-            <TouchableOpacity onPress={() => setShowComments(false)} style={styles.backButton}>
-              <MaterialIcons name="arrow-back" size={24} color="#4ECDC4" />
-            </TouchableOpacity>
-            <Text style={styles.commentsTitle}>Yorumlar</Text>
-          </BlurView>
-          <BlurView intensity={80} tint="dark" style={styles.selectedMessageContainer}>
-            <Image source={{ uri: selectedMessage.profileImage }} style={styles.selectedMessageProfileImage} />
-            <View style={styles.selectedMessageContent}>
-              <Text style={styles.selectedMessageUsername}>{selectedMessage.user}</Text>
-              <Text style={styles.selectedMessageText}>{selectedMessage.text}</Text>
-            </View>
-          </BlurView>
-          <FlatList
-            data={selectedMessage.commentList}
-            renderItem={renderCommentItem}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.commentsList}
-          />
+  const renderComments = () => (
+    <LinearGradient
+      colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']}
+      style={styles.container}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <BlurView intensity={100} tint="dark" style={styles.commentsHeader}>
+          <TouchableOpacity onPress={() => setShowComments(false)} style={styles.backButton}>
+            <MaterialIcons name="arrow-back" size={24} color="#4ECDC4" />
+          </TouchableOpacity>
+          <Text style={styles.commentsTitle}>Yorumlar</Text>
+        </BlurView>
+        <BlurView intensity={80} tint="dark" style={styles.selectedMessageContainer}>
+          <Image source={{ uri: selectedMessage.profileImage }} style={styles.selectedMessageProfileImage} />
+          <View style={styles.selectedMessageContent}>
+            <Text style={styles.selectedMessageUsername}>{selectedMessage.user}</Text>
+            <Text style={styles.selectedMessageText}>{selectedMessage.text}</Text>
+          </View>
+        </BlurView>
+        <FlatList
+          data={selectedMessage.commentList}
+          renderItem={renderCommentItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.commentsList}
+        />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+        >
           <BlurView intensity={100} tint="dark" style={styles.commentInputContainer}>
             <TextInput
               style={styles.commentInput}
@@ -214,15 +226,15 @@ export default function MessageScreen() {
               onChangeText={setNewComment}
             />
             <TouchableOpacity style={styles.commentButton} onPress={handleAddComment}>
-              <Text style={styles.commentButtonText}>Ekle</Text>
+              <Ionicons name="send" size={24} color="#fff" />
             </TouchableOpacity>
           </BlurView>
-        </SafeAreaView>
-      </LinearGradient>
-    );
-  }
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
+  );
 
-  return (
+  const renderMainScreen = () => (
     <LinearGradient
       colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']}
       style={styles.container}
@@ -240,34 +252,34 @@ export default function MessageScreen() {
         </BlurView>
         
         <FlatList
+          ref={scrollViewRef}
           data={messages}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.messageList}
         />
-        <BlurView intensity={100} tint="dark" style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Mesajınızı yazın..."
-            placeholderTextColor="#aaa"
-            value={newMessage}
-            onChangeText={setNewMessage}
-          />
-          <TouchableOpacity style={styles.commentButtonx} onPress={handleAddComment}>
-              {/* <Text style={styles.commentButtonText}>Ekle</Text> */}
-              <IconButton
-            icon="send"
-            size={24}
-            // color="#4ECDC4"
-            style={styles.commentButtonTextx}
-            onPress={handleSend}
-          />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+        >
+          <BlurView intensity={100} tint="dark" style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Mesajınızı yazın..."
+              placeholderTextColor="#aaa"
+              value={newMessage}
+              onChangeText={setNewMessage}
+            />
+            <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+              <Ionicons name="send" size={24} color="#fff" />
             </TouchableOpacity>
-          
-        </BlurView>
+          </BlurView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
   );
+
+  return showComments ? renderComments() : renderMainScreen();
 }
 
 const styles = StyleSheet.create({
@@ -375,6 +387,15 @@ const styles = StyleSheet.create({
     fontSize: screenWidth * 0.04,
     color: '#fff',
   },
+  sendButton: {
+    marginLeft: 10,
+    backgroundColor: '#4ECDC4',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   commentsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -388,7 +409,7 @@ const styles = StyleSheet.create({
   commentsTitle: {
     fontSize: screenWidth * 0.045,
     fontWeight: 'bold',
-    color:  '#4ECDC4',
+    color: '#4ECDC4',
   },
   selectedMessageContainer: {
     flexDirection: 'row',
@@ -483,16 +504,9 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     backgroundColor: '#4ECDC4',
     borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  
-  commentButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: screenWidth * 0.035,
-  },
-  commentButtonTextx:{
-    backgroundColor:"#4ECDC4"
-  }
 });
