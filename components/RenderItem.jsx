@@ -1,21 +1,14 @@
-import { Image, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import React from 'react';
+import { View, Text, Image, StyleSheet, useWindowDimensions } from 'react-native';
 
 const RenderItem = ({ item }) => {
-  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
 
   return (
-    <View
-      style={[
-        styles.itemContainer,
-        { width: SCREEN_WIDTH, height: SCREEN_HEIGHT, backgroundColor: item.backgroundColor },
-      ]}
-    >
+    <View style={[styles.itemContainer, { width, height, backgroundColor: item.backgroundColor }]}>
       <Image source={item.image} style={styles.image} />
-      <Text style={[styles.itemTitle, { color: item.textColor }]}>{item.title}</Text>
-      <Text style={[styles.itemText, { color: item.textColor }]}>
-        {item.text}
-      </Text>
+      <Text style={[styles.title, { color: item.textColor }]}>{item.title}</Text>
+      <Text style={[styles.description, { color: item.textColor }]}>{item.text}</Text>
     </View>
   );
 };
@@ -24,29 +17,27 @@ export default RenderItem;
 
 const styles = StyleSheet.create({
   itemContainer: {
-    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 80,
+    padding: 20,
+    borderRadius: 10,
   },
   image: {
-    width: 150,
-    height: 150,
-    marginTop: 80,
+    width: 180,
+    height: 180,
+    borderRadius: 10,
+    marginBottom: 40,
   },
-  itemTitle: {
-    fontSize: 30,
-    marginTop: 60,
-    textAlign: 'center', // Ortaladı
-    maxWidth: '80%', // Çok uzun yazılarda ekranın %80'ini kaplamasını sağladı
-    lineHeight: 35, // Satır yüksekliği ayarlandı
-  },
-  itemText: {
-    marginTop: 60,
-    textAlign: 'center',
-    fontSize: 17,
+  title: {
+    fontSize: 24,
     fontWeight: 'bold',
-    marginHorizontal: 20,
-    lineHeight: 28,
-    fontFamily: 'serif',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  description: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 50,
+    lineHeight: 24,
   },
 });

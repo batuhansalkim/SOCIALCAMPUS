@@ -1,12 +1,12 @@
-import { StyleSheet, View } from 'react-native';
 import React from 'react';
+import { View, StyleSheet } from 'react-native';
 import Dot from './Dot';
 
 const Pagination = ({ data, buttonVal }) => {
   return (
     <View style={styles.paginationContainer}>
       {data.map((_, index) => (
-        <Dot index={index} buttonVal={buttonVal} key={index} />
+        <Dot key={index} index={index} buttonVal={buttonVal} />
       ))}
     </View>
   );
@@ -18,6 +18,6 @@ const styles = StyleSheet.create({
   paginationContainer: {
     flexDirection: 'row',
     position: 'absolute',
-    bottom: 80, // Adjusted to move the dots up closer to the button
+    bottom: 70, // Yeri biraz yukarıya aldım
   },
 });
