@@ -1,12 +1,17 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import Dot from './Dot';
 
-const Pagination = ({ data, buttonVal }) => {
+const Pagination = ({ data, currentIndex }) => {
   return (
-    <View style={styles.paginationContainer}>
+    <View style={styles.pagination}>
       {data.map((_, index) => (
-        <Dot key={index} index={index} buttonVal={buttonVal} />
+        <View
+          key={index}
+          style={[
+            styles.dot,
+            currentIndex === index ? styles.activeDot : styles.inactiveDot,
+          ]}
+        />
       ))}
     </View>
   );
@@ -15,9 +20,23 @@ const Pagination = ({ data, buttonVal }) => {
 export default Pagination;
 
 const styles = StyleSheet.create({
-  paginationContainer: {
+  pagination: {
     flexDirection: 'row',
     position: 'absolute',
-    bottom: 70, // Yeri biraz yukarıya aldım
+    bottom: 100,
+    alignSelf: 'center',
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  activeDot: {
+    backgroundColor: '#007BFF',
+    width: 20,
+  },
+  inactiveDot: {
+    backgroundColor: '#d3d3d3',
   },
 });

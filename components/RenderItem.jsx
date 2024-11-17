@@ -1,14 +1,21 @@
+import { Image, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import React from 'react';
-import { View, Text, Image, StyleSheet, useWindowDimensions } from 'react-native';
 
 const RenderItem = ({ item }) => {
-  const { width, height } = useWindowDimensions();
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
 
   return (
-    <View style={[styles.itemContainer, { width, height, backgroundColor: item.backgroundColor }]}>
+    <View
+      style={[
+        styles.itemContainer,
+        { width: SCREEN_WIDTH, height: SCREEN_HEIGHT, backgroundColor: item.backgroundColor },
+      ]}
+    >
       <Image source={item.image} style={styles.image} />
-      <Text style={[styles.title, { color: item.textColor }]}>{item.title}</Text>
-      <Text style={[styles.description, { color: item.textColor }]}>{item.text}</Text>
+      <Text style={[styles.itemTitle, { color: item.textColor }]}>{item.title}</Text>
+      <Text style={[styles.itemText, { color: item.textColor }]}>
+        {item.text}
+      </Text>
     </View>
   );
 };
@@ -17,27 +24,29 @@ export default RenderItem;
 
 const styles = StyleSheet.create({
   itemContainer: {
-    justifyContent: 'center',
+    flex: 1,
     alignItems: 'center',
-    padding: 20,
-    borderRadius: 10,
+    paddingTop: 80,
   },
   image: {
-    width: 180,
-    height: 180,
-    borderRadius: 10,
-    marginBottom: 40,
+    width: 150,
+    height: 150,
+    marginTop: 80,
   },
-  title: {
-    fontSize: 24,
+  itemTitle: {
+    fontSize: 30,
+    marginTop: 60,
+    textAlign: 'center', // Ortaladı
+    maxWidth: '80%', // Çok uzun yazılarda ekranın %80'ini kaplamasını sağladı
+    lineHeight: 35, // Satır yüksekliği ayarlandı
+  },
+  itemText: {
+    marginTop: 60,
+    textAlign: 'center',
+    fontSize: 17,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  description: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 50,
-    lineHeight: 24,
+    marginHorizontal: 20,
+    lineHeight: 28,
+    fontFamily: 'serif',
   },
 });
