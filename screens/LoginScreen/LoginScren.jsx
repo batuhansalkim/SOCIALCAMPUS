@@ -263,7 +263,6 @@ export default function LoginScreen({ onLogin }) {
         </SafeAreaView>
     );
 }
-
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
@@ -281,28 +280,28 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     headerContainer: {
-        marginBottom: 20,
+        marginBottom: 10, // Daha az boşluk
         alignItems: 'center'
     },
     logo: {
-        width: 150, // Logo boyutunu artırdım
-        height: 150, // Logo boyutunu artırdım
-        marginTop: 50,
+        width: 120, // Daha küçük logo boyutu
+        height: 120,
+        marginTop: 30,
     },
     title: {
-        fontSize: 28,
+        fontSize: 28, // Küçük başlık boyutu
         fontWeight: 'bold',
         color: '#FFF',
-        marginBottom: 10,
+        marginBottom: 8,
     },
     subtitle: {
-        fontSize: 18,
+        fontSize: 14, // Daha küçük açıklama metni
         color: '#E0E0E0'
     },
     formContainer: {
         backgroundColor: 'rgba(255, 255, 255, 0.9)',
         borderRadius: 10,
-        padding: 20,
+        padding: 15, // Daha az padding
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
@@ -310,75 +309,77 @@ const styles = StyleSheet.create({
         elevation: 5
     },
     inputGroup: {
-        marginBottom: 20
+        marginBottom: 15, // Daha az dikey boşluk
     },
     label: {
-        fontSize: 16,
-        marginBottom: 8,
-        fontWeight: '600',
+        fontSize: 14, // Küçük etiket boyutu
+        marginBottom: 6,
+        fontWeight: '500',
         color: '#333'
     },
     inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderColor: '#4c669f',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    backgroundColor: '#FFF',
-    paddingVertical: 5 // Dikey hizalama için padding ekleyebilirsin
-},
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderColor: '#4c669f',
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 8, // Daha az yatay padding
+        backgroundColor: '#FFF',
+        paddingVertical: 4 // Daha az dikey padding
+    },
     inputIcon: {
-    marginRight: 10, // Yalnızca sağa boşluk ver
-},
+        marginRight: 8, // Daha az boşluk
+    },
     input: {
         flex: 1,
-        height: 50,
+        height: 50, // Daha küçük input yüksekliği
         color: '#333',
-        fontSize: 16
+        fontSize: 14 // Küçük yazı boyutu
     },
     pickerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderColor: '#4c669f',
-    borderWidth: 1,
-    borderRadius: 8,
-    backgroundColor: '#FFF',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-},
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderColor: '#4c669f',
+        borderWidth: 1,
+        borderRadius: 8,
+        backgroundColor: '#FFF',
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+    },
     picker: {
         flex: 1,
         height: 50,
-        color: '#333'
+        color: '#333',
+        fontSize: 14 // Küçük dropdown yazı boyutu
     },
     termsContainer: {
-        marginVertical: 15
+        marginVertical: 10 // Daha az dikey boşluk
     },
     switchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 15
+        marginBottom: 10 // Daha az dikey boşluk
     },
     switchLabel: {
-        marginLeft: 10,
+        marginLeft: 8, // Daha az yatay boşluk
         color: '#333',
-        flex: 1
+        flex: 1,
+        fontSize: 14 // Küçük yazı boyutu
     },
     underlinedText: {
-        textDecorationLine: 'underline'
+        textDecorationLine: 'underline',
+        fontSize: 14 // Küçük yazı boyutu
     },
     button: {
-        marginTop: 20,
-        paddingVertical: 15,
+        marginTop: 15, // Daha az dikey boşluk
+        paddingVertical: 12, // Daha az dikey padding
         borderRadius: 8,
         alignItems: 'center',
         backgroundColor: '#4CAF50',
     },
     buttonText: {
-        fontSize: 18,
+        fontSize: 14, // Küçük buton yazı boyutu
         fontWeight: '600',
         color: '#FFFFFF'
     }
 });
-

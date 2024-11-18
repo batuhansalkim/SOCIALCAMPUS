@@ -1,6 +1,18 @@
-// import Pagination from '../../components/Pagination';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, useWindowDimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  useWindowDimensions,
+} from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import Pagination from '../../components/Pagination';
 import data from '../../data/data'; // Onboarding ekran verileri
 
@@ -8,9 +20,40 @@ const OnboardingScreen = ({ onDone }) => {
   const { width } = useWindowDimensions();
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // Animasyon değerleri
+  const translateX = useSharedValue(0);
+  const opacity = useSharedValue(1);
+
+  const animateTransition = (direction) => {
+    // Yeni içerik için animasyon başlangıcı
+    translateX.value = withTiming(direction * -width, {
+      duration: 400,
+      easing: Easing.inOut(Easing.ease),
+    });
+    opacity.value = withTiming(0, {
+      duration: 300,
+    });
+
+    setTimeout(() => {
+      // Sayfa değişimi
+      setCurrentIndex((prev) => prev + direction);
+
+      // Yeni içerik animasyonu
+      translateX.value = direction * width;
+      opacity.value = 0;
+      translateX.value = withTiming(0, {
+        duration: 400,
+        easing: Easing.inOut(Easing.ease),
+      });
+      opacity.value = withTiming(1, {
+        duration: 300,
+      });
+    }, 300);
+  };
+
   const handleNext = () => {
     if (currentIndex < data.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      animateTransition(1); // İleri geçiş
     } else {
       onDone();
     }
@@ -18,24 +61,31 @@ const OnboardingScreen = ({ onDone }) => {
 
   const handleBack = () => {
     if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
+      animateTransition(-1); // Geri geçiş
     }
   };
 
+  // Animasyonlu stiller
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+    opacity: opacity.value,
+  }));
+
   return (
-    <View style={[styles.container, { backgroundColor: data[currentIndex].backgroundColor }]}>
-      {/* Görsel */}
-      <Image source={data[currentIndex].image} style={styles.image} />
-
-      {/* Başlık */}
-      <Text style={[styles.title, { color: data[currentIndex].textColor }]}>
-        {data[currentIndex].title}
-      </Text>
-
-      {/* Açıklama */}
-      <Text style={[styles.text, { color: data[currentIndex].textColor }]}>
-        {data[currentIndex].text}
-      </Text>
+    <View style={[styles.container]}>
+      {/* Animasyonlu içerik */}
+      <Animated.View style={[animatedStyle, styles.animatedContent]}>
+        {/* Görsel */}
+        <Image source={data[currentIndex].image} style={styles.image} />
+        {/* Başlık */}
+        <Text style={[styles.title, { color: data[currentIndex].textColor }]}>
+          {data[currentIndex].title}
+        </Text>
+        {/* Açıklama */}
+        <Text style={[styles.text, { color: data[currentIndex].textColor }]}>
+          {data[currentIndex].text}
+        </Text>
+      </Animated.View>
 
       {/* Sayfa Noktaları */}
       <Pagination data={data} currentIndex={currentIndex} />
@@ -45,11 +95,11 @@ const OnboardingScreen = ({ onDone }) => {
         {/* Geri Butonu */}
         <TouchableOpacity
           onPress={handleBack}
-          disabled={currentIndex === 0} // İlk sayfada pasif hale getirildi
+          disabled={currentIndex === 0}
           style={[
             styles.button,
             styles.backButton,
-            currentIndex === 0 && styles.disabledButton, // Pasif stil
+            currentIndex === 0 && styles.disabledButton,
           ]}
         >
           <Text style={styles.buttonText}>Geri</Text>
@@ -74,6 +124,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
+    backgroundColor: '#002855', // Sabit koyu mavi arka plan
+  },
+  animatedContent: {
+    position: 'absolute',
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
   },
   image: {
     width: 250,
@@ -111,7 +169,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#007BFF',
   },
   disabledButton: {
-    backgroundColor: '#d3d3d3', // Pasif buton rengi
+    backgroundColor: '#d3d3d3',
   },
   buttonText: {
     color: '#fff',
