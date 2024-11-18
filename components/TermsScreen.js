@@ -8,11 +8,14 @@ export default function TermsScreen({ onAccept, onClose }) {
             <ScrollView contentContainerStyle={styles.container}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                        <Ionicons name="close-outline" size={30} color="#000033" />
+                        <Ionicons name="close-outline" size={35} color="#000033" />
                     </TouchableOpacity>
-                    <Ionicons name="document-text-outline" size={40} color="black" />
-                    <Text style={styles.title}>Şartlar ve Koşullar</Text>
+                    <View style={styles.titleContainer}>
+                        <Ionicons name="document-text-outline" size={40} color="black" />
+                        <Text style={styles.title}>Şartlar ve Koşullar</Text>
+                    </View>
                 </View>
+
                 <View style={styles.contentContainer}>
                     <Text style={styles.content}>
                         Bu uygulamayı kullanarak, aşağıdaki şartlar ve koşulları kabul etmiş sayılırsınız. Bu şartlar ve koşullar, uygulamanın kullanımına yönelik önemli bilgiler ve uymanız gereken kuralları içermektedir.
@@ -98,7 +101,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 20,
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         position: 'relative',
     },
     closeButton: {
@@ -106,6 +109,14 @@ const styles = StyleSheet.create({
         left: 0,
         top: 0,
         zIndex: 1,
+        
+    },
+    titleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginLeft: 40, // Added space to avoid overlapping with the close button
+        flex: 1, // To ensure it takes the remaining space and centers the content
     },
     title: {
         fontSize: 28,

@@ -4,7 +4,7 @@ const data = [
         image: { uri: 'https://cdn-icons-png.flaticon.com/512/2997/2997592.png' },
         title: "Merhaba, Bu Uygulama Nedir?",
         text: 'Kampüs yaşamını kolaylaştıran, bilgi ve kaynak paylaşımını destekleyen özel bir platforma hoş geldiniz!',
-        textColor: '#ffffff',
+        textColor: '#ffffff', // textColor burada olmalı
         backgroundColor: '#182958',
     },
     {
@@ -12,7 +12,7 @@ const data = [
         image: { uri: 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png' },
         title: "Yemek Listesi",
         text: 'Günlük yemek seçeneklerini hızlıca öğrenin, kampüs yemekhanesindeki lezzetlere göz atın!',
-        textColor: '#ffffff',
+        textColor: '#ffffff', // textColor burada olmalı
         backgroundColor: '#bf360c',
     },
     {

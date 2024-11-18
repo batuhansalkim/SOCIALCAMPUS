@@ -280,12 +280,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     headerContainer: {
-        marginBottom: 10, // Daha az boşluk
+        marginBottom: 8, // Daha az boşluk
         alignItems: 'center'
     },
     logo: {
-        width: 120, // Daha küçük logo boyutu
-        height: 120,
+        width: 150, // Daha küçük logo boyutu
+        height: 150,
         marginTop: 30,
     },
     title: {
@@ -293,6 +293,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#FFF',
         marginBottom: 8,
+        marginTop:-30,
     },
     subtitle: {
         fontSize: 14, // Daha küçük açıklama metni
@@ -332,7 +333,7 @@ const styles = StyleSheet.create({
     },
     input: {
         flex: 1,
-        height: 50, // Daha küçük input yüksekliği
+        height: 47, // Daha küçük input yüksekliği
         color: '#333',
         fontSize: 14 // Küçük yazı boyutu
     },

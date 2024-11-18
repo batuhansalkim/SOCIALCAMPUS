@@ -55,7 +55,7 @@ const OnboardingScreen = ({ onDone }) => {
     if (currentIndex < data.length - 1) {
       animateTransition(1); // İleri geçiş
     } else {
-      onDone();
+      onDone(); // Bittiğinde yapılacak işlem
     }
   };
 
@@ -71,19 +71,25 @@ const OnboardingScreen = ({ onDone }) => {
     opacity: opacity.value,
   }));
 
+  // Data'dan mevcut öğeyi alırken, undefined veya boş olma durumuna karşı kontrol ekledik
+  const currentItem = data[currentIndex] || {}; // Geçerli öğe yoksa boş bir nesne döndürürüz.
+
   return (
     <View style={[styles.container]}>
       {/* Animasyonlu içerik */}
       <Animated.View style={[animatedStyle, styles.animatedContent]}>
         {/* Görsel */}
-        <Image source={data[currentIndex].image} style={styles.image} />
+        <Image
+          source={currentItem?.image} // Optional chaining ile image kontrolü
+          style={styles.image}
+        />
         {/* Başlık */}
-        <Text style={[styles.title, { color: data[currentIndex].textColor }]}>
-          {data[currentIndex].title}
+        <Text style={[styles.title, { color: currentItem?.textColor || '#ffffff' }]}>
+          {currentItem?.title}
         </Text>
         {/* Açıklama */}
-        <Text style={[styles.text, { color: data[currentIndex].textColor }]}>
-          {data[currentIndex].text}
+        <Text style={[styles.text, { color: currentItem?.textColor || '#ffffff' }]}>
+          {currentItem?.text}
         </Text>
       </Animated.View>
 
