@@ -17,46 +17,41 @@ export default function AboutScreen({ modalVisible, setModalVisible }) {
 
   return (
     <Modal
-      animationType="slide"
-      transparent={true}
-      visible={modalVisible}
-      onRequestClose={() => setModalVisible(false)}
-    >
-      <LinearGradient
-        colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.9)', 'rgba(0,0,0,0.9)']}
-        style={styles.modalView}
-      >
-        <BlurView intensity={100} tint="dark" style={styles.blurContainer}>
-          <View style={styles.header}>
-            <Text style={styles.title}>{data?.title}</Text>
-            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
-              <Ionicons name="close" style={styles.closeButtonX} size={25} color="#4ECDC4" />
-            </TouchableOpacity>
-          </View>
+  animationType="fade"
+  transparent={true}
+  visible={modalVisible}
+  onRequestClose={() => setModalVisible(false)}
+>
+  <View style={styles.modalOverlay}>
+    <BlurView intensity={90} tint="dark" style={styles.blurContainer}>
+      <View style={styles.header}>
+        <Text style={styles.title}>{data?.title}</Text>
+        <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+          <Ionicons name="close" style={styles.closeButtonX} size={25} color="#fff" />
+        </TouchableOpacity>
+      </View>
 
-          <ScrollView style={styles.content}>
-            <Text style={styles.textTitle}>{data?.welcome}</Text>
-            <Text style={styles.text}>{data?.description}</Text>
-            <Text style={styles.text}>{data?.developer}</Text>
+      <ScrollView style={styles.content}>
+        <Text style={styles.textTitle}>{data?.welcome}</Text>
+        <Text style={styles.text}>{data?.description}</Text>
+        <Text style={styles.text}>{data?.developer}</Text>
 
-            <Text style={styles.subtitle}>Özellikler</Text>
-            <Text style={styles.subtitle}>Yemekhane Bilgileri</Text>
-            <Text style={styles.text}>{data?.features.foodInfo}</Text>
+        <Text style={styles.subtitle}>Özellikler</Text>
+        <Text style={styles.subtitle}>Yemekhane Bilgileri</Text>
+        <Text style={styles.text}>{data?.features.foodInfo}</Text>
 
-            <Text style={styles.subtitle}>Kulüp Bilgileri</Text>
-            <Text style={styles.text}>{data?.features.clubsInfo}</Text>
+        <Text style={styles.subtitle}>Kulüp Bilgileri</Text>
+        <Text style={styles.text}>{data?.features.clubsInfo}</Text>
 
-            <Text style={styles.subtitle}>Sosyalleşme</Text>
-            <Text style={styles.text}>{data?.features.socialInfo}</Text>
+        <Text style={styles.subtitle}>Sosyalleşme</Text>
+        <Text style={styles.text}>{data?.features.socialInfo}</Text>
 
-            <Text style={styles.subtitle}>Satış</Text>
-            <Text style={styles.text}>{data?.features.salesInfo}</Text>
-
-            
-          </ScrollView>
-        </BlurView>
-      </LinearGradient>
-    </Modal>
+        <Text style={styles.subtitle}>Satış</Text>
+        <Text style={styles.text}>{data?.features.salesInfo}</Text>
+      </ScrollView>
+    </BlurView>
+  </View>
+</Modal>
   );
 }
 
@@ -67,9 +62,18 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)', // Koyu arka plan
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   blurContainer: {
     flex: 1,
+    margin: 20,
     padding: 25,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)', // Daha koyu bir modal
   },
   header: {
     flexDirection: 'row',
@@ -82,8 +86,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: {width: -1, height: 1},
-    textShadowRadius: 10
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
+  },
+  closeButton: {
+    padding: 10,
+  },
+  closeButtonX: {
+    color: "#fff",
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 20,
+    fontSize: 27,
+    padding: 5,
   },
   content: {
     flex: 1,

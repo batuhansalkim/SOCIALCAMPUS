@@ -1,10 +1,10 @@
 const data = [
     {
         id: 1,
-        image: { uri: 'https://cdn-icons-png.flaticon.com/512/2997/2997592.png' },
+        image: require("../assets/chat.png"), // Modern mobil uygulama tasarımı görseli
         title: "Merhaba, Bu Uygulama Nedir?",
         text: 'Kampüs yaşamını kolaylaştıran, bilgi ve kaynak paylaşımını destekleyen özel bir platforma hoş geldiniz!',
-        textColor: '#ffffff', // textColor burada olmalı
+        textColor: '#ffffff',
         backgroundColor: '#182958',
     },
     {
@@ -12,7 +12,7 @@ const data = [
         image: { uri: 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png' },
         title: "Yemek Listesi",
         text: 'Günlük yemek seçeneklerini hızlıca öğrenin, kampüs yemekhanesindeki lezzetlere göz atın!',
-        textColor: '#ffffff', // textColor burada olmalı
+        textColor: '#ffffff',
         backgroundColor: '#bf360c',
     },
     {
@@ -25,7 +25,7 @@ const data = [
     },
     {
         id: 4,
-        image: { uri: 'https://cdn-icons-png.flaticon.com/512/1739/1739515.png' },
+        image: require("../assets/worker.png"), // Üniversite bölümlerini temsil eden görsel
         title: "Üniversite Gündemi",
         text: 'Güncel gelişmeleri ve etkinlikleri takip edin, fikirlerinizi paylaşarak üniversiteye katkıda bulunun.',
         textColor: '#ffffff',
