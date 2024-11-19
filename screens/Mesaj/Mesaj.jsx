@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, FlatList, Text, TextInput, StyleSheet, TouchableOpacity, Image, Animated, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, FlatList, Text, TextInput, StyleSheet, TouchableOpacity, Image, Animated, Dimensions, KeyboardAvoidingView, Platform,Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -32,6 +32,9 @@ export default function MessageScreen() {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [newComment, setNewComment] = useState('');
   const [showComments, setShowComments] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);  // To control the options menu visibility
+  const [currentMessage, setCurrentMessage] = useState(null);
+  
 
   const scrollViewRef = useRef(null);
 
@@ -145,7 +148,6 @@ export default function MessageScreen() {
   const renderItem = ({ item }) => (
     <TouchableOpacity onPress={() => openComments(item)}>
       <BlurView intensity={80} tint="dark" style={styles.messageContainer}>
-        <Image source={{ uri: item.profileImage }} style={styles.profileImage} />
         <View style={styles.messageContent}>
           <View style={styles.headerRow}>
             <Text style={styles.username}>{item.user}</Text>
@@ -153,23 +155,73 @@ export default function MessageScreen() {
           </View>
           <Text style={styles.messageText}>{item.text}</Text>
           <View style={styles.actionRow}>
-            <TouchableOpacity onPress={() => handleLikeMessage(item)}>
+            {/* Like Button */}
+            <TouchableOpacity onPress={() => handleLikeMessage(item)} style={styles.actionButton}>
               <Animated.View style={{ transform: [{ scale: item.scale }] }}>
                 <Animated.Text style={[styles.actionText, item.isLiked ? styles.liked : null]}>
                   {item.isLiked ? '❤️' : '🤍'} {item.likes}
                 </Animated.Text>
               </Animated.View>
             </TouchableOpacity>
-            <Text style={styles.actionText}>💬 {item.comments}</Text>
+
+            {/* Comment Button */}
+            <TouchableOpacity onPress={() => openComments(item)} style={styles.actionButton}>
+              <Text style={styles.actionText}>💬 {item.comments}</Text>
+            </TouchableOpacity>
+
+            {/* Hamburger Menu (3 lines icon) */}
+            <TouchableOpacity onPress={() => handleMoreOptions(item)} style={styles.moreOptionsButton}>
+              <Ionicons name="menu" size={24} color="#aaa" />
+            </TouchableOpacity>
           </View>
         </View>
       </BlurView>
     </TouchableOpacity>
   );
 
+  const handleMoreOptions = (message) => {
+    console.log('Options menu opened for:', message.text); // Hangi mesaj için açıldığını kontrol edin
+  setCurrentMessage(message);
+  setShowOptions(true);
+  };
+
+  const handleDeleteMessage = () => {
+    setMessages(messages.filter(msg => msg.id !== currentMessage.id));
+    setShowOptions(false);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+  };
+  const handleEditMessage = () => {
+    // Implement message edit functionality here
+    // For now, just logging the edit action
+    console.log('Edit message:', currentMessage);
+    setShowOptions(false);
+  };
+  const renderOptionsModal = () => (
+    <Modal
+      transparent={true}
+      animationType="fade"
+      visible={showOptions}
+      onRequestClose={() => setShowOptions(false)}
+    >
+      <View style={styles.modalContainer}>
+        <BlurView intensity={100} tint="dark" style={styles.modalContent}>
+          {/* <TouchableOpacity onPress={handleEditMessage} style={styles.optionButton}>
+            <Text style={styles.optionText}>Düzenle</Text>
+          </TouchableOpacity> */}
+          <TouchableOpacity onPress={handleDeleteMessage} style={styles.optionButton}>
+            <Text style={styles.optionText}>Sil</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setShowOptions(false)} style={styles.optionButton}>
+            <Text style={styles.optionText}>Kapat</Text>
+          </TouchableOpacity>
+        </BlurView>
+      </View>
+    </Modal>
+  );
+  
   const renderCommentItem = ({ item }) => (
     <BlurView intensity={80} tint="dark" style={styles.commentContainer}>
-      <Image source={{ uri: item.profileImage }} style={styles.commentProfileImage} />
+      {/* <Image source={{ uri: item.profileImage }} style={styles.commentProfileImage} /> */}
       <View style={styles.commentContent}>
         <View style={styles.commentHeader}>
           <Text style={styles.commentUsername}>{item.user}</Text>
@@ -279,7 +331,12 @@ export default function MessageScreen() {
     </LinearGradient>
   );
 
-  return showComments ? renderComments() : renderMainScreen();
+  return (
+  <>
+    {showComments ? renderComments() : renderMainScreen()}
+    {renderOptionsModal()}
+  </>
+);
 }
 
 const styles = StyleSheet.create({
@@ -300,6 +357,32 @@ const styles = StyleSheet.create({
     color: '#4ECDC4',
     fontWeight: 'bold',
     marginBottom: 5,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center", // Dikey eksende ortala
+    alignItems: "center", // Yatay eksende ortala
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Arka plan karartması
+  },
+  modalContent: {
+    width: 200, // Daha küçük modal genişliği
+    padding: 15, // İçerik boşluğu
+    backgroundColor: "rgba(255, 255, 255, 0.95)", // Modal arka planı
+    borderRadius: 12, // Köşeleri yuvarlatma
+    alignItems: "center", // İçeriği ortala
+  },
+  optionButton: {
+    width: "90%", // Buton genişliği modal genişliğine uyumlu
+    paddingVertical: 8, // Daha küçük dikey boşluk
+    marginBottom: 8, // Butonlar arası daha dar boşluk
+    borderRadius: 6, // Köşeleri yuvarlatma
+    backgroundColor: "#007BFF", // Buton rengi (mavi)
+    alignItems: "center", // Yazıyı ortala
+  },
+  optionText: {
+    color: "#fff", // Yazı rengi
+    fontSize: 14, // Daha küçük yazı boyutu
+    fontWeight: "600", // Orta kalınlıkta yazı
   },
   agendaText: {
     fontSize: screenWidth * 0.04,
@@ -331,11 +414,8 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     overflow: 'hidden',
   },
-  profileImage: {
-    width: screenWidth * 0.12,
-    height: screenWidth * 0.12,
-    borderRadius: screenWidth * 0.06,
-    marginRight: 15,
+ profileImage: {
+    display: 'none', // Profil resmini gizle
   },
   messageContent: {
     flex: 1,
@@ -361,13 +441,20 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   actionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'flex-start', // solda hizala
+},
+  actionButton: {
+    flexDirection: 'row', // Align text and icon horizontally
+    alignItems: 'center',
+    marginRight: 15, // Add some space between buttons
   },
   actionText: {
-    fontSize: screenWidth * 0.035,
-    color: '#aaa',
-  },
+  fontSize: screenWidth * 0.035,
+  color: '#aaa',
+  marginRight: 5, // butonlar arasındaki mesafeyi ayarlayın
+},
   liked: {
     color: '#4ECDC4',
   },
@@ -386,6 +473,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: screenWidth * 0.04,
     color: '#fff',
+  },
+  moreOptionsButton: {
+    marginLeft: 'auto', // Sağda hizalayacak
+    padding: 5,
   },
   sendButton: {
     marginLeft: 10,
@@ -446,10 +537,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   commentProfileImage: {
-    width: screenWidth * 0.1,
-    height: screenWidth * 0.1,
-    borderRadius: screenWidth * 0.05,
-    marginRight: 10,
+    display: 'none', // Yorumlardaki profil resmini gizle
   },
   commentContent: {
     flex: 1,
