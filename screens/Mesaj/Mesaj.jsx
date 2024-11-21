@@ -249,11 +249,11 @@ export default function MessageScreen() {
         <BlurView intensity={100} tint="dark" style={styles.commentsHeader}>
           <TouchableOpacity onPress={() => setShowComments(false)} style={styles.backButton}>
             <MaterialIcons name="arrow-back" size={24} color="#4ECDC4" />
-          </TouchableOpacity>
+          </TouchableOpacity>      
           <Text style={styles.commentsTitle}>Yorumlar</Text>
         </BlurView>
         <BlurView intensity={80} tint="dark" style={styles.selectedMessageContainer}>
-          <Image source={{ uri: selectedMessage.profileImage }} style={styles.selectedMessageProfileImage} />
+          {/* <Image source={{ uri: selectedMessage.profileImage }} style={styles.selectedMessageProfileImage} /> */}
           <View style={styles.selectedMessageContent}>
             <Text style={styles.selectedMessageUsername}>{selectedMessage.user}</Text>
             <Text style={styles.selectedMessageText}>{selectedMessage.text}</Text>
