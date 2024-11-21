@@ -24,39 +24,49 @@ export default function BookSellingPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(100)).current;
+const [isSaveButtonEnabled, setIsSaveButtonEnabled] = useState(false);
+useEffect(() => {
+  const areAllFieldsFilled = Object.values(newBook).every((value) => value.trim() !== '');
+  setIsSaveButtonEnabled(areAllFieldsFilled);
+}, [newBook]);
 
+const saveBook = () => {
+  if (!isSaveButtonEnabled) return; // Eğer buton aktif değilse işlem yapılmasın
+  const newId = (books.length + 1).toString();
+  const bookToAdd = { ...newBook, id: newId };
+  setBooks((prev) => [bookToAdd, ...prev]);
+  setNewBook({ name: '', section: '', price: '', instagram: '', photoUri: '' });
+  closeModal();
+};
   useEffect(() => {
     setFilteredBooks(books);
   }, [books]);
 
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+  let result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    aspect: [4, 3],
+    quality: 1,
+  });
 
-    if (!result.canceled) {
-      setNewBook(prev => ({ ...prev, photoUri: result.assets[0].uri }));
-    }
-  };
+  if (!result.canceled) {
+    console.log('Selected Image URI:', result.assets[0].uri); // Bu eklenebilir
+    setNewBook(prev => ({ ...prev, photoUri: result.assets[0].uri }));
+  }
+};
 
   const handleInputChange = (name, value) => {
     setNewBook(prev => ({ ...prev, [name]: value }));
   };
 
-  const saveBook = () => {
-    const newId = (books.length + 1).toString();
-    const bookToAdd = { ...newBook, id: newId };
-    setBooks(prev => {
-      const updatedBooks = [...prev, bookToAdd];
-      console.log('Updated books:', updatedBooks);
-      return updatedBooks;
-    });
-    setNewBook({ name: '', section: '', price: '', instagram: '', photoUri: '' });
-    closeModal();
-  };
+//   const saveBook = () => {
+//   const newId = (books.length + 1).toString();
+//   const bookToAdd = { ...newBook, id: newId };
+//   setBooks((prev) => [bookToAdd, ...prev]); // Yeni kitabı listenin başına ekliyoruz
+//   setNewBook({ name: '', section: '', price: '', instagram: '', photoUri: '' });
+//   closeModal();
+// };
 
   const openModal = () => {
     setModalVisible(true);
@@ -113,7 +123,7 @@ export default function BookSellingPage() {
         <TouchableOpacity onPress={() => handleImagePress(item.photoUri)}>
           <Image source={{ uri: item.photoUri }} style={styles.bookImage} />
         </TouchableOpacity>
-        <Text style={styles.bookTitle}>{item.name}</Text>
+        <Text numberOfLines={2} ellipsizeMode='tail' style={styles.bookTitle}>{item.name}</Text>
         <Text style={styles.bookSection}>{item.section}</Text>
         <Text style={styles.bookPrice}>{item.price} TL</Text>
         <TouchableOpacity
@@ -137,7 +147,7 @@ export default function BookSellingPage() {
           <Ionicons name="search" size={20} color="#4ECDC4" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search books or sections..."
+            placeholder="Arama Yapabilirsin..."
             placeholderTextColor="#aaa"
             value={searchQuery}
             onChangeText={handleSearch}
@@ -145,13 +155,15 @@ export default function BookSellingPage() {
         </View>
         
         <FlatList
-          data={filteredBooks}
-          renderItem={renderBookItem}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          contentContainerStyle={styles.bookList}
-          inverted
-        />
+  data={filteredBooks}
+  renderItem={renderBookItem}
+  keyExtractor={(item) => item.id}
+  numColumns={2}
+  contentContainerStyle={styles.bookList}
+  ListEmptyComponent={() => (
+    <Text style={styles.emptyListText}>Hiçbir sonuç bulunamadı.</Text>
+  )}
+/>
 
         <TouchableOpacity style={styles.addButton} onPress={openModal}>
           <Ionicons name="add" size={24} color="white" />
@@ -173,22 +185,29 @@ export default function BookSellingPage() {
                 }
               ]}
             >
-              <ScrollView contentContainerStyle={styles.modalContent}>
-                <Text style={styles.modalHeader}>Add New Book</Text>
+              <TouchableOpacity style={styles.closeButtonModal} onPress={closeModal}>
+        <Ionicons name="close" size={30} color="#4ECDC4" />
+      </TouchableOpacity>
+              <ScrollView contentContainerStyle={styles.modalContent}   showsVerticalScrollIndicator={false} // Kaydırma çubuğunu gizler
+>
+                <Text style={styles.modalHeader}>Yeni Kitap Ekle</Text>
 
                 <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-                  {newBook.photoUri ? (
-                    <Image source={{ uri: newBook.photoUri }} style={styles.pickedImage} />
-                  ) : (
-                    <Ionicons name="camera" size={40} color="#4ECDC4" />
-                  )}
-                </TouchableOpacity>
+  <View style={styles.imagePickerContent}>
+    <Ionicons name="camera" size={40} color="#4ECDC4" />
+    
+  </View>
+  {newBook.photoUri && (
+    <Image source={{ uri: newBook.photoUri }} style={styles.pickedImage} />
+  )}
+</TouchableOpacity>
+
 
                 <View style={styles.inputContainer}>
                   <Ionicons name="book" size={20} color="#4ECDC4" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Book Name"
+                    placeholder="Kitap Adı"
                     placeholderTextColor="#aaa"
                     value={newBook.name}
                     onChangeText={(text) => handleInputChange('name', text)}
@@ -199,7 +218,7 @@ export default function BookSellingPage() {
                   <Ionicons name="list" size={20} color="#4ECDC4" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Section"
+                    placeholder="Bölüm"
                     placeholderTextColor="#aaa"
                     value={newBook.section}
                     onChangeText={(text) => handleInputChange('section', text)}
@@ -210,7 +229,7 @@ export default function BookSellingPage() {
                   <Ionicons name="pricetag" size={20} color="#4ECDC4" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Price"
+                    placeholder="Fiyat"
                     placeholderTextColor="#aaa"
                     value={newBook.price}
                     onChangeText={(text) => handleInputChange('price', text)}
@@ -222,20 +241,28 @@ export default function BookSellingPage() {
                   <Ionicons name="logo-instagram" size={20} color="#4ECDC4" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Instagram"
+                    placeholder="Instagram Adı"
                     placeholderTextColor="#aaa"
                     value={newBook.instagram}
                     onChangeText={(text) => handleInputChange('instagram', text)}
                   />
                 </View>
 
-                <TouchableOpacity style={styles.saveButton} onPress={saveBook}>
-                  <Text style={styles.saveButtonText}>Save Book</Text>
-                </TouchableOpacity>
+                <TouchableOpacity
+  style={[
+    styles.saveButton,
+    { opacity: isSaveButtonEnabled ? 1 : 0.5 }, // Buton opaklığını kontrol ediyoruz
+  ]}
+  onPress={saveBook}
+  disabled={!isSaveButtonEnabled} // Buton aktif değilse tıklanamaz hale getiriyoruz
+>
+  <Text style={styles.saveButtonText}>Save Book</Text>
+</TouchableOpacity>
 
-                <TouchableOpacity style={styles.cancelButton} onPress={closeModal}>
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
+                {/* <TouchableOpacity style={styles.closeButtonModal} onPress={closeModal}>
+  <Ionicons name="close" size={30} color="#4ECDC4" />
+</TouchableOpacity> */}
+
               </ScrollView>
             </Animated.View>
           </View>
@@ -272,6 +299,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingTop: 20,
   },
+  emptyListText: {
+  color: '#A9A9A9',
+  textAlign: 'center',
+  marginTop: 20,
+  fontSize: 16,
+},
+closeButtonModal: {
+  position: 'absolute',
+  top: 10,
+  right: 10,
+  padding: 5,
+  zIndex: 1,
+},
+
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -281,6 +322,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     height: 50,
   },
+  imagePicker: {
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: '#2C2C2E',
+  borderRadius: 15,
+  padding: 10,
+  height: 150,
+  marginBottom: 20,
+},
   searchIcon: {
     marginRight: 10,
     color: '#4ECDC4',
@@ -291,9 +341,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   bookList: {
-    paddingBottom: 10,
-    paddingTop: 80,
-  },
+  paddingBottom: 10,
+  paddingTop: 10, // FlatList hizalamasını düzenlemek için azaltıldı
+},
+imagePickerContent: {
+  alignItems: 'center',
+},
+imagePickerHint: {
+  fontSize: 12,
+  color: '#A9A9A9',
+  marginTop: 8,
+  textAlign: 'center',
+},
+pickedImage: {
+  marginTop: 10,
+  width: 100,
+  height: 100,
+  borderRadius: 8,
+},
   bookCardWrapper: {
     flex: 1,
     maxWidth: '50%',

@@ -6,7 +6,7 @@
   import { Ionicons } from '@expo/vector-icons';
   import { BlurView } from 'expo-blur';
   import AboutScreen from '../About/About'; // Uygulama Hakkında bileşeni import edildi
-
+import AppAdd from "../AppAdd/AppAdd";
   const screenWidth = Dimensions.get('window').width;
 
   export default function Profil() {
@@ -119,41 +119,9 @@
         <AboutScreen modalVisible={aboutModalVisible} setModalVisible={setAboutModalVisible} />
 
         {/* Yeni Eklenecekler Modali */}
-        <Modal visible={addModalVisible} animationType="slide" transparent={true}>
-  <BlurView intensity={100} tint="dark" style={styles.addModalContent}>
-    <TouchableOpacity style={styles.closeButton} onPress={() => setAddModalVisible(false)}>
-      <Ionicons name="close-outline" size={24} color="#FFFFFF" />
-    </TouchableOpacity>
-
-    <Text style={styles.modalTitle}>Uygulama Özellikleri</Text>
-    
-    <Text style={styles.modalDescription}>
-      • Yemekleri değerlendirme, puan verme ve yorum yapabilme.
-    </Text>
-    <Text style={styles.modalDescription}>
-      • Kulüplerin geçmiş etkinliklerini ve yeni yapılacak etkinliklerini görüntüleme.
-    </Text>
-    <Text style={styles.modalDescription}>
-      • Kulüplerin üye sayıları görüntülenebilir.
-    </Text>
-    <Text style={styles.modalDescription}>
-      • Sohbet kısmında, istediğiniz kişinin profil sayfasını görüntüleyebilirsiniz.
-    </Text>
-    <Text style={styles.modalDescription}>
-      • Uygulamada, Kırklareli'de yaşamı kolaylaştıracak birçok bilgi, reklamlar, kampanyalar ve indirimlerin bulunduğu bir sayfa olacak.
-    </Text>
-    <Text style={styles.modalDescription}>
-      • Profil kısmında; şehir, sosyal medya adresleri, e-posta, doğum tarihi ve kişisel fotoğraf eklenebilecek.
-    </Text>
-    <Text style={styles.modalDescription}>
-      • Daha birçok özellik, ilerleyen günlerde eklenmeye devam edecektir.
-    </Text>
-
-    <TouchableOpacity style={styles.saveButton} onPress={() => setAddModalVisible(false)}>
-      <Text style={styles.saveButtonText}>Kapat</Text>
-    </TouchableOpacity>
-  </BlurView>
-</Modal>
+        <AppAdd modalVisible={addModalVisible}
+        setModalVisible={setAddModalVisible}/>
+        
       </SafeAreaView>
     );
   }
