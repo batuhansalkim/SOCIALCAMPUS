@@ -21,7 +21,7 @@ export default function App() {
   return (
     <NavigationContainer>
       {showOnboarding ? (
-        <OnboardingScreens onDone={handleDone} />  
+        <OnboardingScreens onDone={handleDone} />
       ) : !isLoggedIn ? (
         <LoginScreen onLogin={handleLogin} />
       ) : (
