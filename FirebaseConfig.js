@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
-import {getAuth} from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore"; //veri tabanı için kullanılabilir.
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBGCqIMp2W_MSEXSNwS6fBXCOTcf3SVnQ8",
@@ -12,6 +13,9 @@ const firebaseConfig = {
     measurementId: "G-QDFNQW62PB"
 };
 
-export const firebaseApp = initializeApp(firebaseConfig);
-export const FIREBASE_AUTH = getAuth(firebaseApp);
-export const FIRESTORE_DB = getFirestore(firebaseApp); //veri tabanı bağlantısı için kullanılabilir    
+const app = initializeApp(firebaseConfig);
+export const FIRESTORE_DB = getFirestore(app);
+export const storage = getStorage(app);
+export const FIREBASE_AUTH = getAuth(app);
+
+export default app;    

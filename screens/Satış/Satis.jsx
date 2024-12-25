@@ -1,72 +1,183 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image, FlatList, Modal, TextInput, ScrollView, Animated, Easing, Linking, Dimensions } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, FlatList, Modal, TextInput, ScrollView, Animated, Easing, Linking, Dimensions, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import { collection, addDoc, getDocs, query, orderBy, Timestamp } from 'firebase/firestore';
+import { FIRESTORE_DB } from '../../FirebaseConfig';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const fakeBooks = [
-  { id: '0', name: 'The Great Gatsby', section: 'Classic', price: '25', instagram: 'greatgatsby', photoUri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEQrAC8BSjbxoiCNNzaR7YRGxDQHV6Gn_ndg&s' },
-  { id: '1', name: 'To Kill a Mockingbird', section: 'Classic', price: '20', instagram: 'mockingbird', photoUri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEQrAC8BSjbxoiCNNzaR7YRGxDQHV6Gn_ndg&s' },
-  { id: '2', name: '1984', section: 'Dystopian', price: '22', instagram: '1984book', photoUri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEQrAC8BSjbxoiCNNzaR7YRGxDQHV6Gn_ndg&s' },
-  { id: '3', name: 'Pride and Prejudice', section: 'Romance', price: '18', instagram: 'prideandprejudice', photoUri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEQrAC8BSjbxoiCNNzaR7YRGxDQHV6Gn_ndg&s' },
-];
-
 export default function BookSellingPage() {
-  const [books, setBooks] = useState(fakeBooks);
-  const [filteredBooks, setFilteredBooks] = useState(fakeBooks);
+  const [books, setBooks] = useState([]);
+  const [filteredBooks, setFilteredBooks] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [newBook, setNewBook] = useState({ name: '', section: '', price: '', instagram: '', photoUri: '' });
   const [enlargedImage, setEnlargedImage] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(100)).current;
-const [isSaveButtonEnabled, setIsSaveButtonEnabled] = useState(false);
-useEffect(() => {
-  const areAllFieldsFilled = Object.values(newBook).every((value) => value.trim() !== '');
-  setIsSaveButtonEnabled(areAllFieldsFilled);
-}, [newBook]);
+  const [isSaveButtonEnabled, setIsSaveButtonEnabled] = useState(false);
 
-const saveBook = () => {
-  if (!isSaveButtonEnabled) return; // Eğer buton aktif değilse işlem yapılmasın
-  const newId = (books.length + 1).toString();
-  const bookToAdd = { ...newBook, id: newId };
-  setBooks((prev) => [bookToAdd, ...prev]);
-  setNewBook({ name: '', section: '', price: '', instagram: '', photoUri: '' });
-  closeModal();
-};
   useEffect(() => {
-    setFilteredBooks(books);
-  }, [books]);
+    fetchBooks();
+  }, []);
 
-  const pickImage = async () => {
-  let result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsEditing: true,
-    aspect: [4, 3],
-    quality: 1,
-  });
+  useEffect(() => {
+    const areAllFieldsFilled = 
+      newBook.name.trim() !== '' && 
+      newBook.section.trim() !== '' && 
+      newBook.price.trim() !== '' && 
+      newBook.instagram.trim() !== '' && 
+      newBook.photoUri !== '';
+    setIsSaveButtonEnabled(areAllFieldsFilled);
+  }, [newBook]);
 
-  if (!result.canceled) {
-    console.log('Selected Image URI:', result.assets[0].uri); // Bu eklenebilir
-    setNewBook(prev => ({ ...prev, photoUri: result.assets[0].uri }));
-  }
-};
-
-  const handleInputChange = (name, value) => {
-    setNewBook(prev => ({ ...prev, [name]: value }));
+  const fetchBooks = async () => {
+    try {
+      const q = query(collection(FIRESTORE_DB, 'books'), orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      const booksData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setBooks(booksData);
+      setFilteredBooks(booksData);
+    } catch (error) {
+      console.error('Kitaplar yüklenirken hata:', error);
+      Alert.alert('Hata', 'Kitaplar yüklenirken bir hata oluştu. Lütfen internet bağlantınızı kontrol edin.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-//   const saveBook = () => {
-//   const newId = (books.length + 1).toString();
-//   const bookToAdd = { ...newBook, id: newId };
-//   setBooks((prev) => [bookToAdd, ...prev]); // Yeni kitabı listenin başına ekliyoruz
-//   setNewBook({ name: '', section: '', price: '', instagram: '', photoUri: '' });
-//   closeModal();
-// };
+  const uploadImage = async (uri) => {
+    try {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const storage = getStorage();
+      const imageRef = ref(storage, `bookImages/${Date.now()}`);
+      await uploadBytes(imageRef, blob);
+      const downloadURL = await getDownloadURL(imageRef);
+      return downloadURL;
+    } catch (error) {
+      console.error('Resim yüklenirken hata:', error);
+      throw error;
+    }
+  };
+
+  const saveBook = async () => {
+    if (!isSaveButtonEnabled) return;
+
+    try {
+      setLoading(true);
+      
+      // Kullanıcı bilgilerini al
+      const usersRef = collection(FIRESTORE_DB, 'users');
+      const userSnapshot = await getDocs(usersRef);
+      
+      if (userSnapshot.empty) {
+        Alert.alert('Hata', 'Kullanıcı bilgileri bulunamadı. Lütfen tekrar giriş yapın.');
+        return;
+      }
+
+      // En son giriş yapan kullanıcıyı bul
+      let latestUser = null;
+      let latestTimestamp = new Date(0);
+
+      userSnapshot.forEach((doc) => {
+        const userData = doc.data();
+        if (userData.createdAt && userData.createdAt.toDate) {
+        const userTimestamp = userData.createdAt.toDate();
+        if (userTimestamp > latestTimestamp) {
+          latestTimestamp = userTimestamp;
+          latestUser = { ...userData, id: doc.id };
+          }
+        }
+      });
+
+      if (!latestUser) {
+        Alert.alert('Hata', 'Geçerli bir kullanıcı bulunamadı. Lütfen tekrar giriş yapın.');
+        return;
+      }
+
+      // Resmi yükle
+      if (!newBook.photoUri) {
+        Alert.alert('Hata', 'Lütfen bir kitap resmi seçin.');
+        return;
+      }
+
+      const imageUrl = await uploadImage(newBook.photoUri);
+
+      if (!imageUrl) {
+        Alert.alert('Hata', 'Resim yüklenemedi. Lütfen tekrar deneyin.');
+        return;
+      }
+
+      // Kitap bilgilerini kontrol et
+      if (!newBook.name || !newBook.section || !newBook.price || !newBook.instagram) {
+        Alert.alert('Hata', 'Lütfen tüm alanları doldurun.');
+        return;
+      }
+
+      // Kitap bilgilerini kaydet
+      const timestamp = Timestamp.now();
+      const bookData = {
+        title: newBook.name.trim(),
+        section: newBook.section.trim(),
+        price: Number(newBook.price),
+        instagram: newBook.instagram.trim(),
+        imageUrl: imageUrl,
+        sellerId: latestUser.id,
+        sellerName: latestUser.fullName,
+        sellerFaculty: latestUser.faculty,
+        sellerDepartment: latestUser.department,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        status: "available"
+      };
+
+      await addDoc(collection(FIRESTORE_DB, 'books'), bookData);
+
+      // Başarılı mesajı göster ve formu temizle
+      Alert.alert('Başarılı', 'Kitap başarıyla eklendi!');
+      setNewBook({ name: '', section: '', price: '', instagram: '', photoUri: '' });
+      closeModal();
+      await fetchBooks(); // Listeyi güncelle
+
+    } catch (error) {
+      console.error('Kitap kaydedilirken hata:', error);
+      Alert.alert('Hata', 'Kitap kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderBookItem = ({ item }) => (
+    <View style={styles.bookCardWrapper}>
+      <BlurView intensity={80} tint="dark" style={styles.bookCard}>
+        <TouchableOpacity onPress={() => handleImagePress(item.imageUrl)}>
+          <Image source={{ uri: item.imageUrl }} style={styles.bookImage} />
+        </TouchableOpacity>
+        <Text numberOfLines={2} ellipsizeMode='tail' style={styles.bookTitle}>{item.title}</Text>
+        <Text style={styles.bookSection}>{item.section}</Text>
+        <Text style={styles.bookPrice}>{item.price} TL</Text>
+        <Text style={styles.sellerInfo}>Satıcı: {item.sellerName}</Text>
+        <Text style={styles.sellerInfo}>Bölüm: {item.sellerDepartment}</Text>
+        <TouchableOpacity
+          style={styles.instagramContainer}
+          onPress={() => handleInstagramPress(item.instagram)}
+        >
+          <Ionicons name="logo-instagram" size={16} color="#4ECDC4" />
+          <Text style={styles.instagramText}>@{item.instagram}</Text>
+        </TouchableOpacity>
+      </BlurView>
+    </View>
+  );
 
   const openModal = () => {
     setModalVisible(true);
@@ -111,31 +222,42 @@ const saveBook = () => {
     setSearchQuery(text);
     const lowercasedQuery = text.toLowerCase();
     const filtered = books.filter(
-      book => book.name.toLowerCase().includes(lowercasedQuery) || 
+      book => book.title.toLowerCase().includes(lowercasedQuery) || 
               book.section.toLowerCase().includes(lowercasedQuery)
     );
     setFilteredBooks(filtered);
   }, [books]);
 
-  const renderBookItem = ({ item, index }) => (
-    <View style={styles.bookCardWrapper}>
-      <BlurView intensity={80} tint="dark" style={styles.bookCard}>
-        <TouchableOpacity onPress={() => handleImagePress(item.photoUri)}>
-          <Image source={{ uri: item.photoUri }} style={styles.bookImage} />
-        </TouchableOpacity>
-        <Text numberOfLines={2} ellipsizeMode='tail' style={styles.bookTitle}>{item.name}</Text>
-        <Text style={styles.bookSection}>{item.section}</Text>
-        <Text style={styles.bookPrice}>{item.price} TL</Text>
-        <TouchableOpacity
-          style={styles.instagramContainer}
-          onPress={() => handleInstagramPress(item.instagram)}
-        >
-          <Ionicons name="logo-instagram" size={16} color="#4ECDC4" />
-          <Text style={styles.instagramText}>@{item.instagram}</Text>
-        </TouchableOpacity>
-      </BlurView>
-    </View>
-  );
+  const handleInputChange = (name, value) => {
+    setNewBook(prev => ({ ...prev, [name]: value }));
+  };
+
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        setNewBook(prev => ({ ...prev, photoUri: result.assets[0].uri }));
+      }
+    } catch (error) {
+      console.error('Resim seçilirken hata:', error);
+      Alert.alert('Hata', 'Resim seçilirken bir hata oluştu.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#4ECDC4" />
+        <Text style={styles.loadingText}>Yükleniyor...</Text>
+      </View>
+    );
+  }
 
   return (
     <LinearGradient
@@ -155,15 +277,15 @@ const saveBook = () => {
         </View>
         
         <FlatList
-  data={filteredBooks}
-  renderItem={renderBookItem}
-  keyExtractor={(item) => item.id}
-  numColumns={2}
-  contentContainerStyle={styles.bookList}
-  ListEmptyComponent={() => (
-    <Text style={styles.emptyListText}>Hiçbir sonuç bulunamadı.</Text>
-  )}
-/>
+          data={filteredBooks}
+          renderItem={renderBookItem}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          contentContainerStyle={styles.bookList}
+          ListEmptyComponent={() => (
+            <Text style={styles.emptyListText}>Hiçbir sonuç bulunamadı.</Text>
+          )}
+        />
 
         <TouchableOpacity style={styles.addButton} onPress={openModal}>
           <Ionicons name="add" size={24} color="white" />
@@ -186,22 +308,20 @@ const saveBook = () => {
               ]}
             >
               <TouchableOpacity style={styles.closeButtonModal} onPress={closeModal}>
-        <Ionicons name="close" size={30} color="#4ECDC4" />
-      </TouchableOpacity>
-              <ScrollView contentContainerStyle={styles.modalContent}   showsVerticalScrollIndicator={false} // Kaydırma çubuğunu gizler
->
+                <Ionicons name="close" size={30} color="#4ECDC4" />
+              </TouchableOpacity>
+
+              <ScrollView contentContainerStyle={styles.modalContent} showsVerticalScrollIndicator={false}>
                 <Text style={styles.modalHeader}>Yeni Kitap Ekle</Text>
 
                 <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-  <View style={styles.imagePickerContent}>
-    <Ionicons name="camera" size={40} color="#4ECDC4" />
-    
-  </View>
-  {newBook.photoUri && (
-    <Image source={{ uri: newBook.photoUri }} style={styles.pickedImage} />
-  )}
-</TouchableOpacity>
-
+                  <View style={styles.imagePickerContent}>
+                    <Ionicons name="camera" size={40} color="#4ECDC4" />
+                  </View>
+                  {newBook.photoUri && (
+                    <Image source={{ uri: newBook.photoUri }} style={styles.pickedImage} />
+                  )}
+                </TouchableOpacity>
 
                 <View style={styles.inputContainer}>
                   <Ionicons name="book" size={20} color="#4ECDC4" style={styles.inputIcon} />
@@ -249,20 +369,15 @@ const saveBook = () => {
                 </View>
 
                 <TouchableOpacity
-  style={[
-    styles.saveButton,
-    { opacity: isSaveButtonEnabled ? 1 : 0.5 }, // Buton opaklığını kontrol ediyoruz
-  ]}
-  onPress={saveBook}
-  disabled={!isSaveButtonEnabled} // Buton aktif değilse tıklanamaz hale getiriyoruz
->
-  <Text style={styles.saveButtonText}>Save Book</Text>
-</TouchableOpacity>
-
-                {/* <TouchableOpacity style={styles.closeButtonModal} onPress={closeModal}>
-  <Ionicons name="close" size={30} color="#4ECDC4" />
-</TouchableOpacity> */}
-
+                  style={[
+                    styles.saveButton,
+                    { opacity: isSaveButtonEnabled ? 1 : 0.5 }
+                  ]}
+                  onPress={saveBook}
+                  disabled={!isSaveButtonEnabled}
+                >
+                  <Text style={styles.saveButtonText}>Kaydet</Text>
+                </TouchableOpacity>
               </ScrollView>
             </Animated.View>
           </View>
@@ -299,20 +414,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingTop: 20,
   },
-  emptyListText: {
-  color: '#A9A9A9',
-  textAlign: 'center',
-  marginTop: 20,
-  fontSize: 16,
-},
-closeButtonModal: {
-  position: 'absolute',
-  top: 10,
-  right: 10,
-  padding: 5,
-  zIndex: 1,
-},
-
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -322,15 +423,6 @@ closeButtonModal: {
     marginBottom: 20,
     height: 50,
   },
-  imagePicker: {
-  alignItems: 'center',
-  justifyContent: 'center',
-  backgroundColor: '#2C2C2E',
-  borderRadius: 15,
-  padding: 10,
-  height: 150,
-  marginBottom: 20,
-},
   searchIcon: {
     marginRight: 10,
     color: '#4ECDC4',
@@ -341,37 +433,21 @@ closeButtonModal: {
     fontSize: 16,
   },
   bookList: {
-  paddingBottom: 10,
-  paddingTop: 10, // FlatList hizalamasını düzenlemek için azaltıldı
-},
-imagePickerContent: {
-  alignItems: 'center',
-},
-imagePickerHint: {
-  fontSize: 12,
-  color: '#A9A9A9',
-  marginTop: 8,
-  textAlign: 'center',
-},
-pickedImage: {
-  marginTop: 10,
-  width: 100,
-  height: 100,
-  borderRadius: 8,
-},
+    paddingBottom: 80, // Add Button için alan bırak
+  },
   bookCardWrapper: {
     flex: 1,
     maxWidth: '50%',
     padding: 8,
-    height: SCREEN_WIDTH * 0.8, // Fixed height for wrapper
+    height: SCREEN_WIDTH * 0.8,
   },
   bookCard: {
-    flex: 1, // Take full height of wrapper
+    flex: 1,
     padding: 12,
     borderRadius: 12,
-    backgroundColor: '#2C2C2E',
+    backgroundColor: 'rgba(44, 44, 46, 0.8)',
     alignItems: 'center',
-    justifyContent: 'space-between', // Evenly space content
+    justifyContent: 'space-between',
     shadowColor: '#4ECDC4',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -380,31 +456,32 @@ pickedImage: {
   bookImage: {
     width: SCREEN_WIDTH * 0.35,
     height: SCREEN_WIDTH * 0.35,
-    borderRadius: SCREEN_WIDTH * 0.175,
+    borderRadius: 10,
+    marginBottom: 8,
   },
   bookTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#4ECDC4',
     textAlign: 'center',
-    paddingHorizontal: 4,
-    height: 50, // Fixed height for title
-    numberOfLines: 2, // Limit to 2 lines
-    ellipsizeMode: 'tail', // Add ... if text is too long
+    marginBottom: 4,
   },
   bookSection: {
     fontSize: 14,
     color: '#A9A9A9',
-    textAlign: 'center',
-    height: 20, // Fixed height for section
-    numberOfLines: 1, // Limit to 1 line
-    ellipsizeMode: 'tail',
+    marginBottom: 4,
   },
   bookPrice: {
     fontSize: 16,
     fontWeight: '600',
     color: '#4ECDC4',
-    height: 24, // Fixed height for price
+    marginBottom: 4,
+  },
+  sellerInfo: {
+    fontSize: 12,
+    color: '#A9A9A9',
+    textAlign: 'center',
+    marginBottom: 2,
   },
   instagramContainer: {
     flexDirection: 'row',
@@ -413,29 +490,28 @@ pickedImage: {
     borderRadius: 15,
     paddingVertical: 6,
     paddingHorizontal: 10,
-    height: 32, // Fixed height for Instagram container
+    marginTop: 4,
   },
   instagramText: {
-    fontSize: 13,
+    fontSize: 12,
     marginLeft: 6,
     color: '#A9A9A9',
-    numberOfLines: 1,
-    ellipsizeMode: 'tail',
   },
   addButton: {
     position: 'absolute',
     right: 20,
     bottom: 20,
     backgroundColor: '#4ECDC4',
-    width: 65,
-    height: 65,
-    borderRadius: 32.5,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#4ECDC4',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 6,
+    elevation: 8,
   },
   modalOverlay: {
     flex: 1,
@@ -447,16 +523,36 @@ pickedImage: {
     backgroundColor: '#2C2C2E',
     borderRadius: 20,
     padding: 20,
-    width: '85%',
-    maxWidth: 400,
-    borderWidth: 1,
-    borderColor: '#4ECDC4',
+    width: '90%',
+    maxHeight: '80%',
+  },
+  modalContent: {
+    padding: 20,
   },
   modalHeader: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '600',
     color: '#4ECDC4',
     marginBottom: 20,
+    textAlign: 'center',
+  },
+  imagePicker: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#393939',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+    height: 150,
+  },
+  imagePickerContent: {
+    alignItems: 'center',
+  },
+  pickedImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    marginTop: 10,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -464,41 +560,35 @@ pickedImage: {
     backgroundColor: '#393939',
     borderRadius: 10,
     marginBottom: 15,
-    paddingHorizontal: 10,
+    paddingHorizontal: 15,
     height: 50,
   },
   inputIcon: {
     marginRight: 10,
-    color: '#4ECDC4',
   },
   input: {
     flex: 1,
-    fontSize: 16,
     color: '#FFFFFF',
+    fontSize: 16,
   },
   saveButton: {
     backgroundColor: '#4ECDC4',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 20,
+    borderRadius: 15,
+    padding: 15,
+    alignItems: 'center',
     marginTop: 10,
-    shadowColor: '#4ECDC4',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
   },
   saveButtonText: {
     color: '#1C1C1E',
+    fontSize: 16,
     fontWeight: '600',
-    fontSize: 16,
   },
-  cancelButton: {
-    marginTop: 10,
-    paddingVertical: 12,
-  },
-  cancelButtonText: {
-    color: '#4ECDC4',
-    fontSize: 16,
+  closeButtonModal: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    padding: 10,
+    zIndex: 1,
   },
   enlargedImageContainer: {
     flex: 1,
@@ -507,8 +597,8 @@ pickedImage: {
     alignItems: 'center',
   },
   enlargedImage: {
-    width: '100%',
-    height: '80%',
+    width: '90%',
+    height: '70%',
   },
   closeButton: {
     position: 'absolute',
@@ -516,4 +606,20 @@ pickedImage: {
     right: 20,
     padding: 10,
   },
+  emptyListText: {
+    color: '#A9A9A9',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#4ECDC4',
+    fontSize: 16,
+  }
 });
