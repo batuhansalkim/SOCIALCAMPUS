@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     View, 
     Text, 
@@ -11,122 +11,18 @@ import {
     SafeAreaView,
     Platform,
     StatusBar,
+    Alert,
     KeyboardAvoidingView,
     Image,
+    ActivityIndicator,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import TermsScreen from "../../components/TermsScreen";
-const faculties = {
-    medicine: {
-        name: "Tıp Fakültesi",
-        departments: [
-            "Tıp bölümü"
-        ]
-    },
-    literature: {
-        name: "Fen Edebiyat Fakültesi",
-        departments: [
-            "Batı Dilleri ve Edebiyatları Bölümü",
-            "Çağdaş Lehçeleri ve Edebiyatları Bölümü",
-            "Eğitim Bilimleri Bölümü",
-            "Felsefe Bölümü",
-            "Fizik Bölümü",
-            "Kimya Bölümü",
-            "Matematik Bölümü",
-            "Moleküler Biyoloji ve Genetik Bölümü",
-            "Mütercim Tercümanlık Bölümü",
-            "Psikoloji Bölümü",
-            "Sosyoloji Bölümü",
-            "Tarih Bölümü",
-            "Türk Dili ve Edebiyatı Bölümü"
-        ]
-    },
-    economics: {
-        name: "İktisadi ve İdari Bilimler Fakültesi",
-        departments: [
-            "Çalışma Ekonomisi ve Endüstri İlişkileri Bölümü",
-            "Ekonometri Bölümü",
-            "İktisat Bölümü",
-            "İktisat (İngilizce) Programı",
-            "İşletme Bölümü",
-            "İnsan Kaynakları Bölümü",
-            "Maliye Bölümü",
-            "Siyaset Bilimi ve Kamu Yönetimi Bölümü",
-            "Uluslararası İlişkiler Bölümü",
-            "Yönetim Bilişim Sistemleri"
-        ]
-    },
-    law: {
-        name: "Hukuk Fakültesi",
-        departments: [
-            "Hukuk Bölümü"
-        ]
-    },
-    engineering: {
-        name: "Mühendislik Fakültesi",
-        departments: [
-            "Elektrik Elektronik Mühendisliği",
-            "Endüstri Mühendisliği",
-            "Gıda Mühendisliği",
-            "İnşaat Mühendisliği",
-            "Makine Mühendisliği",
-            "Yazılım Mühendisliği"
-        ]
-    },
-    technology: {
-        name: "Teknoloji Fakültesi",
-        departments: [
-            "Enerji Sistemleri Mühendisliği",
-            "Mekatronik Mühendisliği"
-        ]
-    },
-    aviation: {
-        name: "Lüleburgaz Havacılık ve Uzay Bilimleri Fakültesi",
-        departments: [
-            "Havacılık Yönetimi Bölümü",
-            "Uçak Bakım ve Onarım Bölümü",
-            "Pilotaj Bölümü",
-            "Havacılık ve Uzay Mühendisliği Bölümü",
-            "Havacılık Elektrik ve Elektroniği"
-        ]
-    },
-    theology: {
-        name: "İlahiyat Fakültesi",
-        departments: [
-            "İlahiyat Bölümü"
-        ]
-    },
-    architecture: {
-        name: "Mimarlık Fakültesi",
-        departments: [
-            "Mimarlık Bölümü",
-            "Şehir ve Bölge Planlama Bölümü",
-            "Peyzaj Mimarlığı Bölümü",
-            "İç Mimarlık Bölümü"
-        ]
-    },
-    tourism: {
-        name: "Turizm Fakültesi",
-        departments: [
-            "Turizm İşletmeciliği",
-            "Turizm Rehberliği",
-            "Rekreasyon Yönetimi",
-            "Gastronomi ve Mutfak Sanatları"
-        ]
-    },
-    applied_sciences: {
-        name: "Uygulamalı Bilimler Fakültesi",
-        departments: [
-            "Finans ve Bankacılık",
-            "Muhasebe ve Finans Yönetimi",
-            "Uluslararası Ticaret ve Lojistik"
-        ]
-    }
-};
-
-// ... (faculties object remains unchanged)
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { FIRESTORE_DB } from "../../FirebaseConfig";
+import { fetchFaculties } from '../../services/facultyService';
 
 export default function LoginScreen({ onLogin }) {
     const [fullName, setFullName] = useState('');
@@ -135,8 +31,92 @@ export default function LoginScreen({ onLogin }) {
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [eulaAccepted, setEulaAccepted] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
+    const [faculties, setFaculties] = useState({});
+    const [loading, setLoading] = useState(true);
+    const [isSubmitted, setIsSubmitted] = useState(false);
 
-    const isFormValid = termsAccepted && eulaAccepted && fullName && faculty && department;
+    useEffect(() => {
+        loadFaculties();
+    }, []);
+
+    const loadFaculties = async () => {
+        try {
+            const facultiesData = await fetchFaculties();
+            if (facultiesData) {
+                setFaculties(facultiesData);
+            } else {
+                Alert.alert(
+                    'Hata',
+                    'Fakülte bilgileri yüklenirken bir hata oluştu. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.'
+                );
+            }
+        } catch (error) {
+            console.error('Fakülte bilgileri yüklenirken hata:', error);
+            Alert.alert(
+                'Hata',
+                'Fakülte bilgileri yüklenirken bir hata oluştu.'
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const isFormValid = termsAccepted && 
+                       eulaAccepted && 
+                       fullName && 
+                       faculty && 
+                       department;
+
+    const handleLogin = async () => {
+        if (!isFormValid || isSubmitted) {
+            return;
+        }
+
+        setIsSubmitted(true);
+
+        try {
+            const timestamp = Timestamp.now();
+            const facultyName = faculties[faculty]?.name || '';
+
+            // Firestore'da kullanıcı koleksiyonuna veri ekleme
+            const docRef = await addDoc(collection(FIRESTORE_DB, 'users'), {
+                fullName,
+                faculty,
+                facultyName,
+                department,
+                termsAccepted,
+                eulaAccepted,
+                createdAt: timestamp,
+                updatedAt: timestamp
+            });
+
+            Alert.alert(
+                'Başarılı', 
+                'Bilgileriniz başarıyla kaydedildi!',
+                [
+                    {
+                        text: 'Tamam',
+                        onPress: () => {
+                            if (onLogin) onLogin();
+                        }
+                    }
+                ]
+            );
+        } catch (error) {
+            setIsSubmitted(false);
+            console.error('Kayıt sırasında bir hata oluştu:', error);
+            Alert.alert('Hata', 'Bilgiler kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
+        }
+    };
+
+    if (loading) {
+        return (
+            <View style={[styles.container, styles.centerContent]}>
+                <ActivityIndicator size="large" color="#4c669f" />
+                <Text style={styles.loadingText}>Fakülte bilgileri yükleniyor...</Text>
+            </View>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -241,12 +221,18 @@ export default function LoginScreen({ onLogin }) {
                             </View>
                             
                             <TouchableOpacity 
-                                style={[styles.button, { opacity: isFormValid ? 1 : 0.5 }]}
-                                disabled={!isFormValid}
-                                onPress={onLogin}
+                                style={[
+                                    styles.button, 
+                                    { 
+                                        opacity: isFormValid && !isSubmitted ? 1 : 0.5,
+                                        backgroundColor: isSubmitted ? '#ccc' : '#4CAF50' 
+                                    }
+                                ]}
+                                disabled={!isFormValid || isSubmitted}
+                                onPress={handleLogin}
                             >
                                 <Text style={styles.buttonText}>
-                                    Gönder
+                                    {isSubmitted ? 'Gönderildi' : 'Gönder'}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -382,5 +368,14 @@ const styles = StyleSheet.create({
         fontSize: 14, // Küçük buton yazı boyutu
         fontWeight: '600',
         color: '#FFFFFF'
-    }
+    },
+    centerContent: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 10,
+        color: '#4c669f',
+        fontSize: 16,
+    },
 });
