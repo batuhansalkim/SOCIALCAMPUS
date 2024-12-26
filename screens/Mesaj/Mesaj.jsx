@@ -1,60 +1,256 @@
-import React, { useState, useRef } from 'react';
-import { View, FlatList, Text, TextInput, StyleSheet, TouchableOpacity, Image, Animated, Dimensions, KeyboardAvoidingView, Platform,Modal } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, FlatList, Text, TextInput, StyleSheet, TouchableOpacity, Image, Animated, Dimensions, KeyboardAvoidingView, Platform, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
+import { collection, addDoc, getDocs, query, orderBy, updateDoc, doc, deleteDoc, getDoc, increment, arrayUnion, arrayRemove, writeBatch } from 'firebase/firestore';
+import { FIRESTORE_DB } from '../../FirebaseConfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-const initialMessages = [
-  {
-    id: '1',
-    user: 'aysebi',
-    text: 'KLUCAMPUS uygulaması sayesinde kampüsteki tüm etkinliklerden haberdar olabiliyorum. Gerçekten çok faydalı!',
-    likes: 10,
-    comments: 2,
-    timestamp: '2024-10-14 12:30',
-    profileImage: 'https://randomuser.me/api/portraits/women/1.jpg',
-    commentList: [
-      { id: '2', user: 'AliVeli', text: 'Harika bir yorum!', profileImage: 'https://randomuser.me/api/portraits/men/2.jpg', timestamp: '2024-10-14 12:35', likes: 3, isLiked: false },
-      { id: '1', user: 'ZeynepS', text: 'Katılıyorum, çok kullanışlı bir uygulama.', profileImage: 'https://randomuser.me/api/portraits/women/3.jpg', timestamp: '2024-10-14 12:32', likes: 1, isLiked: false }
-    ],
-    isLiked: false,
-    scale: new Animated.Value(1),
-  },
-];
-
 export default function MessageScreen() {
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
   const [newMessage, setNewMessage] = useState('');
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [newComment, setNewComment] = useState('');
   const [showComments, setShowComments] = useState(false);
-  const [showOptions, setShowOptions] = useState(false);  // To control the options menu visibility
+  const [showOptions, setShowOptions] = useState(false);
   const [currentMessage, setCurrentMessage] = useState(null);
-  
 
   const scrollViewRef = useRef(null);
 
-  const handleSend = () => {
-    if (newMessage.trim()) {
-      const newMsg = {
-        id: (messages.length + 1).toString(),
-        user: 'You',
-        text: newMessage,
+  // Kullanıcı bilgisini al
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        const userDataStr = await AsyncStorage.getItem('userData');
+        console.log('Stored userId:', userId);
+        console.log('Stored userData:', userDataStr);
+
+        if (userId && userDataStr) {
+          const userData = JSON.parse(userDataStr);
+          setCurrentUser(userData);
+          console.log('Current user set:', userData);
+        } else {
+          console.log('No user data found in AsyncStorage');
+        }
+      } catch (error) {
+        console.error('Kullanıcı bilgisi alınırken hata:', error);
+      }
+    };
+
+    getCurrentUser();
+  }, []);
+
+  // Mesajları getir
+  useEffect(() => {
+    fetchMessages();
+  }, []);
+
+  const fetchMessages = async () => {
+    try {
+      setLoading(true);
+      const messagesRef = collection(FIRESTORE_DB, 'messages');
+      const q = query(messagesRef, orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      const messagesData = [];
+      for (const doc of querySnapshot.docs) {
+        const messageData = { id: doc.id, ...doc.data() };
+        
+        // Her mesaj için scale değeri ekle
+        messageData.scale = new Animated.Value(1);
+        
+        // Mesajın beğenilip beğenilmediğini kontrol et
+        messageData.isLiked = currentUser ? messageData.likedBy?.includes(currentUser.id) : false;
+        
+        // Yorumları getir
+        const commentsRef = collection(FIRESTORE_DB, `messages/${doc.id}/comments`);
+        const commentsQuery = query(commentsRef, orderBy('createdAt', 'desc'));
+        const commentsSnapshot = await getDocs(commentsQuery);
+        
+        messageData.commentList = commentsSnapshot.docs.map(commentDoc => {
+          const commentData = { id: commentDoc.id, ...commentDoc.data() };
+          // Yorumun beğenilip beğenilmediğini kontrol et
+          commentData.isLiked = currentUser ? commentData.likedBy?.includes(currentUser.id) : false;
+          return commentData;
+        });
+        
+        // Yorum sayısını güncelle
+        messageData.comments = messageData.commentList.length;
+        
+        messagesData.push(messageData);
+      }
+      
+      setMessages(messagesData);
+    } catch (error) {
+      console.error('Mesajlar alınırken hata:', error);
+      Alert.alert('Hata', 'Mesajlar yüklenirken bir hata oluştu.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSend = async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      const userDataStr = await AsyncStorage.getItem('userData');
+      console.log('Sending message - userId:', userId);
+      console.log('Sending message - userData:', userDataStr);
+
+      if (!userId || !userDataStr) {
+        Alert.alert('Uyarı', 'Mesaj göndermek için giriş yapmalısınız.');
+        return;
+      }
+
+      const userData = JSON.parse(userDataStr);
+
+      if (newMessage.trim()) {
+        const messageRef = await addDoc(collection(FIRESTORE_DB, 'messages'), {
+          userId: userId,
+          userName: userData.fullName,
+          text: newMessage.trim(),
+          likes: 0,
+          likedBy: [],
+          commentCount: 0,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+
+        setNewMessage('');
+        fetchMessages();
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error('Mesaj gönderilirken hata:', error);
+      Alert.alert('Hata', 'Mesaj gönderilemedi.');
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!currentUser) {
+      Alert.alert('Uyarı', 'Yorum yapmak için giriş yapmalısınız.');
+      return;
+    }
+
+    if (newComment.trim() && selectedMessage) {
+      try {
+        const commentRef = await addDoc(
+          collection(FIRESTORE_DB, `messages/${selectedMessage.id}/comments`),
+          {
+            userId: currentUser.id,
+            userName: currentUser.fullName,
+            text: newComment.trim(),
         likes: 0,
-        comments: 0,
-        timestamp: new Date().toLocaleString(),
-        profileImage: 'https://randomuser.me/api/portraits/men/1.jpg',
-        commentList: [],
-        isLiked: false,
-        scale: new Animated.Value(1),
-      };
-      setMessages([newMsg, ...messages]);
-      setNewMessage('');
+            likedBy: [],
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }
+        );
+
+        // Ana mesajın yorum sayısını güncelle
+        await updateDoc(doc(FIRESTORE_DB, 'messages', selectedMessage.id), {
+          commentCount: increment(1)
+        });
+
+        setNewComment('');
+        fetchMessages(); // Mesajları yenile
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch (error) {
+        console.error('Yorum eklenirken hata:', error);
+        Alert.alert('Hata', 'Yorum eklenemedi.');
+      }
+    }
+  };
+
+  const handleLikeMessage = async (message) => {
+    if (!currentUser) {
+      Alert.alert('Uyarı', 'Beğenmek için giriş yapmalısınız.');
+      return;
+    }
+
+    try {
+      const messageRef = doc(FIRESTORE_DB, 'messages', message.id);
+      const messageDoc = await getDoc(messageRef);
+      
+      if (messageDoc.exists()) {
+        const likedBy = messageDoc.data().likedBy || [];
+        const isLiked = likedBy.includes(currentUser.id);
+        
+        await updateDoc(messageRef, {
+          likes: isLiked ? increment(-1) : increment(1),
+          likedBy: isLiked ? arrayRemove(currentUser.id) : arrayUnion(currentUser.id)
+        });
+        
+        fetchMessages(); // Mesajları yenile
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    } catch (error) {
+      console.error('Beğeni işlemi sırasında hata:', error);
+      Alert.alert('Hata', 'Beğeni işlemi gerçekleştirilemedi.');
+    }
+  };
+
+  const handleLikeComment = async (messageId, commentId) => {
+    if (!currentUser) {
+      Alert.alert('Uyarı', 'Beğenmek için giriş yapmalısınız.');
+      return;
+    }
+
+    try {
+      const commentRef = doc(FIRESTORE_DB, `messages/${messageId}/comments`, commentId);
+      const commentDoc = await getDoc(commentRef);
+      
+      if (commentDoc.exists()) {
+        const likedBy = commentDoc.data().likedBy || [];
+        const isLiked = likedBy.includes(currentUser.id);
+        
+        await updateDoc(commentRef, {
+          likes: isLiked ? increment(-1) : increment(1),
+          likedBy: isLiked ? arrayRemove(currentUser.id) : arrayUnion(currentUser.id)
+        });
+        
+        fetchMessages(); // Mesajları yenile
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    } catch (error) {
+      console.error('Yorum beğeni işlemi sırasında hata:', error);
+      Alert.alert('Hata', 'Beğeni işlemi gerçekleştirilemedi.');
+    }
+  };
+
+  const handleDeleteMessage = async () => {
+    if (!currentUser || !currentMessage || currentMessage.userId !== currentUser.id) {
+      Alert.alert('Uyarı', 'Bu mesajı silme yetkiniz yok.');
+      return;
+    }
+
+    try {
+      // Önce mesajın tüm yorumlarını sil
+      const commentsRef = collection(FIRESTORE_DB, `messages/${currentMessage.id}/comments`);
+      const commentsSnapshot = await getDocs(commentsRef);
+      const batch = writeBatch(FIRESTORE_DB);
+      
+      commentsSnapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      
+      // Sonra mesajı sil
+      batch.delete(doc(FIRESTORE_DB, 'messages', currentMessage.id));
+      await batch.commit();
+
+      setMessages(messages.filter(msg => msg.id !== currentMessage.id));
+      setShowOptions(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.error('Mesaj silinirken hata:', error);
+      Alert.alert('Hata', 'Mesaj silinemedi.');
     }
   };
 
@@ -64,85 +260,10 @@ export default function MessageScreen() {
     Haptics.selectionAsync();
   };
 
-  const handleAddComment = () => {
-    if (newComment.trim() && selectedMessage) {
-      const newCommentObj = {
-        id: (selectedMessage.commentList.length + 1).toString(),
-        user: 'You',
-        text: newComment,
-        profileImage: 'https://randomuser.me/api/portraits/men/1.jpg',
-        timestamp: new Date().toLocaleString(),
-        likes: 0,
-        isLiked: false,
-      };
-      const updatedMessages = messages.map((msg) => {
-        if (msg.id === selectedMessage.id) {
-          return {
-            ...msg,
-            comments: msg.comments + 1,
-            commentList: [newCommentObj, ...msg.commentList],
-          };
-        }
-        return msg;
-      });
-      setMessages(updatedMessages);
-      setNewComment('');
-      setSelectedMessage(updatedMessages.find(msg => msg.id === selectedMessage.id));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleLikeMessage = (message) => {
-    const updatedMessages = messages.map((msg) => {
-      if (msg.id === message.id) {
-        const newScale = msg.isLiked ? 1 : 1.2;
-        Animated.sequence([
-          Animated.spring(msg.scale, {
-            toValue: newScale,
-            useNativeDriver: true,
-            friction: 3,
-          }),
-          Animated.spring(msg.scale, {
-            toValue: 1,
-            useNativeDriver: true,
-            friction: 3,
-          }),
-        ]).start();
-        
-        return {
-          ...msg,
-          likes: msg.isLiked ? msg.likes - 1 : msg.likes + 1,
-          isLiked: !msg.isLiked,
-        };
-      }
-      return msg;
-    });
-    setMessages(updatedMessages);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  };
-
-  const handleLikeComment = (messageId, commentId) => {
-    const updatedMessages = messages.map((msg) => {
-      if (msg.id === messageId) {
-        const updatedComments = msg.commentList.map((comment) => {
-          if (comment.id === commentId) {
-            return {
-              ...comment,
-              likes: comment.isLiked ? comment.likes - 1 : comment.likes + 1,
-              isLiked: !comment.isLiked,
-            };
-          }
-          return comment;
-        });
-        return { ...msg, commentList: updatedComments };
-      }
-      return msg;
-    });
-    setMessages(updatedMessages);
-    if (selectedMessage && selectedMessage.id === messageId) {
-      setSelectedMessage(updatedMessages.find(msg => msg.id === messageId));
-    }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const handleMoreOptions = (message) => {
+    console.log('Options menu opened for:', message.text); // Hangi mesaj için açıldığını kontrol edin
+    setCurrentMessage(message);
+    setShowOptions(true);
   };
 
   const renderItem = ({ item }) => (
@@ -150,12 +271,13 @@ export default function MessageScreen() {
       <BlurView intensity={80} tint="dark" style={styles.messageContainer}>
         <View style={styles.messageContent}>
           <View style={styles.headerRow}>
-            <Text style={styles.username}>{item.user}</Text>
-            <Text style={styles.timestamp}>{item.timestamp}</Text>
+            <Text style={styles.username}>{item.userName}</Text>
+            <Text style={styles.timestamp}>
+              {item.createdAt?.toDate().toLocaleString('tr-TR')}
+            </Text>
           </View>
           <Text style={styles.messageText}>{item.text}</Text>
           <View style={styles.actionRow}>
-            {/* Like Button */}
             <TouchableOpacity onPress={() => handleLikeMessage(item)} style={styles.actionButton}>
               <Animated.View style={{ transform: [{ scale: item.scale }] }}>
                 <Animated.Text style={[styles.actionText, item.isLiked ? styles.liked : null]}>
@@ -164,38 +286,21 @@ export default function MessageScreen() {
               </Animated.View>
             </TouchableOpacity>
 
-            {/* Comment Button */}
             <TouchableOpacity onPress={() => openComments(item)} style={styles.actionButton}>
               <Text style={styles.actionText}>💬 {item.comments}</Text>
             </TouchableOpacity>
 
-            {/* Hamburger Menu (3 lines icon) */}
-            <TouchableOpacity onPress={() => handleMoreOptions(item)} style={styles.moreOptionsButton}>
-              <Ionicons name="menu" size={24} color="#aaa" />
-            </TouchableOpacity>
+            {currentUser && currentUser.id === item.userId && (
+              <TouchableOpacity onPress={() => handleMoreOptions(item)} style={styles.moreOptionsButton}>
+                <Ionicons name="menu" size={24} color="#aaa" />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </BlurView>
     </TouchableOpacity>
   );
 
-  const handleMoreOptions = (message) => {
-    console.log('Options menu opened for:', message.text); // Hangi mesaj için açıldığını kontrol edin
-  setCurrentMessage(message);
-  setShowOptions(true);
-  };
-
-  const handleDeleteMessage = () => {
-    setMessages(messages.filter(msg => msg.id !== currentMessage.id));
-    setShowOptions(false);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-  };
-  const handleEditMessage = () => {
-    // Implement message edit functionality here
-    // For now, just logging the edit action
-    console.log('Edit message:', currentMessage);
-    setShowOptions(false);
-  };
   const renderOptionsModal = () => (
     <Modal
       transparent={true}

@@ -155,6 +155,7 @@ export default function Profil() {
 
     const [aboutAppModalVisible, setAboutAppModalVisible] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showChatbotModal, setShowChatbotModal] = useState(false);
 
     useEffect(() => {
         fetchUserData();
@@ -278,6 +279,82 @@ export default function Profil() {
         Linking.openURL('https://www.linkedin.com/in/batuhanslkmm/');
     };
 
+    const renderChatbotModal = () => (
+      <Modal
+        visible={showChatbotModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowChatbotModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <BlurView intensity={100} tint="dark" style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Chatbot Sistemi</Text>
+              <TouchableOpacity onPress={() => setShowChatbotModal(false)} style={styles.closeButton}>
+                <Text style={styles.closeButtonText}>X</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.modalScrollView}>
+              <Text style={styles.modalSubtitle}>Chatbot Sistemi ile Tüm Sorularınıza Cevap</Text>
+              <Text style={styles.modalText}>
+                KLUCAMPUS mobil uygulamasına entegre edilen chatbot sistemi, Kırklareli Üniversitesi öğrencilerinin ve kullanıcıların ihtiyaç duyduğu bilgilere hızlı ve kolay bir şekilde erişmesini sağlamak amacıyla geliştirilmiştir. Bu gelişmiş sistem, yalnızca üniversite ile ilgili değil, aynı zamanda Kırklareli şehri hakkında da kapsamlı bir bilgi kaynağı sunmaktadır.
+              </Text>
+              
+              <Text style={styles.modalText}>
+                Chatbot, Kırklareli Üniversitesi öğrencilerine ve Kırklareli şehrine ait tüm bilgilerle eğitilmiş olup, kullanıcıların ihtiyaç duyduğu bilgilere anında ulaşabilmesi için özel olarak tasarlanmıştır.
+              </Text>
+
+              <Text style={styles.sectionTitle}>Chatbot'un Avantajları ve İşlevleri</Text>
+              
+              <Text style={styles.featureTitle}>1. Hızlı Bilgi Erişimi:</Text>
+              <Text style={styles.modalText}>
+                Chatbot, kullanıcıların uygulama içinde aradıkları bilgilere saniyeler içinde ulaşmasını sağlar.
+              </Text>
+
+              <Text style={styles.featureTitle}>2. Üniversite ve Şehir Hakkında Kapsamlı Bilgi:</Text>
+              <Text style={styles.modalText}>
+                • Staj Olanakları{"\n"}
+                • Dikey Geçiş (DGS){"\n"}
+                • Yatay Geçiş{"\n"}
+                • Ders Seçimi ve Kayıt İşlemleri{"\n"}
+                • Öğrenci Belgeleri{"\n"}
+                • Kayıt Dondurma İşlemleri{"\n"}
+                • Askerlik Tecil İşlemleri{"\n"}
+                • Öğrenci Kulüpleri
+              </Text>
+
+              <Text style={styles.featureTitle}>3. Akademik ve Sosyal Destek:</Text>
+              <Text style={styles.modalText}>
+                Chatbot, öğrencilerin akademik süreçlerle ilgili tüm sorularını yanıtlarken aynı zamanda kampüs yaşamını kolaylaştıracak önerilerde bulunur.
+              </Text>
+
+              <Text style={styles.featureTitle}>4. Kişisel Asistan Deneyimi:</Text>
+              <Text style={styles.modalText}>
+                • "Bugün yemekte ne var?"{"\n"}
+                • "Kütüphane saat kaça kadar açık?"{"\n"}
+                • "Bu hafta yapılacak etkinlikler neler?"
+              </Text>
+
+              <Text style={styles.featureTitle}>5. 7/24 Hizmet:</Text>
+              <Text style={styles.modalText}>
+                Chatbot, zaman fark etmeksizin her an erişilebilir olup, kullanıcı deneyimini üst seviyeye taşır.
+              </Text>
+
+              <Text style={styles.featureTitle}>6. Güncel ve Doğru Bilgi:</Text>
+              <Text style={styles.modalText}>
+                Sürekli güncellenen veritabanı sayesinde chatbot, en doğru ve en güncel bilgilere ulaşmanızı sağlar.
+              </Text>
+
+              <Text style={styles.sectionTitle}>Chatbot'un Amacı</Text>
+              <Text style={styles.modalText}>
+                Chatbot sistemi, kullanıcıların bilgiye erişimini kolaylaştırarak Kırklareli Üniversitesi öğrencilerinin akademik, sosyal ve günlük yaşamlarını zenginleştirmek için tasarlanmıştır.
+              </Text>
+            </ScrollView>
+          </BlurView>
+        </View>
+      </Modal>
+    );
+
     if (loading) {
         return (
             <View style={[styles.container, styles.centerContent]}>
@@ -344,6 +421,16 @@ export default function Profil() {
                     <TouchableOpacity style={styles.longButton} onPress={() => setAddModalVisible(true)}>
                         <Text style={styles.longButtonText}>Uygulamaya Eklenecekler</Text>
                     </TouchableOpacity>
+
+                    <TouchableOpacity 
+                        style={[styles.longButton, { marginTop: 10, backgroundColor: 'rgba(78,205,196,0.9)' }]} 
+                        onPress={() => setShowChatbotModal(true)}
+                    >
+                        <View style={styles.buttonInnerContainer}>
+                            <Ionicons name="logo-android" size={24} color="black" style={{ marginRight: 10 }} />
+                            <Text style={styles.longButtonText}>Chatbot</Text>
+                        </View>
+                    </TouchableOpacity>
                 </ScrollView>
             </LinearGradient>
 
@@ -400,6 +487,7 @@ export default function Profil() {
                 visible={aboutAppModalVisible} 
                 onClose={() => setAboutAppModalVisible(false)} 
             />
+            {renderChatbotModal()}
         </SafeAreaView>
     );
 }
@@ -621,6 +709,7 @@ const styles = StyleSheet.create({
     },
     modalScrollView: {
         flex: 1,
+        padding: 20,
     },
     welcomeSection: {
         borderRadius: 15,
@@ -701,5 +790,102 @@ const styles = StyleSheet.create({
         color: '#000',
         fontSize: screenWidth * 0.04,
         fontWeight: '600',
+    },
+    modalContainer: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.9)',
+    },
+    modalContent: {
+        flex: 1,
+        padding: 20,
+        paddingTop: 40,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    modalTitle: {
+        fontSize: screenWidth * 0.06,
+        fontWeight: 'bold',
+        color: '#4ECDC4',
+    },
+    closeButton: {
+        padding: 5,
+    },
+    closeButtonText: {
+        color: '#4ECDC4',
+        fontSize: screenWidth * 0.04,
+        fontWeight: '600',
+    },
+    modalSubtitle: {
+        fontSize: screenWidth * 0.045,
+        fontWeight: '600',
+        color: '#4ECDC4',
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    sectionTitle: {
+        fontSize: screenWidth * 0.05,
+        fontWeight: 'bold',
+        color: '#4ECDC4',
+        marginTop: 25,
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    featureTitle: {
+        fontSize: screenWidth * 0.04,
+        fontWeight: '600',
+        color: '#fff',
+        marginTop: 20,
+        marginBottom: 10,
+    },
+    modalText: {
+        fontSize: screenWidth * 0.035,
+        color: '#ddd',
+        lineHeight: screenWidth * 0.05,
+        marginBottom: 15,
+        textAlign: 'justify',
+    },
+    button: {
+        backgroundColor: 'rgba(78,205,196,0.1)',
+        borderRadius: 10,
+        padding: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '30%',
+    },
+    buttonText: {
+        color: '#4ECDC4',
+        fontSize: screenWidth * 0.035,
+        fontWeight: '600',
+        marginLeft: 8,
+    },
+    buttonInnerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    iconButton: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        alignSelf: 'center',
+        marginTop: 20,
+        borderWidth: 1.5,
+        borderColor: '#4ECDC4',
+        shadowColor: '#4ECDC4',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
     },
 });
