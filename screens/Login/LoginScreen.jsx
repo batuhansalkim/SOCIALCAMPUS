@@ -18,25 +18,28 @@ const handleRegister = async () => {
       updatedAt: new Date()
     });
 
-    // Kullanıcı ID'sini AsyncStorage'a kaydet
-    await AsyncStorage.setItem('userId', docRef.id);
-    console.log('Saved userId to AsyncStorage:', docRef.id); // Debug için
-
-    // Kullanıcı bilgilerini global state'e kaydet
+    // Kullanıcı bilgilerini hazırla
     const userData = {
       id: docRef.id,
       fullName: formData.fullName,
       faculty: formData.faculty,
       department: formData.department
     };
+
+    // AsyncStorage'a kullanıcı bilgilerini kaydet
+    await AsyncStorage.setItem('userId', docRef.id);
     await AsyncStorage.setItem('userData', JSON.stringify(userData));
-    console.log('Saved userData to AsyncStorage:', userData); // Debug için
+
+    console.log('Saved user data:', {
+      userId: docRef.id,
+      userData: userData
+    });
 
     setLoading(false);
     navigation.replace('TabNavigator');
   } catch (error) {
     console.error('Kayıt sırasında bir hata oluştu:', error);
-    Alert.alert('Hata', 'Kayıt sırasında bir hata oluştu.');
+    Alert.alert('Hata', 'Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.');
     setLoading(false);
   }
 }; 

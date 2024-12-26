@@ -101,9 +101,7 @@ export default function MessageScreen() {
     try {
       const userId = await AsyncStorage.getItem('userId');
       const userDataStr = await AsyncStorage.getItem('userData');
-      console.log('Sending message - userId:', userId);
-      console.log('Sending message - userData:', userDataStr);
-
+      
       if (!userId || !userDataStr) {
         Alert.alert('Uyarı', 'Mesaj göndermek için giriş yapmalısınız.');
         return;
@@ -111,25 +109,29 @@ export default function MessageScreen() {
 
       const userData = JSON.parse(userDataStr);
 
-      if (newMessage.trim()) {
-        const messageRef = await addDoc(collection(FIRESTORE_DB, 'messages'), {
-          userId: userId,
-          userName: userData.fullName,
-          text: newMessage.trim(),
-          likes: 0,
-          likedBy: [],
-          commentCount: 0,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        });
-
-        setNewMessage('');
-        fetchMessages();
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (!newMessage.trim()) {
+        return;
       }
+
+      const messageData = {
+        userId: userId,
+        userName: userData.fullName,
+        text: newMessage.trim(),
+        likes: 0,
+        likedBy: [],
+        commentCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const messageRef = await addDoc(collection(FIRESTORE_DB, 'messages'), messageData);
+
+      setNewMessage('');
+      fetchMessages();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
       console.error('Mesaj gönderilirken hata:', error);
-      Alert.alert('Hata', 'Mesaj gönderilemedi.');
+      Alert.alert('Hata', 'Mesaj gönderilemedi. Lütfen tekrar deneyin.');
     }
   };
 
