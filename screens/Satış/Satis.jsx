@@ -5,7 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { collection, addDoc, getDocs, query, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, Timestamp, where } from 'firebase/firestore';
 import { FIRESTORE_DB } from '../../FirebaseConfig';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -29,6 +29,10 @@ export default function BookSellingPage() {
   }, []);
 
   useEffect(() => {
+    setFilteredBooks(books);
+  }, [books]);
+
+  useEffect(() => {
     const areAllFieldsFilled = 
       newBook.name.trim() !== '' && 
       newBook.section.trim() !== '' && 
@@ -40,17 +44,23 @@ export default function BookSellingPage() {
 
   const fetchBooks = async () => {
     try {
-      const q = query(collection(FIRESTORE_DB, 'books'), orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
+      setLoading(true);
+      const booksRef = collection(FIRESTORE_DB, 'books');
+      const querySnapshot = await getDocs(query(booksRef, orderBy('createdAt', 'desc')));
+      
       const booksData = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
+      
       setBooks(booksData);
       setFilteredBooks(booksData);
     } catch (error) {
       console.error('Kitaplar yüklenirken hata:', error);
-      Alert.alert('Hata', 'Kitaplar yüklenirken bir hata oluştu. Lütfen internet bağlantınızı kontrol edin.');
+      Alert.alert(
+        'Hata',
+        'Kitaplar yüklenirken bir hata oluştu. Lütfen internet bağlantınızı kontrol edin.'
+      );
     } finally {
       setLoading(false);
     }
@@ -172,24 +182,28 @@ export default function BookSellingPage() {
   };
 
   const renderBookItem = ({ item }) => (
-    <View style={styles.bookCardWrapper}>
-      <BlurView intensity={80} tint="dark" style={styles.bookCard}>
-        <TouchableOpacity onPress={() => handleImagePress(item.imageUrl)}>
-          <Image source={{ uri: item.imageUrl }} style={styles.bookImage} />
-        </TouchableOpacity>
-        <Text numberOfLines={2} ellipsizeMode='tail' style={styles.bookTitle}>{item.title}</Text>
-        <Text style={styles.bookSection}>{item.section}</Text>
-        <Text style={styles.bookPrice}>{item.price} TL</Text>
-        <Text style={styles.sellerInfo}>Satıcı: {item.sellerName}</Text>
-        <Text style={styles.sellerInfo}>Bölüm: {item.sellerDepartment}</Text>
-        <TouchableOpacity
-          style={styles.instagramContainer}
-          onPress={() => handleInstagramPress(item.instagram)}
-        >
-          <Ionicons name="logo-instagram" size={16} color="#4ECDC4" />
-          <Text style={styles.instagramText}>@{item.instagram}</Text>
-        </TouchableOpacity>
-      </BlurView>
+    <View style={styles.bookCard}>
+        <Image 
+            source={{ uri: item.imageUrl }} 
+            style={styles.bookImage}
+            resizeMode="cover"
+        />
+        <View style={styles.bookInfo}>
+            <Text style={styles.bookTitle}>{item.title}</Text>
+            <Text style={styles.bookSection}>Bölüm: {item.section}</Text>
+            <Text style={styles.bookPrice}>Fiyat: {item.price} TL</Text>
+            <View style={styles.sellerInfo}>
+                <Text style={styles.sellerName}>Satıcı: {item.sellerName}</Text>
+                <Text style={styles.sellerFaculty}>{item.sellerFaculty}</Text>
+                <Text style={styles.sellerDepartment}>{item.sellerDepartment}</Text>
+            </View>
+            <TouchableOpacity 
+                style={styles.contactButton}
+                onPress={() => Linking.openURL(`https://instagram.com/${item.instagram}`)}
+            >
+                <Text style={styles.contactButtonText}>İletişime Geç</Text>
+            </TouchableOpacity>
+        </View>
     </View>
   );
 
@@ -234,12 +248,17 @@ export default function BookSellingPage() {
 
   const handleSearch = useCallback((text) => {
     setSearchQuery(text);
-    const lowercasedQuery = text.toLowerCase();
-    const filtered = books.filter(
-      book => book.title.toLowerCase().includes(lowercasedQuery) || 
-              book.section.toLowerCase().includes(lowercasedQuery)
-    );
-    setFilteredBooks(filtered);
+    if (text.trim() === '') {
+      setFilteredBooks(books);
+    } else {
+      const lowercasedQuery = text.toLowerCase();
+      const filtered = books.filter(
+        book => 
+          book.title?.toLowerCase().includes(lowercasedQuery) || 
+          book.section?.toLowerCase().includes(lowercasedQuery)
+      );
+      setFilteredBooks(filtered);
+    }
   }, [books]);
 
   const handleInputChange = (name, value) => {
@@ -291,13 +310,15 @@ export default function BookSellingPage() {
         </View>
         
         <FlatList
-          data={filteredBooks}
+          data={searchQuery.trim() === '' ? books : filteredBooks}
           renderItem={renderBookItem}
           keyExtractor={(item) => item.id}
           numColumns={2}
           contentContainerStyle={styles.bookList}
           ListEmptyComponent={() => (
-            <Text style={styles.emptyListText}>Hiçbir sonuç bulunamadı.</Text>
+            <Text style={styles.emptyListText}>
+              {loading ? 'Yükleniyor...' : 'Hiçbir kitap bulunamadı.'}
+            </Text>
           )}
         />
 
@@ -419,9 +440,16 @@ export default function BookSellingPage() {
 }
 
 const styles = StyleSheet.create({
+  safeContainer: {
+    flex: 1,
+  },
+  gradient: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: '#1C1C1E',
+    padding: 20,
   },
   innerContainer: {
     flex: 1,
@@ -447,69 +475,75 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   bookList: {
-    paddingBottom: 80, // Add Button için alan bırak
-  },
-  bookCardWrapper: {
-    flex: 1,
-    maxWidth: '50%',
-    padding: 8,
-    height: SCREEN_WIDTH * 0.8,
+    paddingBottom: 80,
   },
   bookCard: {
     flex: 1,
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: 'rgba(44, 44, 46, 0.8)',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    shadowColor: '#4ECDC4',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 15,
+    margin: 8,
+    overflow: 'hidden',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   bookImage: {
-    width: SCREEN_WIDTH * 0.35,
-    height: SCREEN_WIDTH * 0.35,
-    borderRadius: 10,
-    marginBottom: 8,
+    width: '100%',
+    height: 150,
+  },
+  bookInfo: {
+    padding: 12,
   },
   bookTitle: {
-    fontSize: 16,
+    fontSize: SCREEN_WIDTH * 0.035,
     fontWeight: '600',
     color: '#4ECDC4',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  bookSection: {
-    fontSize: 14,
-    color: '#A9A9A9',
-    marginBottom: 4,
-  },
-  bookPrice: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#4ECDC4',
-    marginBottom: 4,
-  },
-  sellerInfo: {
-    fontSize: 12,
-    color: '#A9A9A9',
-    textAlign: 'center',
     marginBottom: 2,
   },
-  instagramContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#393939',
-    borderRadius: 15,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    marginTop: 4,
+  bookSection: {
+    fontSize: SCREEN_WIDTH * 0.035,
+    color: '#fff',
+    marginBottom: 2,
   },
-  instagramText: {
-    fontSize: 12,
-    marginLeft: 6,
-    color: '#A9A9A9',
+  bookPrice: {
+    fontSize: SCREEN_WIDTH * 0.04,
+    fontWeight: '600',
+    color: '#4ECDC4',
+    marginBottom: 8,
+  },
+  sellerInfo: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: 8,
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+  sellerName: {
+    fontSize: SCREEN_WIDTH * 0.035,
+    fontWeight: '600',
+    color: '#4ECDC4',
+    marginBottom: 2,
+  },
+  sellerFaculty: {
+    fontSize: SCREEN_WIDTH * 0.035,
+    color: '#fff',
+    marginBottom: 2,
+  },
+  sellerDepartment: {
+    fontSize: SCREEN_WIDTH * 0.035,
+    color: '#fff',
+  },
+  contactButton: {
+    backgroundColor: 'rgba(78,205,196,0.1)',
+    borderRadius: 10,
+    padding: 10,
+    alignItems: 'center',
+  },
+  contactButtonText: {
+    color: '#4ECDC4',
+    fontSize: SCREEN_WIDTH * 0.04,
+    fontWeight: '600',
   },
   addButton: {
     position: 'absolute',
@@ -534,8 +568,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContainer: {
-    backgroundColor: '#2C2C2E',
-    borderRadius: 20,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 15,
     padding: 20,
     width: '90%',
     maxHeight: '80%',
@@ -544,16 +578,17 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalHeader: {
-    fontSize: 24,
-    fontWeight: '600',
+    fontSize: SCREEN_WIDTH * 0.06,
+    fontWeight: 'bold',
     color: '#4ECDC4',
     marginBottom: 20,
+    marginTop: 10,
     textAlign: 'center',
   },
   imagePicker: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#393939',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 15,
     padding: 20,
     marginBottom: 20,
@@ -571,30 +606,31 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#393939',
-    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
     marginBottom: 15,
     paddingHorizontal: 15,
     height: 50,
   },
   inputIcon: {
     marginRight: 10,
+    color: '#4ECDC4',
   },
   input: {
     flex: 1,
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: SCREEN_WIDTH * 0.04,
   },
   saveButton: {
     backgroundColor: '#4ECDC4',
-    borderRadius: 15,
+    borderRadius: 8,
     padding: 15,
     alignItems: 'center',
     marginTop: 10,
   },
   saveButtonText: {
-    color: '#1C1C1E',
-    fontSize: 16,
+    color: '#000',
+    fontSize: SCREEN_WIDTH * 0.04,
     fontWeight: '600',
   },
   closeButtonModal: {
