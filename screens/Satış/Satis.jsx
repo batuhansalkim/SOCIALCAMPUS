@@ -183,11 +183,13 @@ export default function BookSellingPage() {
 
   const renderBookItem = ({ item }) => (
     <View style={styles.bookCard}>
-        <Image 
-            source={{ uri: item.imageUrl }} 
-            style={styles.bookImage}
-            resizeMode="cover"
-        />
+        <TouchableOpacity onPress={() => handleImagePress(item.imageUrl)}>
+            <Image 
+                source={{ uri: item.imageUrl }} 
+                style={styles.bookImage}
+                resizeMode="cover"
+            />
+        </TouchableOpacity>
         <View style={styles.bookInfo}>
             <Text style={styles.bookTitle}>{item.title}</Text>
             <Text style={styles.bookSection}>Bölüm: {item.section}</Text>
@@ -423,15 +425,23 @@ export default function BookSellingPage() {
           visible={!!enlargedImage}
           onRequestClose={() => setEnlargedImage(null)}
         >
-          <View style={styles.enlargedImageContainer}>
-            <Image source={{ uri: enlargedImage }} style={styles.enlargedImage} resizeMode="contain" />
+          <TouchableOpacity 
+            style={styles.enlargedImageContainer} 
+            activeOpacity={1}
+            onPress={() => setEnlargedImage(null)}
+          >
+            <Image 
+              source={{ uri: enlargedImage }} 
+              style={styles.enlargedImage} 
+              resizeMode="contain"
+            />
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setEnlargedImage(null)}
             >
-              <Ionicons name="close" size={30} color="white" />
+              <Ionicons name="close-circle" size={35} color="white" />
             </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         </Modal>
       </SafeAreaView>
     </LinearGradient>
@@ -491,6 +501,8 @@ const styles = StyleSheet.create({
   bookImage: {
     width: '100%',
     height: 150,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
   },
   bookInfo: {
     padding: 12,
@@ -649,16 +661,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 10,
   },
   enlargedImage: {
-    width: '90%',
-    height: '70%',
+    width: '100%',
+    height: '90%',
+    borderRadius: 10,
   },
   closeButton: {
     position: 'absolute',
     top: 40,
     right: 20,
     padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
   },
   emptyListText: {
     color: '#A9A9A9',
