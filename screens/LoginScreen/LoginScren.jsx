@@ -22,7 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import TermsScreen from "../../components/TermsScreen";
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { FIRESTORE_DB } from "../../FirebaseConfig";
-import { fetchFaculties } from '../../services/facultyService';
+import facultiesData from '../../data/faculties.json';
 
 export default function LoginScreen({ onLogin }) {
     const [fullName, setFullName] = useState('');
@@ -31,35 +31,8 @@ export default function LoginScreen({ onLogin }) {
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [eulaAccepted, setEulaAccepted] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
-    const [faculties, setFaculties] = useState({});
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
-
-    useEffect(() => {
-        loadFaculties();
-    }, []);
-
-    const loadFaculties = async () => {
-        try {
-            const facultiesData = await fetchFaculties();
-            if (facultiesData) {
-                setFaculties(facultiesData);
-            } else {
-                Alert.alert(
-                    'Hata',
-                    'Fakülte bilgileri yüklenirken bir hata oluştu. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.'
-                );
-            }
-        } catch (error) {
-            console.error('Fakülte bilgileri yüklenirken hata:', error);
-            Alert.alert(
-                'Hata',
-                'Fakülte bilgileri yüklenirken bir hata oluştu.'
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const isFormValid = termsAccepted && 
                        eulaAccepted && 
@@ -76,7 +49,7 @@ export default function LoginScreen({ onLogin }) {
 
         try {
             const timestamp = Timestamp.now();
-            const facultyName = faculties[faculty]?.name || '';
+            const facultyName = facultiesData[faculty]?.name || '';
 
             // Firestore'da kullanıcı koleksiyonuna veri ekleme
             const docRef = await addDoc(collection(FIRESTORE_DB, 'users'), {
@@ -113,7 +86,7 @@ export default function LoginScreen({ onLogin }) {
         return (
             <View style={[styles.container, styles.centerContent]}>
                 <ActivityIndicator size="large" color="#4c669f" />
-                <Text style={styles.loadingText}>Fakülte bilgileri yükleniyor...</Text>
+                <Text style={styles.loadingText}>Yükleniyor...</Text>
             </View>
         );
     }
@@ -166,7 +139,7 @@ export default function LoginScreen({ onLogin }) {
                                         }}
                                     >
                                         <Picker.Item label="Fakülte Seçin" value="" />
-                                        {Object.entries(faculties).map(([key, value]) => (
+                                        {Object.entries(facultiesData).map(([key, value]) => (
                                             <Picker.Item key={key} label={value.name} value={key} />
                                         ))}
                                     </Picker>
@@ -184,7 +157,7 @@ export default function LoginScreen({ onLogin }) {
                                         enabled={!!faculty}
                                     >
                                         <Picker.Item label="Bölüm Seçin" value="" />
-                                        {(faculties[faculty]?.departments || []).map((dept, index) => (
+                                        {facultiesData[faculty]?.departments.map((dept, index) => (
                                             <Picker.Item key={index} label={dept} value={dept} />
                                         ))}
                                     </Picker>
@@ -249,6 +222,7 @@ export default function LoginScreen({ onLogin }) {
         </SafeAreaView>
     );
 }
+
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
@@ -266,29 +240,29 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     headerContainer: {
-        marginBottom: 8, // Daha az boşluk
+        marginBottom: 8,
         alignItems: 'center'
     },
     logo: {
-        width: 150, // Daha küçük logo boyutu
+        width: 150,
         height: 150,
         marginTop: 30,
     },
     title: {
-        fontSize: 28, // Küçük başlık boyutu
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#FFF',
         marginBottom: 8,
         marginTop:-30,
     },
     subtitle: {
-        fontSize: 14, // Daha küçük açıklama metni
+        fontSize: 14,
         color: '#E0E0E0'
     },
     formContainer: {
         backgroundColor: 'rgba(255, 255, 255, 0.9)',
         borderRadius: 10,
-        padding: 15, // Daha az padding
+        padding: 15,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
@@ -296,10 +270,10 @@ const styles = StyleSheet.create({
         elevation: 5
     },
     inputGroup: {
-        marginBottom: 15, // Daha az dikey boşluk
+        marginBottom: 15,
     },
     label: {
-        fontSize: 14, // Küçük etiket boyutu
+        fontSize: 14,
         marginBottom: 6,
         fontWeight: '500',
         color: '#333'
@@ -310,18 +284,18 @@ const styles = StyleSheet.create({
         borderColor: '#4c669f',
         borderWidth: 1,
         borderRadius: 8,
-        paddingHorizontal: 8, // Daha az yatay padding
+        paddingHorizontal: 8,
         backgroundColor: '#FFF',
-        paddingVertical: 4 // Daha az dikey padding
+        paddingVertical: 4
     },
     inputIcon: {
-        marginRight: 8, // Daha az boşluk
+        marginRight: 8,
     },
     input: {
         flex: 1,
-        height: 47, // Daha küçük input yüksekliği
+        height: 47,
         color: '#333',
-        fontSize: 14 // Küçük yazı boyutu
+        fontSize: 14
     },
     pickerContainer: {
         flexDirection: 'row',
@@ -337,35 +311,35 @@ const styles = StyleSheet.create({
         flex: 1,
         height: 50,
         color: '#333',
-        fontSize: 14 // Küçük dropdown yazı boyutu
+        fontSize: 14
     },
     termsContainer: {
-        marginVertical: 10 // Daha az dikey boşluk
+        marginVertical: 10
     },
     switchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 10 // Daha az dikey boşluk
+        marginBottom: 10
     },
     switchLabel: {
-        marginLeft: 8, // Daha az yatay boşluk
+        marginLeft: 8,
         color: '#333',
         flex: 1,
-        fontSize: 14 // Küçük yazı boyutu
+        fontSize: 14
     },
     underlinedText: {
         textDecorationLine: 'underline',
-        fontSize: 14 // Küçük yazı boyutu
+        fontSize: 14
     },
     button: {
-        marginTop: 15, // Daha az dikey boşluk
-        paddingVertical: 12, // Daha az dikey padding
+        marginTop: 15,
+        paddingVertical: 12,
         borderRadius: 8,
         alignItems: 'center',
         backgroundColor: '#4CAF50',
     },
     buttonText: {
-        fontSize: 14, // Küçük buton yazı boyutu
+        fontSize: 14,
         fontWeight: '600',
         color: '#FFFFFF'
     },
@@ -378,4 +352,4 @@ const styles = StyleSheet.create({
         color: '#4c669f',
         fontSize: 16,
     },
-});
+}); 

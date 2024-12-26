@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import Navigator from './Navigator';
-import OnboardingScreens from "../kluCampus/screens/onBoardingScren/onBoarding";
-import LoginScreen from "../kluCampus/screens/LoginScreen/LoginScren"
+import OnboardingScreens from "./screens/onBoardingScren/onBoarding";
+import LoginScreen from "./screens/LoginScreen/LoginScren"
 
 export default function App() {
   const [showOnboarding, setShowOnboarding] = useState(true);

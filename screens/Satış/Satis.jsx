@@ -7,9 +7,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { collection, addDoc, getDocs, query, orderBy, Timestamp } from 'firebase/firestore';
 import { FIRESTORE_DB } from '../../FirebaseConfig';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const IMGUR_CLIENT_ID = '0250b8b91223111'; // Imgur Client ID eklendi
 
 export default function BookSellingPage() {
   const [books, setBooks] = useState([]);
@@ -55,17 +56,35 @@ export default function BookSellingPage() {
     }
   };
 
-  const uploadImage = async (uri) => {
+  const uploadToImgur = async (uri) => {
     try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const storage = getStorage();
-      const imageRef = ref(storage, `bookImages/${Date.now()}`);
-      await uploadBytes(imageRef, blob);
-      const downloadURL = await getDownloadURL(imageRef);
-      return downloadURL;
+      const formData = new FormData();
+      const filename = uri.split('/').pop();
+      const match = /\.(\w+)$/.exec(filename);
+      const type = match ? `image/${match[1]}` : `image`;
+      
+      formData.append('image', {
+        uri: uri,
+        name: filename,
+        type
+      });
+
+      const response = await fetch('https://api.imgur.com/3/image', {
+        method: 'POST',
+        headers: {
+          Authorization: `Client-ID ${IMGUR_CLIENT_ID}`,
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        return data.data.link;
+      } else {
+        throw new Error('Imgur upload failed');
+      }
     } catch (error) {
-      console.error('Resim yüklenirken hata:', error);
+      console.error('Image upload error:', error);
       throw error;
     }
   };
@@ -92,10 +111,10 @@ export default function BookSellingPage() {
       userSnapshot.forEach((doc) => {
         const userData = doc.data();
         if (userData.createdAt && userData.createdAt.toDate) {
-        const userTimestamp = userData.createdAt.toDate();
-        if (userTimestamp > latestTimestamp) {
-          latestTimestamp = userTimestamp;
-          latestUser = { ...userData, id: doc.id };
+          const userTimestamp = userData.createdAt.toDate();
+          if (userTimestamp > latestTimestamp) {
+            latestTimestamp = userTimestamp;
+            latestUser = { ...userData, id: doc.id };
           }
         }
       });
@@ -105,18 +124,13 @@ export default function BookSellingPage() {
         return;
       }
 
-      // Resmi yükle
+      // Resmi Imgur'a yükle
       if (!newBook.photoUri) {
         Alert.alert('Hata', 'Lütfen bir kitap resmi seçin.');
         return;
       }
 
-      const imageUrl = await uploadImage(newBook.photoUri);
-
-      if (!imageUrl) {
-        Alert.alert('Hata', 'Resim yüklenemedi. Lütfen tekrar deneyin.');
-        return;
-      }
+      const imageUrl = await uploadToImgur(newBook.photoUri);
 
       // Kitap bilgilerini kontrol et
       if (!newBook.name || !newBook.section || !newBook.price || !newBook.instagram) {
@@ -147,7 +161,7 @@ export default function BookSellingPage() {
       Alert.alert('Başarılı', 'Kitap başarıyla eklendi!');
       setNewBook({ name: '', section: '', price: '', instagram: '', photoUri: '' });
       closeModal();
-      await fetchBooks(); // Listeyi güncelle
+      await fetchBooks();
 
     } catch (error) {
       console.error('Kitap kaydedilirken hata:', error);

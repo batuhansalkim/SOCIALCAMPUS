@@ -1,8 +1,9 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore"; //veri tabanı için kullanılabilir.
+import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getAnalytics } from "firebase/analytics";
 
+// Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBGCqIMp2W_MSEXSNwS6fBXCOTcf3SVnQ8",
     authDomain: "campusapp-5a7ee.firebaseapp.com",
@@ -13,9 +14,10 @@ const firebaseConfig = {
     measurementId: "G-QDFNQW62PB"
 };
 
-const app = initializeApp(firebaseConfig);
-export const FIRESTORE_DB = getFirestore(app);
-export const storage = getStorage(app);
-export const FIREBASE_AUTH = getAuth(app);
+// Initialize Firebase
+const FIREBASE_APP = initializeApp(firebaseConfig);
+const FIRESTORE_DB = getFirestore(FIREBASE_APP);
+const FIREBASE_STORAGE = getStorage(FIREBASE_APP);
+const analytics = getAnalytics(FIREBASE_APP);
 
-export default app;    
+export { FIREBASE_APP, FIRESTORE_DB, FIREBASE_STORAGE };    
