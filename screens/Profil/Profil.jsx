@@ -287,69 +287,113 @@ export default function Profil() {
         onRequestClose={() => setShowChatbotModal(false)}
       >
         <View style={styles.modalContainer}>
-          <BlurView intensity={100} tint="dark" style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Chatbot Sistemi</Text>
-              <TouchableOpacity onPress={() => setShowChatbotModal(false)} style={styles.closeButton}>
-                <Text style={styles.closeButtonText}>X</Text>
+          <BlurView intensity={100} tint="dark" style={styles.chatbotModalContent}>
+            <LinearGradient
+              colors={['rgba(26,26,26,0.98)', 'rgba(13,13,13,0.95)']}
+              style={styles.chatbotGradient}
+            >
+              <View style={styles.chatbotModalHeader}>
+                <View style={styles.chatbotTitleContainer}>
+                  <LinearGradient
+                    colors={['#4ECDC4', '#45B7AF']}
+                    style={styles.chatbotIconBg}
+                  >
+                    <Ionicons name="logo-android" size={32} color="#1a1a1a" />
+                  </LinearGradient>
+                  <Text style={styles.chatbotModalTitle}>AI Asistan</Text>
+                </View>
+                <TouchableOpacity onPress={() => setShowChatbotModal(false)} style={styles.modalCloseButton}>
+                  <Ionicons name="close-circle" size={35} color="#4ECDC4" />
               </TouchableOpacity>
             </View>
-            <ScrollView style={styles.modalScrollView}>
-              <Text style={styles.modalSubtitle}>Chatbot Sistemi ile Tüm Sorularınıza Cevap</Text>
-              <Text style={styles.modalText}>
-                KLUCAMPUS mobil uygulamasına entegre edilen chatbot sistemi, Kırklareli Üniversitesi öğrencilerinin ve kullanıcıların ihtiyaç duyduğu bilgilere hızlı ve kolay bir şekilde erişmesini sağlamak amacıyla geliştirilmiştir. Bu gelişmiş sistem, yalnızca üniversite ile ilgili değil, aynı zamanda Kırklareli şehri hakkında da kapsamlı bir bilgi kaynağı sunmaktadır.
-              </Text>
-              
-              <Text style={styles.modalText}>
-                Chatbot, Kırklareli Üniversitesi öğrencilerine ve Kırklareli şehrine ait tüm bilgilerle eğitilmiş olup, kullanıcıların ihtiyaç duyduğu bilgilere anında ulaşabilmesi için özel olarak tasarlanmıştır.
-              </Text>
 
-              <Text style={styles.sectionTitle}>Chatbot'un Avantajları ve İşlevleri</Text>
-              
-              <Text style={styles.featureTitle}>1. Hızlı Bilgi Erişimi:</Text>
-              <Text style={styles.modalText}>
-                Chatbot, kullanıcıların uygulama içinde aradıkları bilgilere saniyeler içinde ulaşmasını sağlar.
+              <ScrollView 
+                style={styles.chatbotScrollView}
+                showsVerticalScrollIndicator={false}
+              >
+                <LinearGradient
+                  colors={['rgba(78,205,196,0.15)', 'rgba(78,205,196,0.05)']}
+                  style={styles.chatbotWelcomeSection}
+                >
+                  <Text style={{color:"white"}}>Yapay Zeka Destekli Asistanınız</Text>
+                  <Text style={{color:"white"}}>
+                    KLUCAMPUS AI Asistan, üniversite yaşamınızı kolaylaştırmak için tasarlanmış akıllı bir yardımcıdır. 
+                    Anlık sorularınıza hızlı ve doğru yanıtlar sunar, kampüs hayatınızı daha verimli hale getirir.
               </Text>
+                </LinearGradient>
 
-              <Text style={styles.featureTitle}>2. Üniversite ve Şehir Hakkında Kapsamlı Bilgi:</Text>
-              <Text style={styles.modalText}>
-                • Staj Olanakları{"\n"}
-                • Dikey Geçiş (DGS){"\n"}
-                • Yatay Geçiş{"\n"}
-                • Ders Seçimi ve Kayıt İşlemleri{"\n"}
-                • Öğrenci Belgeleri{"\n"}
-                • Kayıt Dondurma İşlemleri{"\n"}
-                • Askerlik Tecil İşlemleri{"\n"}
-                • Öğrenci Kulüpleri
+                <View style={styles.chatbotFeatureGrid}>
+                  <View style={styles.chatbotFeatureRow}>
+                    <View style={styles.chatbotFeatureCard}>
+                      <View style={styles.chatbotFeatureIconContainer}>
+                        <Ionicons name="flash" size={24} color="#4ECDC4" />
+                      </View>
+                      <Text style={styles.chatbotFeatureTitle}>Anlık Yanıtlar</Text>
+                      <Text style={styles.chatbotFeatureText}>
+                        Saniyeler içinde bilgiye erişin
               </Text>
+                    </View>
 
-              <Text style={styles.featureTitle}>3. Akademik ve Sosyal Destek:</Text>
-              <Text style={styles.modalText}>
-                Chatbot, öğrencilerin akademik süreçlerle ilgili tüm sorularını yanıtlarken aynı zamanda kampüs yaşamını kolaylaştıracak önerilerde bulunur.
+                    <View style={styles.chatbotFeatureCard}>
+                      <View style={styles.chatbotFeatureIconContainer}>
+                        <Ionicons name="school" size={24} color="#4ECDC4" />
+                      </View>
+                      <Text style={styles.chatbotFeatureTitle}>Akademik Destek</Text>
+                      <Text style={styles.chatbotFeatureText}>
+                        Eğitim süreçlerinizde yanınızda
               </Text>
+                    </View>
+                  </View>
 
-              <Text style={styles.featureTitle}>4. Kişisel Asistan Deneyimi:</Text>
-              <Text style={styles.modalText}>
-                • "Bugün yemekte ne var?"{"\n"}
-                • "Kütüphane saat kaça kadar açık?"{"\n"}
-                • "Bu hafta yapılacak etkinlikler neler?"
+                  <View style={styles.chatbotFeatureRow}>
+                    <View style={styles.chatbotFeatureCard}>
+                      <View style={styles.chatbotFeatureIconContainer}>
+                        <Ionicons name="time" size={24} color="#4ECDC4" />
+                      </View>
+                      <Text style={styles.chatbotFeatureTitle}>7/24 Hizmet</Text>
+                      <Text style={styles.chatbotFeatureText}>
+                        Her an erişilebilir asistan
               </Text>
+                    </View>
 
-              <Text style={styles.featureTitle}>5. 7/24 Hizmet:</Text>
-              <Text style={styles.modalText}>
-                Chatbot, zaman fark etmeksizin her an erişilebilir olup, kullanıcı deneyimini üst seviyeye taşır.
+                    <View style={styles.chatbotFeatureCard}>
+                      <View style={styles.chatbotFeatureIconContainer}>
+                        <Ionicons name="information" size={24} color="#4ECDC4" />
+                      </View>
+                      <Text style={styles.chatbotFeatureTitle}>Güncel Bilgi</Text>
+                      <Text style={styles.chatbotFeatureText}>
+                        Sürekli güncellenen veritabanı
               </Text>
+                    </View>
+                  </View>
+                </View>
 
-              <Text style={styles.featureTitle}>6. Güncel ve Doğru Bilgi:</Text>
-              <Text style={styles.modalText}>
-                Sürekli güncellenen veritabanı sayesinde chatbot, en doğru ve en güncel bilgilere ulaşmanızı sağlar.
-              </Text>
-
-              <Text style={styles.sectionTitle}>Chatbot'un Amacı</Text>
-              <Text style={styles.modalText}>
-                Chatbot sistemi, kullanıcıların bilgiye erişimini kolaylaştırarak Kırklareli Üniversitesi öğrencilerinin akademik, sosyal ve günlük yaşamlarını zenginleştirmek için tasarlanmıştır.
-              </Text>
+                <LinearGradient
+                  colors={['rgba(78,205,196,0.1)', 'rgba(78,205,196,0.05)']}
+                  style={styles.chatbotCapabilitiesSection}
+                >
+                  <Text style={styles.chatbotSectionTitle}>Neler Yapabilir?</Text>
+                  <View style={styles.chatbotCapabilitiesList}>
+                    <View style={styles.chatbotCapabilityItem}>
+                      <Ionicons name="checkmark-circle" size={20} color="#4ECDC4" />
+                      <Text style={styles.chatbotCapabilityText}>Akademik süreçler hakkında bilgilendirme</Text>
+                    </View>
+                    <View style={styles.chatbotCapabilityItem}>
+                      <Ionicons name="checkmark-circle" size={20} color="#4ECDC4" />
+                      <Text style={styles.chatbotCapabilityText}>Kampüs yaşamı ve etkinlikler hakkında rehberlik</Text>
+                    </View>
+                    <View style={styles.chatbotCapabilityItem}>
+                      <Ionicons name="checkmark-circle" size={20} color="#4ECDC4" />
+                      <Text style={styles.chatbotCapabilityText}>Öğrenci kulüpleri ve sosyal aktiviteler</Text>
+                    </View>
+                    <View style={styles.chatbotCapabilityItem}>
+                      <Ionicons name="checkmark-circle" size={20} color="#4ECDC4" />
+                      <Text style={styles.chatbotCapabilityText}>Kırklareli şehir rehberi ve yaşam bilgileri</Text>
+                    </View>
+                  </View>
+                </LinearGradient>
             </ScrollView>
+            </LinearGradient>
           </BlurView>
         </View>
       </Modal>
@@ -423,13 +467,15 @@ export default function Profil() {
                     </TouchableOpacity>
 
                     <TouchableOpacity 
-                        style={[styles.longButton, { marginTop: 10, backgroundColor: 'rgba(78,205,196,0.9)' }]} 
+                        style={[styles.chatbotButton]} 
                         onPress={() => setShowChatbotModal(true)}
                     >
-                        <View style={styles.buttonInnerContainer}>
-                            <Ionicons name="logo-android" size={24} color="black" style={{ marginRight: 10 }} />
-                            <Text style={styles.longButtonText}>Chatbot</Text>
-                        </View>
+                        <LinearGradient
+                            colors={['#1a1a1a', '#2d2d2d']}
+                            style={styles.chatbotButtonGradient}
+                        >
+                            <Ionicons name="logo-android" size={32} color="#4ECDC4" />
+                        </LinearGradient>
                     </TouchableOpacity>
                 </ScrollView>
             </LinearGradient>
@@ -887,5 +933,131 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
+    },
+    chatbotButton: {
+        width: 65,
+        height: 65,
+        borderRadius: 32.5,
+        alignSelf: 'center',
+        marginTop: 20,
+        marginBottom: 40,
+        overflow: 'hidden',
+        elevation: 8,
+        shadowColor: '#4ECDC4',
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+    },
+    chatbotButtonGradient: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1.5,
+        borderColor: '#4ECDC4',
+        borderRadius: 32.5,
+    },
+    chatbotModalContent: {
+        flex: 1,
+        margin: 20,
+        borderRadius: 20,
+        overflow: 'hidden',
+    },
+    chatbotGradient: {
+        flex: 1,
+        padding: 20,
+    },
+    chatbotModalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    chatbotTitleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    chatbotIconBg: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15,
+    },
+    chatbotModalTitle: {
+        fontSize: screenWidth * 0.06,
+        fontWeight: 'bold',
+        color: '#4ECDC4',
+    },
+    chatbotWelcomeSection: {
+        borderRadius: 15,
+        padding: 20,
+        marginBottom: 20,
+    },
+    chatbotFeatureGrid: {
+        marginBottom: 20,
+    },
+    chatbotFeatureRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 15,
+    },
+    chatbotFeatureCard: {
+        width: '48%',
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderRadius: 15,
+        padding: 15,
+        alignItems: 'center',
+    },
+    chatbotFeatureIconContainer: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: 'rgba(78,205,196,0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    chatbotFeatureTitle: {
+        fontSize: screenWidth * 0.04,
+        fontWeight: 'bold',
+        color: '#4ECDC4',
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    chatbotFeatureText: {
+        fontSize: screenWidth * 0.035,
+        color: '#fff',
+        textAlign: 'center',
+        opacity: 0.9,
+    },
+    chatbotCapabilitiesSection: {
+        borderRadius: 15,
+        padding: 20,
+    },
+    chatbotSectionTitle: {
+        fontSize: screenWidth * 0.045,
+        fontWeight: 'bold',
+        color: '#4ECDC4',
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    chatbotCapabilitiesList: {
+        marginTop: 10,
+    },
+    chatbotCapabilityItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    chatbotCapabilityText: {
+        fontSize: screenWidth * 0.035,
+        color: '#fff',
+        marginLeft: 10,
+        opacity: 0.9,
     },
 });
