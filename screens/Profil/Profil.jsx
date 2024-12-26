@@ -10,7 +10,8 @@ import {
     TouchableOpacity, 
     ScrollView, 
     Alert,
-    ActivityIndicator
+    ActivityIndicator,
+    Modal
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -23,6 +24,57 @@ import AppAdd from "../AppAdd/AppAdd";
 import facultiesData from '../../data/faculties.json';
 
 const screenWidth = Dimensions.get('window').width;
+
+const AboutAppModal = ({ visible, onClose }) => (
+  <Modal visible={visible} animationType="slide" transparent>
+    <BlurView intensity={100} tint="dark" style={styles.aboutModalContainer}>
+      <ScrollView style={styles.aboutModalContent}>
+        <View style={styles.modalHeader}>
+          <Text style={styles.aboutModalTitle}>Uygulama Hakkında</Text>
+          <TouchableOpacity style={styles.modalCloseButton} onPress={onClose}>
+            <Ionicons name="close-circle" size={35} color="#4ECDC4" />
+          </TouchableOpacity>
+        </View>
+        
+        <Text style={styles.aboutModalSubtitle}>SocialCampus Uygulamasına Hoş Geldiniz!</Text>
+        
+        <Text style={styles.aboutModalText}>
+          Kırklareli Üniversitesi'nin öğrenci deneyimini en üst düzeye çıkarmak için tasarlanmış olan SocialCampus uygulaması, siz değerli öğrencilerimizin günlük yaşantısını kolaylaştırmak üzere geliştirilmiştir. Uygulama, bilgiye hızlı erişim sağlayarak öğrencilerin akademik ve sosyal yaşamlarını zenginleştirmeyi amaçlar.
+        </Text>
+        
+        <Text style={styles.aboutModalText}>
+          Uygulamayı Kırklareli Üniversitesi'nde okuyan Yazılım Mühendisliği öğrencisi olarak gönüllü geliştirdim. Amacım, öğrenci topluluğuna katkıda bulunmak ve onların deneyimlerini iyileştirmektir.
+        </Text>
+        
+        <Text style={styles.aboutModalSectionTitle}>Özellikler</Text>
+        
+        <Text style={styles.aboutModalFeatureTitle}>Yemekhane Bilgileri</Text>
+        <Text style={styles.aboutModalText}>
+          "Bugün yemekte ne var?" sorusunun yanıtını SocialCampus Uygulaması ile öğrenebilirsiniz. Günlük yemek menülerini kolayca görüntüleyebilir ve sağlıklı beslenme tercihlerinizle ilgili bilgilere ulaşabilirsiniz.
+        </Text>
+        
+        <Text style={styles.aboutModalFeatureTitle}>Kulüp Bilgileri</Text>
+        <Text style={styles.aboutModalText}>
+          Okuldaki kulüpleri görüntüleyip, sosyal medya adresleri, yöneticileri ve danışman hocalara ulaşabilirsiniz. Bu sayede ilginizi çeken aktiviteleri takip edebilirsiniz.
+        </Text>
+        
+        <Text style={styles.aboutModalFeatureTitle}>Sosyalleşme</Text>
+        <Text style={styles.aboutModalText}>
+          Okul gündemini takip ederek sosyal etkinliklere katılabilir, arkadaşlarınızla etkileşimde bulunarak sosyalleşme imkanlarınızı artırabilirsiniz.
+        </Text>
+        
+        <Text style={styles.aboutModalFeatureTitle}>Satış</Text>
+        <Text style={styles.aboutModalText}>
+          Üst sınıflardan kitap, kırtasiye veya diğer eşyaları satın alarak ihtiyaçlarınızı karşılayabilir, aynı zamanda kendi eşyalarınızı da satışa sunabilirsiniz.
+        </Text>
+
+        <TouchableOpacity style={styles.modalBottomButton} onPress={onClose}>
+          <Text style={styles.modalBottomButtonText}>Kapat</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </BlurView>
+  </Modal>
+);
 
 export default function Profil() {
     const [modalVisible, setModalVisible] = useState(false);
@@ -40,6 +92,8 @@ export default function Profil() {
         faculty: "",
         department: ""
     });
+
+    const [aboutAppModalVisible, setAboutAppModalVisible] = useState(false);
 
     useEffect(() => {
         fetchUserData();
@@ -191,6 +245,24 @@ export default function Profil() {
                         </TouchableOpacity>
                     </View>
 
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity 
+                            style={styles.actionButton} 
+                            onPress={() => Linking.openURL('https://www.linkedin.com/in/batuhanslkmm/')}
+                        >
+                            <Ionicons name="logo-linkedin" size={24} color="#4ECDC4" />
+                            <Text style={styles.actionButtonText}>İletişime Geç</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                            style={styles.actionButton}
+                            onPress={() => setAboutAppModalVisible(true)}
+                        >
+                            <Ionicons name="information-circle-outline" size={24} color="#4ECDC4" />
+                            <Text style={styles.actionButtonText}>Uygulama Hakkında</Text>
+                        </TouchableOpacity>
+                    </View>
+
                     <TouchableOpacity style={styles.longButton} onPress={() => setAddModalVisible(true)}>
                         <Text style={styles.longButtonText}>Uygulamaya Eklenecekler</Text>
                     </TouchableOpacity>
@@ -237,6 +309,10 @@ export default function Profil() {
 
             <AboutScreen modalVisible={aboutModalVisible} setModalVisible={setAboutModalVisible} />
             <AppAdd modalVisible={addModalVisible} setModalVisible={setAddModalVisible} />
+            <AboutAppModal 
+                visible={aboutAppModalVisible} 
+                onClose={() => setAboutAppModalVisible(false)} 
+            />
         </SafeAreaView>
     );
 }
@@ -399,5 +475,110 @@ const styles = StyleSheet.create({
     centerContent: {
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '90%',
+        marginBottom: 15,
+        alignSelf: 'center',
+    },
+    actionButton: {
+        backgroundColor: 'rgba(78,205,196,0.1)',
+        borderRadius: 10,
+        padding: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '48%',
+    },
+    actionButtonText: {
+        color: '#4ECDC4',
+        fontSize: screenWidth * 0.035,
+        fontWeight: '600',
+        marginLeft: 8,
+    },
+    aboutModalContainer: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.9)',
+    },
+    aboutModalContent: {
+        padding: 20,
+        marginTop: 50,
+        paddingBottom: 20,
+    },
+    aboutModalTitle: {
+        fontSize: screenWidth * 0.06,
+        fontWeight: 'bold',
+        color: '#4ECDC4',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    aboutModalSubtitle: {
+        fontSize: screenWidth * 0.04,
+        color: '#fff',
+        marginBottom: 20,
+        marginTop:15,
+        textAlign: 'center',
+        fontStyle: 'italic',
+    },
+    aboutModalText: {
+        fontSize: screenWidth * 0.035,
+        color: '#fff',
+        marginBottom: 15,
+        lineHeight: screenWidth * 0.05,
+    },
+    aboutModalSectionTitle: {
+        fontSize: screenWidth * 0.05,
+        fontWeight: 'bold',
+        color: '#4ECDC4',
+        marginTop: 20,
+        marginBottom: 15,
+    },
+    aboutModalFeatureTitle: {
+        fontSize: screenWidth * 0.04,
+        fontWeight: 'bold',
+        color: '#4ECDC4',
+        marginTop: 15,
+        marginBottom: 5,
+    },
+    modalCloseButton: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        padding: 8,
+        zIndex: 1,
+    },
+    modalBottomButton: {
+        backgroundColor: '#4ECDC4',
+        borderRadius: 10,
+        padding: 15,
+        marginTop: 20,
+        marginBottom: 30,
+        width: '100%',
+        alignItems: 'center',
+    },
+    modalBottomButtonText: {
+        color: '#000',
+        fontSize: screenWidth * 0.04,
+        fontWeight: '600',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: '100%',
+        marginBottom: 20,
+        paddingRight: 5,
+    },
+    aboutModalTitle: {
+        fontSize: screenWidth * 0.06,
+        fontWeight: 'bold',
+        color: '#4ECDC4',
+        flex: 1,
+        textAlign: 'center',
+    },
+    modalCloseButton: {
+        padding: 5,
     },
 });
