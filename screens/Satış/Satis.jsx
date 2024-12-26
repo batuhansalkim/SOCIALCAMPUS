@@ -5,7 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { collection, addDoc, getDocs, query, orderBy, Timestamp, where } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, Timestamp, where, doc, deleteDoc } from 'firebase/firestore';
 import { FIRESTORE_DB } from '../../FirebaseConfig';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -20,12 +20,15 @@ export default function BookSellingPage() {
   const [enlargedImage, setEnlargedImage] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(100)).current;
   const [isSaveButtonEnabled, setIsSaveButtonEnabled] = useState(false);
 
   useEffect(() => {
     fetchBooks();
+    getCurrentUser();
   }, []);
 
   useEffect(() => {
@@ -63,6 +66,32 @@ export default function BookSellingPage() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getCurrentUser = async () => {
+    try {
+      const usersRef = collection(FIRESTORE_DB, 'users');
+      const querySnapshot = await getDocs(query(usersRef));
+      let latestUser = null;
+      let latestTimestamp = new Date(0);
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.createdAt && data.createdAt.toDate) {
+          const timestamp = data.createdAt.toDate();
+          if (timestamp > latestTimestamp) {
+            latestTimestamp = timestamp;
+            latestUser = { ...data, id: doc.id };
+          }
+        }
+      });
+
+      if (latestUser) {
+        setCurrentUserId(latestUser.id);
+      }
+    } catch (error) {
+      console.error('Kullanıcı bilgisi alınırken hata:', error);
     }
   };
 
@@ -181,32 +210,76 @@ export default function BookSellingPage() {
     }
   };
 
-  const renderBookItem = ({ item }) => (
-    <View style={styles.bookCard}>
+  const handleDeleteBook = async (bookId) => {
+    try {
+      Alert.alert(
+        'Kitabı Sil',
+        'Bu kitabı silmek istediğinize emin misiniz?',
+        [
+          {
+            text: 'İptal',
+            style: 'cancel'
+          },
+          {
+            text: 'Sil',
+            onPress: async () => {
+              const bookRef = doc(FIRESTORE_DB, 'books', bookId);
+              await deleteDoc(bookRef);
+              Alert.alert('Başarılı', 'Kitap başarıyla silindi.');
+              fetchBooks(); // Listeyi yenile
+            },
+            style: 'destructive'
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Kitap silinirken hata:', error);
+      Alert.alert('Hata', 'Kitap silinirken bir hata oluştu.');
+    }
+  };
+
+  const renderBookItem = ({ item }) => {
+    const isOwnBook = item.sellerId === currentUserId;
+
+    return (
+      <View style={styles.bookCard}>
+        <View style={styles.imageContainer}>
         <TouchableOpacity onPress={() => handleImagePress(item.imageUrl)}>
-            <Image 
-                source={{ uri: item.imageUrl }} 
-                style={styles.bookImage}
-                resizeMode="cover"
-            />
-        </TouchableOpacity>
-        <View style={styles.bookInfo}>
-            <Text style={styles.bookTitle}>{item.title}</Text>
-            <Text style={styles.bookSection}>Bölüm: {item.section}</Text>
-            <Text style={styles.bookPrice}>Fiyat: {item.price} TL</Text>
-            <View style={styles.sellerInfo}>
-                <Text style={styles.sellerName}>Satıcı: {item.sellerName}</Text>
-            </View>
-            <TouchableOpacity 
-                style={styles.contactButton}
-                onPress={() => Linking.openURL(`https://instagram.com/${item.instagram}`)}
-            >
-                <Ionicons name="logo-instagram" size={20} color="#4ECDC4" style={styles.instagramIcon} />
-                <Text style={styles.contactButtonText}>@{item.instagram}</Text>
-            </TouchableOpacity>
+          <Image 
+            source={{ uri: item.imageUrl }} 
+            style={styles.bookImage}
+            resizeMode="cover"
+          />
+          </TouchableOpacity>
         </View>
-    </View>
-  );
+        <View style={styles.bookInfo}>
+          <View style={styles.titleContainer}>
+            <Text style={styles.bookTitle}>{item.title}</Text>
+          {isOwnBook && (
+            <TouchableOpacity 
+              style={styles.deleteButton}
+              onPress={() => handleDeleteBook(item.id)}
+            >
+                <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+            </TouchableOpacity>
+          )}
+          </View>
+          <Text style={styles.bookSection}>Bölüm: {item.section}</Text>
+          <Text style={styles.bookPrice}>Fiyat: {item.price} TL</Text>
+          <View style={styles.sellerInfo}>
+            <Text style={styles.sellerName}>Satıcı: {item.sellerName}</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.contactButton}
+            onPress={() => Linking.openURL(`https://instagram.com/${item.instagram}`)}
+          >
+            <Ionicons name="logo-instagram" size={20} color="#4ECDC4" style={styles.instagramIcon} />
+            <Text style={styles.contactButtonText}>@{item.instagram}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
 
   const openModal = () => {
     setModalVisible(true);
@@ -284,6 +357,11 @@ export default function BookSellingPage() {
     }
   };
 
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchBooks().then(() => setRefreshing(false));
+  }, []);
+
   if (loading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
@@ -316,6 +394,8 @@ export default function BookSellingPage() {
           keyExtractor={(item) => item.id}
           numColumns={2}
           contentContainerStyle={styles.bookList}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
           ListEmptyComponent={() => (
             <Text style={styles.emptyListText}>
               {loading ? 'Yükleniyor...' : 'Hiçbir kitap bulunamadı.'}
@@ -691,5 +771,21 @@ const styles = StyleSheet.create({
     marginTop: 10,
     color: '#4ECDC4',
     fontSize: 16,
-  }
+  },
+  imageContainer: {
+    position: 'relative',
+    width: '100%',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  deleteButton: {
+    backgroundColor: 'rgba(255, 59, 48, 0.1)',
+    borderRadius: 8,
+    padding: 6,
+    marginLeft: 8,
+  },
 });
