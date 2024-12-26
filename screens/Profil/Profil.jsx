@@ -28,52 +28,112 @@ const screenWidth = Dimensions.get('window').width;
 const AboutAppModal = ({ visible, onClose }) => (
   <Modal visible={visible} animationType="slide" transparent>
     <BlurView intensity={100} tint="dark" style={styles.aboutModalContainer}>
-      <ScrollView style={styles.aboutModalContent}>
+      <LinearGradient
+        colors={['rgba(0,0,0,0.95)', 'rgba(0,0,0,0.85)']}
+        style={styles.aboutModalContent}
+      >
         <View style={styles.modalHeader}>
-          <Text style={styles.aboutModalTitle}>Uygulama Hakkında</Text>
+          <View style={styles.modalTitleContainer}>
+            <Ionicons name="information-circle" size={32} color="#4ECDC4" style={styles.modalTitleIcon} />
+            <Text style={styles.aboutModalTitle}>Uygulama Hakkında</Text>
+          </View>
           <TouchableOpacity style={styles.modalCloseButton} onPress={onClose}>
             <Ionicons name="close-circle" size={35} color="#4ECDC4" />
           </TouchableOpacity>
         </View>
         
-        <Text style={styles.aboutModalSubtitle}>SocialCampus Uygulamasına Hoş Geldiniz!</Text>
-        
-        <Text style={styles.aboutModalText}>
-          Kırklareli Üniversitesi'nin öğrenci deneyimini en üst düzeye çıkarmak için tasarlanmış olan SocialCampus uygulaması, siz değerli öğrencilerimizin günlük yaşantısını kolaylaştırmak üzere geliştirilmiştir. Uygulama, bilgiye hızlı erişim sağlayarak öğrencilerin akademik ve sosyal yaşamlarını zenginleştirmeyi amaçlar.
-        </Text>
-        
-        <Text style={styles.aboutModalText}>
-          Uygulamayı Kırklareli Üniversitesi'nde okuyan Yazılım Mühendisliği öğrencisi olarak gönüllü geliştirdim. Amacım, öğrenci topluluğuna katkıda bulunmak ve onların deneyimlerini iyileştirmektir.
-        </Text>
-        
-        <Text style={styles.aboutModalSectionTitle}>Özellikler</Text>
-        
-        <Text style={styles.aboutModalFeatureTitle}>Yemekhane Bilgileri</Text>
-        <Text style={styles.aboutModalText}>
-          "Bugün yemekte ne var?" sorusunun yanıtını SocialCampus Uygulaması ile öğrenebilirsiniz. Günlük yemek menülerini kolayca görüntüleyebilir ve sağlıklı beslenme tercihlerinizle ilgili bilgilere ulaşabilirsiniz.
-        </Text>
-        
-        <Text style={styles.aboutModalFeatureTitle}>Kulüp Bilgileri</Text>
-        <Text style={styles.aboutModalText}>
-          Okuldaki kulüpleri görüntüleyip, sosyal medya adresleri, yöneticileri ve danışman hocalara ulaşabilirsiniz. Bu sayede ilginizi çeken aktiviteleri takip edebilirsiniz.
-        </Text>
-        
-        <Text style={styles.aboutModalFeatureTitle}>Sosyalleşme</Text>
-        <Text style={styles.aboutModalText}>
-          Okul gündemini takip ederek sosyal etkinliklere katılabilir, arkadaşlarınızla etkileşimde bulunarak sosyalleşme imkanlarınızı artırabilirsiniz.
-        </Text>
-        
-        <Text style={styles.aboutModalFeatureTitle}>Satış</Text>
-        <Text style={styles.aboutModalText}>
-          Üst sınıflardan kitap, kırtasiye veya diğer eşyaları satın alarak ihtiyaçlarınızı karşılayabilir, aynı zamanda kendi eşyalarınızı da satışa sunabilirsiniz.
-        </Text>
+        <ScrollView 
+          style={styles.modalScrollView}
+          showsVerticalScrollIndicator={false}
+        >
+          <LinearGradient
+            colors={['rgba(78,205,196,0.15)', 'rgba(78,205,196,0.05)']}
+            style={styles.welcomeSection}
+          >
+            <Text style={styles.aboutModalSubtitle}>SocialCampus'e Hoş Geldiniz</Text>
+            
+            <Text style={styles.aboutModalText}>
+              SocialCampus, Kırklareli Üniversitesi öğrencilerinin kampüs deneyimini zenginleştirmek ve günlük yaşamlarını 
+              kolaylaştırmak amacıyla özel olarak tasarlanmış yenilikçi bir mobil platformdur. Modern arayüzü ve kullanıcı 
+              dostu özellikleriyle, öğrencilerin akademik ve sosyal hayatlarını daha verimli bir şekilde yönetmelerine 
+              olanak sağlar.
+            </Text>
+          </LinearGradient>
+          
+          <View style={styles.developerSection}>
+            <Text style={styles.aboutModalText}>
+              Bu platform, Kırklareli Üniversitesi Yazılım Mühendisliği bölümü öğrencisi tarafından, öğrenci topluluğunun 
+              ihtiyaçları göz önünde bulundurularak geliştirilmiştir. Amacımız, teknoloji ile öğrenci deneyimini 
+              iyileştirerek, kampüs yaşamını daha etkileşimli ve erişilebilir hale getirmektir.
+            </Text>
+          </View>
+
+          <Text style={styles.featuresTitle}>
+            <Ionicons name="star" size={24} color="#4ECDC4" /> Temel Özellikler
+          </Text>
+          
+          <View style={styles.featuresContainer}>
+            <FeatureCard
+              title="Yemekhane Bilgi Sistemi"
+              icon="restaurant-outline"
+              description="Günlük yemek menülerini anlık olarak görüntüleyebilir, haftalık menüleri inceleyebilir ve 
+              beslenme planlamanızı buna göre yapabilirsiniz."
+            />
+
+            <FeatureCard
+              title="Öğrenci Kulüpleri Portalı"
+              icon="people-outline"
+              description="Üniversitemizdeki tüm öğrenci kulüplerinin detaylı bilgilerine, 
+              yönetim kadrosuna ve iletişim bilgilerine tek bir platformdan erişebilirsiniz."
+            />
+
+            <FeatureCard
+              title="Kampüs Sosyal Ağı"
+              icon="chatbubbles-outline"
+              description="Kampüs içi etkinlikleri, duyuruları ve güncel haberleri takip edebilir, diğer öğrencilerle 
+              etkileşime geçebilirsiniz. Sosyal ağımız, öğrenci topluluğunu bir araya getirerek bilgi paylaşımını ve 
+              iletişimi güçlendirir."
+            />
+
+            <FeatureCard
+              title="Öğrenci Alışveriş Platformu"
+              icon="cart-outline"
+              description="Kampüs içi alışveriş deneyimini kolaylaştıran bu platformda, diğer öğrencilerin paylaştığı 
+              ders kitapları, kırtasiye malzemeleri ve çeşitli ürünlere göz atabilirsiniz. İlgilendiğiniz ürünün 
+              satıcısıyla Instagram üzerinden doğrudan iletişime geçebilir, detayları görüşebilirsiniz. Ayrıca kendi 
+              ürünlerinizi de platforma ekleyerek diğer öğrencilerle güvenli bir şekilde alışveriş yapabilirsiniz."
+            />
+          </View>
+        </ScrollView>
 
         <TouchableOpacity style={styles.modalBottomButton} onPress={onClose}>
-          <Text style={styles.modalBottomButtonText}>Kapat</Text>
+          <LinearGradient
+            colors={['#4ECDC4', '#45B7AF']}
+            style={styles.bottomButtonGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <Text style={styles.modalBottomButtonText}>Kapat</Text>
+          </LinearGradient>
         </TouchableOpacity>
-      </ScrollView>
+      </LinearGradient>
     </BlurView>
   </Modal>
+);
+
+const FeatureCard = ({ title, icon, description }) => (
+  <LinearGradient
+    colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+    style={styles.featureCard}
+  >
+    <View style={styles.featureIconContainer}>
+      <Ionicons name={icon} size={24} color="#4ECDC4" />
+    </View>
+    <View style={styles.featureTextContainer}>
+      <Text style={styles.featureTitle}>{title}</Text>
+      <Text style={styles.featureDescription}>{description}</Text>
+    </View>
+  </LinearGradient>
 );
 
 export default function Profil() {
@@ -94,6 +154,7 @@ export default function Profil() {
     });
 
     const [aboutAppModalVisible, setAboutAppModalVisible] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         fetchUserData();
@@ -142,7 +203,22 @@ export default function Profil() {
         }
     };
 
+    const isFormValid = () => {
+        return editedInfo.fullName.trim() !== '' && 
+               editedInfo.faculty.trim() !== '' && 
+               editedInfo.department.trim() !== '';
+    };
+
     const updateUserData = async () => {
+        if (isSubmitting) return; // Eğer gönderim devam ediyorsa fonksiyondan çık
+        
+        if (!isFormValid()) {
+            Alert.alert('Uyarı', 'Lütfen tüm alanları doldurunuz.');
+            return;
+        }
+
+        setIsSubmitting(true); // Gönderim başladı
+
         try {
             const usersRef = collection(FIRESTORE_DB, 'users');
             const querySnapshot = await getDocs(query(usersRef));
@@ -167,18 +243,18 @@ export default function Profil() {
 
             const userRef = doc(FIRESTORE_DB, 'users', userId);
             await updateDoc(userRef, {
-                fullName: editedInfo.fullName,
-                faculty: editedInfo.faculty,
-                department: editedInfo.department,
+                fullName: editedInfo.fullName.trim(),
+                faculty: editedInfo.faculty.trim(),
+                department: editedInfo.department.trim(),
                 updatedAt: Timestamp.now()
             });
 
             const facultyName = facultiesData[editedInfo.faculty]?.name || editedInfo.faculty;
 
             setUserInfo({
-                isimSoyisim: editedInfo.fullName,
+                isimSoyisim: editedInfo.fullName.trim(),
                 fakulte: facultyName,
-                bolum: editedInfo.department
+                bolum: editedInfo.department.trim()
             });
 
             setModalVisible(false);
@@ -186,6 +262,8 @@ export default function Profil() {
         } catch (error) {
             console.error('Veri güncellenirken hata oluştu:', error);
             Alert.alert('Hata', 'Bilgiler güncellenemedi.');
+        } finally {
+            setIsSubmitting(false); // Gönderim bitti
         }
     };
 
@@ -301,8 +379,17 @@ export default function Profil() {
                         placeholderTextColor="#aaa"
                     />
 
-                    <TouchableOpacity style={styles.saveButton} onPress={updateUserData}>
-                        <Text style={styles.saveButtonText}>Kaydet</Text>
+                    <TouchableOpacity 
+                        style={[
+                            styles.saveButton, 
+                            !isFormValid() && styles.saveButtonDisabled
+                        ]} 
+                        onPress={updateUserData}
+                        disabled={!isFormValid() || isSubmitting}
+                    >
+                        <Text style={styles.saveButtonText}>
+                            {isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}
+                        </Text>
                     </TouchableOpacity>
                 </BlurView>
             )}
@@ -438,6 +525,10 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         marginTop: 10,
     },
+    saveButtonDisabled: {
+        backgroundColor: '#4ECDC4',
+        opacity: 0.5,
+    },
     saveButtonText: {
         color: '#000',
         fontSize: screenWidth * 0.04,
@@ -503,82 +594,112 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.9)',
     },
     aboutModalContent: {
+        flex: 1,
         padding: 20,
-        marginTop: 50,
-        paddingBottom: 20,
+        paddingTop: 40,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    modalTitleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    modalTitleIcon: {
+        marginRight: 10,
     },
     aboutModalTitle: {
         fontSize: screenWidth * 0.06,
         fontWeight: 'bold',
         color: '#4ECDC4',
-        marginBottom: 10,
-        textAlign: 'center',
+    },
+    modalCloseButton: {
+        padding: 5,
+    },
+    modalScrollView: {
+        flex: 1,
+    },
+    welcomeSection: {
+        borderRadius: 15,
+        padding: 20,
+        marginBottom: 20,
     },
     aboutModalSubtitle: {
-        fontSize: screenWidth * 0.04,
-        color: '#fff',
-        marginBottom: 20,
-        marginTop:15,
+        fontSize: screenWidth * 0.045,
+        fontWeight: '600',
+        color: '#4ECDC4',
+        marginBottom: 15,
         textAlign: 'center',
-        fontStyle: 'italic',
     },
     aboutModalText: {
         fontSize: screenWidth * 0.035,
         color: '#fff',
-        marginBottom: 15,
         lineHeight: screenWidth * 0.05,
+        marginBottom: 15,
     },
-    aboutModalSectionTitle: {
+    developerSection: {
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderRadius: 15,
+        padding: 20,
+        marginBottom: 20,
+    },
+    featuresTitle: {
         fontSize: screenWidth * 0.05,
         fontWeight: 'bold',
         color: '#4ECDC4',
-        marginTop: 20,
-        marginBottom: 15,
+        marginBottom: 20,
+        marginTop: 10,
+        textAlign: 'center',
     },
-    aboutModalFeatureTitle: {
+    featuresContainer: {
+        marginBottom: 20,
+    },
+    featureCard: {
+        flexDirection: 'row',
+        borderRadius: 15,
+        padding: 15,
+        marginBottom: 15,
+        alignItems: 'flex-start',
+    },
+    featureIconContainer: {
+        width: 45,
+        height: 45,
+        borderRadius: 22.5,
+        backgroundColor: 'rgba(78,205,196,0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15,
+    },
+    featureTextContainer: {
+        flex: 1,
+    },
+    featureTitle: {
         fontSize: screenWidth * 0.04,
         fontWeight: 'bold',
         color: '#4ECDC4',
-        marginTop: 15,
-        marginBottom: 5,
+        marginBottom: 8,
     },
-    modalCloseButton: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-        padding: 8,
-        zIndex: 1,
+    featureDescription: {
+        fontSize: screenWidth * 0.035,
+        color: '#fff',
+        opacity: 0.9,
+        lineHeight: screenWidth * 0.05,
     },
     modalBottomButton: {
-        backgroundColor: '#4ECDC4',
         borderRadius: 10,
+        overflow: 'hidden',
+        marginTop: 10,
+    },
+    bottomButtonGradient: {
         padding: 15,
-        marginTop: 20,
-        marginBottom: 30,
-        width: '100%',
         alignItems: 'center',
     },
     modalBottomButtonText: {
         color: '#000',
         fontSize: screenWidth * 0.04,
         fontWeight: '600',
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        width: '100%',
-        marginBottom: 20,
-        paddingRight: 5,
-    },
-    aboutModalTitle: {
-        fontSize: screenWidth * 0.06,
-        fontWeight: 'bold',
-        color: '#4ECDC4',
-        flex: 1,
-        textAlign: 'center',
-    },
-    modalCloseButton: {
-        padding: 5,
     },
 });
