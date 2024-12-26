@@ -301,6 +301,7 @@ export default function Profil() {
                     <Ionicons name="logo-android" size={32} color="#1a1a1a" />
                   </LinearGradient>
                   <Text style={styles.chatbotModalTitle}>AI Asistan</Text>
+                  
                 </View>
                 <TouchableOpacity onPress={() => setShowChatbotModal(false)} style={styles.modalCloseButton}>
                   <Ionicons name="close-circle" size={35} color="#4ECDC4" />
@@ -311,6 +312,8 @@ export default function Profil() {
                 style={styles.chatbotScrollView}
                 showsVerticalScrollIndicator={false}
               >
+                <Text style={{color:"red",fontSize:18,fontWeight:"bold",fontFamily:"Arial",textAlign:"center",marginVertical:10}}>YAKINDA EKLENECEK...</Text>
+
                 <LinearGradient
                   colors={['rgba(78,205,196,0.15)', 'rgba(78,205,196,0.05)']}
                   style={styles.chatbotWelcomeSection}
