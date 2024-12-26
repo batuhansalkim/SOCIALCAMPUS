@@ -194,14 +194,13 @@ export default function BookSellingPage() {
             <Text style={styles.bookPrice}>Fiyat: {item.price} TL</Text>
             <View style={styles.sellerInfo}>
                 <Text style={styles.sellerName}>Satıcı: {item.sellerName}</Text>
-                <Text style={styles.sellerFaculty}>{item.sellerFaculty}</Text>
-                <Text style={styles.sellerDepartment}>{item.sellerDepartment}</Text>
             </View>
             <TouchableOpacity 
                 style={styles.contactButton}
                 onPress={() => Linking.openURL(`https://instagram.com/${item.instagram}`)}
             >
-                <Text style={styles.contactButtonText}>İletişime Geç</Text>
+                <Ionicons name="logo-instagram" size={20} color="#4ECDC4" style={styles.instagramIcon} />
+                <Text style={styles.contactButtonText}>@{item.instagram}</Text>
             </TouchableOpacity>
         </View>
     </View>
@@ -538,7 +537,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(78,205,196,0.1)',
     borderRadius: 10,
     padding: 10,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  instagramIcon: {
+    marginRight: 5,
   },
   contactButtonText: {
     color: '#4ECDC4',
