@@ -10,15 +10,17 @@ import {
   ImageBackground,
   ScrollView,
   ActivityIndicator,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { StatusBar } from 'expo-status-bar';
 import axios from 'axios';
 import { collection, addDoc, query, where, getDocs, updateDoc, doc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { FIRESTORE_DB } from "../../FirebaseConfig";
 
 const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
 
 export default function MealSchedule() {
   const [mealList, setMealList] = useState([]);
@@ -473,81 +475,78 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f0f0f0',
-  },
-  weekendText: {
-    fontSize: 20,
-    color: '#fff',
-    textAlign: 'center',
-    marginTop: 20,
+    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight || 0,
   },
   header: {
-    padding: 20,
-    paddingTop: 40,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    padding: screenWidth * 0.04,
+    paddingTop: Platform.OS === 'ios' ? screenHeight * 0.02 : screenHeight * 0.015,
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
     alignItems: 'center',
   },
   headerIcon: {
-    marginBottom: 10,
+    marginBottom: screenHeight * 0.01,
   },
   headerText: {
-    fontSize: 28,
+    fontSize: screenWidth * 0.06,
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'center',
   },
   subHeaderText: {
-    fontSize: 16,
+    fontSize: screenWidth * 0.035,
     color: '#ddd',
     textAlign: 'center',
-    marginTop: 5,
+    marginTop: screenHeight * 0.005,
   },
   flatListContent: {
-    paddingVertical: 40,
+    paddingVertical: screenHeight * 0.02,
     alignItems: 'center',
   },
   cardContainer: {
     width: screenWidth,
-    paddingHorizontal: 20,
+    paddingHorizontal: screenWidth * 0.04,
     justifyContent: 'center',
+    paddingBottom: screenHeight * 0.03,
   },
   card: {
-    borderRadius: 20,
-    padding: 20,
-    marginVertical: 10,
+    borderRadius: 15,
+    padding: screenWidth * 0.04,
+    marginVertical: screenHeight * 0.005,
     alignItems: 'flex-start',
-    height: 400,
+    height: Platform.OS === 'ios' ? screenHeight * 0.38 : screenHeight * 0.42,
+    maxHeight: screenHeight * 0.45,
   },
   dateContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    marginBottom: 15,
+    marginBottom: screenHeight * 0.01,
     alignItems: 'flex-start',
   },
   dateText: {
-    fontSize: 24,
+    fontSize: screenWidth * 0.048,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 5,
+    marginBottom: screenHeight * 0.005,
   },
   mealHoursContainer: {
-    marginTop: 5,
+    marginTop: screenHeight * 0.005,
   },
   mealHourBox: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.2)',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 6,
+    paddingVertical: screenHeight * 0.005,
+    paddingHorizontal: screenWidth * 0.02,
+    borderRadius: 5,
     marginVertical: 2,
   },
   timeIcon: {
-    marginRight: 6,
+    marginRight: screenWidth * 0.01,
   },
   mealHoursText: {
-    fontSize: 14,
+    fontSize: screenWidth * 0.034,
     color: '#fff',
     fontWeight: '500',
   },
@@ -558,23 +557,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFD700',
   },
   mealScrollView: {
-    maxHeight: 250,
+    flex: 1,
     width: '100%',
+    marginVertical: screenHeight * 0.01,
   },
   yemekContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: screenHeight * 0.008,
+    paddingHorizontal: screenWidth * 0.02,
   },
   yemekIcon: {
-    marginRight: 10,
+    marginRight: screenWidth * 0.02,
   },
   yemekDetails: {
     flex: 1,
   },
   yemekText: {
-    fontSize: 18,
+    fontSize: screenWidth * 0.038,
     color: '#fff',
+    flexWrap: 'wrap',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -598,54 +600,59 @@ const styles = StyleSheet.create({
   pagination: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 10,
+    position: 'absolute',
+    bottom: screenHeight * 0.02,
+    left: 0,
+    right: 0,
+    height: screenHeight * 0.02,
   },
   dot: {
-    height: 10,
-    width: 10,
-    borderRadius: 5,
-    backgroundColor: 'black',
-    marginHorizontal: 8,
-    marginBottom: 20,
+    height: screenWidth * 0.015,
+    width: screenWidth * 0.015,
+    borderRadius: screenWidth * 0.0075,
+    backgroundColor: '#000',
+    marginHorizontal: screenWidth * 0.01,
+    opacity: 0.7,
   },
   loadingContainer: {
     flex: 1,
-    justifyContent:  'center',
+    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.8)',
   },
   loadingText: {
     color: '#fff',
-    fontSize: 18,
-    marginTop: 10,
+    fontSize: screenWidth * 0.04,
+    marginTop: screenHeight * 0.01,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.8)',
+    padding: screenWidth * 0.04,
   },
   errorText: {
     color: '#ff0000',
-    fontSize: 18,
+    fontSize: screenWidth * 0.04,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: screenHeight * 0.02,
   },
   retryButton: {
     backgroundColor: '#4ECDC4',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: screenWidth * 0.05,
+    paddingVertical: screenHeight * 0.015,
     borderRadius: 10,
   },
   retryButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: screenWidth * 0.038,
     fontWeight: 'bold',
   },
   reactionContainer: {
     width: '100%',
-    marginTop: 10,
-    paddingTop: 10,
+    marginTop: 'auto',
+    paddingTop: screenHeight * 0.01,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.2)',
   },
@@ -653,14 +660,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 20,
+    gap: Platform.OS === 'ios' ? screenWidth * 0.04 : screenWidth * 0.03,
   },
   reactionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
-    borderRadius: 8,
-    gap: 5,
+    padding: screenWidth * 0.02,
+    borderRadius: 6,
+    gap: screenWidth * 0.01,
   },
   likeButton: {
     backgroundColor: '#4CAF50',
@@ -674,8 +681,8 @@ const styles = StyleSheet.create({
   },
   reactionCount: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: screenWidth * 0.034,
     fontWeight: 'bold',
-    marginLeft: 5,
+    marginLeft: screenWidth * 0.01,
   },
 });

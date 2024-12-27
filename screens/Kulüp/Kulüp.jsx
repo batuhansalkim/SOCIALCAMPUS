@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, TextInput, KeyboardAvoidingView, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, TextInput, KeyboardAvoidingView, Dimensions, ActivityIndicator, Platform, StatusBar } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
@@ -129,48 +129,51 @@ const Kulüp = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight || 0,
   },
   innerContainer: {
-    paddingHorizontal: 15,
+    paddingHorizontal: screenWidth * 0.04,
     flex: 1,
-    paddingTop: 80,
+    paddingTop: screenHeight * 0.02,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 25,
-    paddingHorizontal: 15,
-    marginBottom: 20,
+    paddingHorizontal: screenWidth * 0.04,
+    marginBottom: screenHeight * 0.02,
     overflow: 'hidden',
+    height: screenHeight * 0.06,
   },
   searchIcon: {
-    marginRight: 10,
+    marginRight: screenWidth * 0.02,
   },
   searchInput: {
     flex: 1,
-    height: 45,
     fontSize: screenWidth * 0.04,
     color: '#fff',
+    height: '100%',
   },
   list: {
     flex: 1,
   },
   listContent: {
-    paddingBottom: 20,
+    paddingBottom: screenHeight * 0.02,
   },
   card: {
-    marginVertical: 10,
-    marginHorizontal: 5,
-    padding: 15,
+    marginVertical: screenHeight * 0.01,
+    marginHorizontal: screenWidth * 0.02,
+    padding: screenWidth * 0.04,
     borderRadius: 15,
     alignItems: 'center',
     overflow: 'hidden',
+    minHeight: screenHeight * 0.15,
   },
   image: {
-    width: screenWidth * 0.3,
-    height: screenWidth * 0.3,
-    borderRadius: screenWidth * 0.15,
-    marginBottom: 10,
+    width: screenWidth * 0.25,
+    height: screenWidth * 0.25,
+    borderRadius: screenWidth * 0.125,
+    marginBottom: screenHeight * 0.01,
     borderWidth: 2,
     borderColor: '#4ECDC4',
   },
@@ -179,6 +182,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'center',
+    paddingHorizontal: screenWidth * 0.02,
   },
   loadingContainer: {
     flex: 1,
@@ -191,11 +195,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.8)',
+    padding: screenWidth * 0.04,
   },
   errorText: {
     color: '#ff0000',
-    fontSize: 18,
+    fontSize: screenWidth * 0.04,
     textAlign: 'center',
+    marginBottom: screenHeight * 0.02,
   },
 });
 

@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, Linking, Modal, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
+import { View, Text, Image, StyleSheet, Linking, Modal, TouchableOpacity, Dimensions, ScrollView, Platform, StatusBar } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 
 const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
 
 const ClubDetailsModal = ({ visible, club, onClose }) => {
   if (!club) return null;
@@ -73,64 +74,69 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight || 0,
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: screenWidth * 0.04,
   },
   modalContent: {
     width: '90%',
-    maxHeight: '80%',
+    maxHeight: screenHeight * 0.8,
     borderRadius: 20,
     overflow: 'hidden',
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   scrollContent: {
     alignItems: 'center',
-    paddingVertical: 30,
-    paddingHorizontal: 20,
+    paddingVertical: screenHeight * 0.03,
+    paddingHorizontal: screenWidth * 0.04,
   },
   closeButton: {
     position: 'absolute',
-    top: 10,
-    right: 10,
+    top: Platform.OS === 'ios' ? screenHeight * 0.02 : screenHeight * 0.015,
+    right: screenWidth * 0.04,
     zIndex: 1,
+    padding: 8,
   },
   image: {
-    width: screenWidth * 0.5,
-    height: screenWidth * 0.5,
-    borderRadius: screenWidth * 0.25,
-    marginBottom: 20,
+    width: screenWidth * 0.4,
+    height: screenWidth * 0.4,
+    borderRadius: screenWidth * 0.2,
+    marginBottom: screenHeight * 0.02,
     borderWidth: 4,
     borderColor: '#4ECDC4',
   },
   name: {
-    fontSize: screenWidth * 0.07,
+    fontSize: screenWidth * 0.06,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: screenHeight * 0.02,
     color: '#4ECDC4',
     textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: {width: -1, height: 1},
-    textShadowRadius: 10
+    textShadowRadius: 10,
+    paddingHorizontal: screenWidth * 0.04,
   },
   detailsContainer: {
     width: '100%',
-    marginBottom: 30,
+    marginBottom: screenHeight * 0.03,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: screenHeight * 0.015,
     backgroundColor: 'rgba(78,205,196,0.1)',
     borderRadius: 15,
-    padding: 15,
+    padding: screenWidth * 0.04,
   },
   detail: {
-    fontSize: screenWidth * 0.045,
-    marginLeft: 15,
+    fontSize: screenWidth * 0.04,
+    marginLeft: screenWidth * 0.03,
     color: '#fff',
+    flex: 1,
   },
   detailLabel: {
     fontWeight: 'bold',
@@ -145,14 +151,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    paddingVertical: screenHeight * 0.015,
+    paddingHorizontal: screenWidth * 0.04,
   },
   instagramText: {
     color: '#fff',
-    fontSize: screenWidth * 0.045,
+    fontSize: screenWidth * 0.04,
     fontWeight: 'bold',
-    marginLeft: 10,
+    marginLeft: screenWidth * 0.02,
   },
 });
 
