@@ -292,17 +292,20 @@ export default function MealSchedule() {
               <View style={styles.mealHoursContainer}>
                 <View style={styles.mealHourBox}>
                   <Ionicons name="time" size={16} color="#FFD700" style={styles.timeIcon} />
-              <Text style={styles.mealHoursText}>Öğle: 11:00 - 14:00</Text>
+                  <Text style={styles.mealHoursText}>Öğle: 11:00 - 14:00</Text>
                 </View>
                 <View style={styles.mealHourBox}>
                   <Ionicons name="time" size={16} color="#FFD700" style={styles.timeIcon} />
-              <Text style={styles.mealHoursText}>Akşam: 16:00 - 18:00</Text>
+                  <Text style={styles.mealHoursText}>Akşam: 16:00 - 18:00</Text>
                 </View>
               </View>
             </View>
             {isCurrentDay && <View style={styles.currentDayIndicator} />}
           </View>
-          <ScrollView style={styles.mealScrollView}>
+          <ScrollView 
+            style={styles.mealScrollView}
+            showsVerticalScrollIndicator={false}
+          >
             {item.aciklama.split(',').map((meal, idx) => (
               <View key={idx} style={styles.yemekContainer}>
                 <Ionicons name={getIconForMeal(idx)} size={28} color="#FFF" style={styles.yemekIcon} />
