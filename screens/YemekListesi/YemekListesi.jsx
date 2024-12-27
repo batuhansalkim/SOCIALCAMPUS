@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Platform,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -147,25 +148,35 @@ export default function MealSchedule() {
   const fetchMealData = async () => {
     try {
       setLoading(true);
+      setError(null);
       console.log('Fetching meal data...');
       
-      // Timeout ekleyelim
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 saniye timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 saniye timeout
 
       const response = await axios.get('https://sks.klu.edu.tr/Takvimler/73-yemek-takvimi.klu', {
         signal: controller.signal,
-        timeout: 10000
+        timeout: 30000,
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'tr-TR,tr;q=0.8,en-US;q=0.5,en;q=0.3',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        }
       });
       
       clearTimeout(timeoutId);
       console.log('Response received:', response.status);
 
+      if (!response.data) {
+        throw new Error('Veri alınamadı');
+      }
+
       const htmlContent = response.data;
       const jsonDataMatch = htmlContent.match(/<textarea[^>]*>(.*?)<\/textarea>/s);
       
       if (!jsonDataMatch || !jsonDataMatch[1]) {
-        throw new Error('Veri formatı beklendiği gibi değil.');
+        throw new Error('Veri formatı beklendiği gibi değil');
       }
 
       let jsonData;
@@ -173,14 +184,14 @@ export default function MealSchedule() {
         jsonData = JSON.parse(jsonDataMatch[1]);
       } catch (parseError) {
         console.error('JSON parse error:', parseError);
-        throw new Error('Yemek listesi verisi geçerli bir format değil.');
+        throw new Error('Yemek listesi verisi geçerli bir format değil');
       }
 
       if (!Array.isArray(jsonData)) {
-        throw new Error('Yemek listesi verisi dizi formatında değil.');
+        throw new Error('Yemek listesi verisi dizi formatında değil');
       }
 
-      console.log('Parsed JSON data:', jsonData);
+      console.log('Parsed JSON data length:', jsonData.length);
       
       // Geçerli tarihleri filtrele
       const validData = jsonData.filter(item => {
@@ -192,6 +203,10 @@ export default function MealSchedule() {
         }
       });
       
+      if (validData.length === 0) {
+        throw new Error('Gösterilecek yemek listesi bulunamadı');
+      }
+
       // Sort the data by date
       const sortedData = validData.sort((a, b) => new Date(a.start) - new Date(b.start));
       
@@ -212,14 +227,14 @@ export default function MealSchedule() {
       });
 
       if (startIndex === -1) {
-        throw new Error('Gösterilecek yemek listesi bulunamadı.');
+        startIndex = 0; // Eğer uygun tarih bulunamazsa en baştan başla
       }
 
       // Get 5 weekdays starting from the found index
       let selectedData = [];
       let currentIndex = startIndex;
       let attempts = 0;
-      const maxAttempts = sortedData.length; // Sonsuz döngüyü önlemek için
+      const maxAttempts = sortedData.length;
 
       while (selectedData.length < 5 && currentIndex < sortedData.length && attempts < maxAttempts) {
         const itemDate = new Date(sortedData[currentIndex].start);
@@ -243,17 +258,24 @@ export default function MealSchedule() {
         currentIndex = (currentIndex + 1) % sortedData.length;
         attempts++;
       }
-      
-      if (selectedData.length === 0) {
-        throw new Error('Gösterilecek yemek listesi bulunamadı.');
-      }
 
+      console.log('Selected data length:', selectedData.length);
       setMealList(selectedData);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching meal data:', err);
-      setError(err instanceof Error ? err.message : 'Yemek listesi yüklenirken bir hata oluştu.');
+      setError(err.message || 'Yemek listesi yüklenirken bir hata oluştu');
       setLoading(false);
+      Alert.alert(
+        'Hata',
+        'Yemek listesi yüklenirken bir hata oluştu. Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.',
+        [
+          {
+            text: 'Tekrar Dene',
+            onPress: () => fetchMealData()
+          }
+        ]
+      );
     }
   };
 
