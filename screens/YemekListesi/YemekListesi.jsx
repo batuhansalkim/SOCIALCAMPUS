@@ -15,6 +15,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import axios from 'axios';
+import { collection, addDoc, query, where, getDocs, updateDoc, doc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { FIRESTORE_DB } from "../../FirebaseConfig";
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -22,6 +24,8 @@ export default function MealSchedule() {
   const [mealList, setMealList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reactions, setReactions] = useState({});
+  const [userReactions, setUserReactions] = useState({});
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef(null);
   const [gununSozu] = useState('Başarı, sabır ve azimle gelir.');
@@ -29,6 +33,115 @@ export default function MealSchedule() {
   useEffect(() => {
     fetchMealData();
   }, []);
+
+  useEffect(() => {
+    if (mealList.length > 0) {
+      fetchReactions();
+    }
+  }, [mealList]);
+
+  const fetchReactions = async () => {
+    try {
+      const reactionQuery = query(collection(FIRESTORE_DB, 'mealReactions'));
+      const querySnapshot = await getDocs(reactionQuery);
+      const reactionData = {};
+      const userReactionData = {};
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (!reactionData[data.mealId]) {
+          reactionData[data.mealId] = { likes: 0, dislikes: 0 };
+        }
+        if (data.type === 'like') {
+          reactionData[data.mealId].likes++;
+        } else {
+          reactionData[data.mealId].dislikes++;
+        }
+        if (data.userId === 'user123') {
+          userReactionData[data.mealId] = data.type;
+        }
+      });
+
+      setReactions(reactionData);
+      setUserReactions(userReactionData);
+    } catch (error) {
+      console.error('Error fetching reactions:', error);
+    }
+  };
+
+  const handleReaction = async (mealId, type) => {
+    try {
+      const userId = 'user123';
+      
+      // Önce yerel state'i güncelle (anlık geri bildirim için)
+      const newReactions = { ...reactions };
+      const newUserReactions = { ...userReactions };
+      
+      // Eğer kullanıcının önceki reaksiyonu varsa
+      if (userReactions[mealId]) {
+        // Önceki reaksiyonu kaldır
+        if (userReactions[mealId] === 'like') {
+          newReactions[mealId].likes = Math.max(0, (newReactions[mealId]?.likes || 0) - 1);
+        } else {
+          newReactions[mealId].dislikes = Math.max(0, (newReactions[mealId]?.dislikes || 0) - 1);
+        }
+      }
+
+      // Eğer aynı reaksiyona tıklanmışsa, sadece kaldır
+      if (userReactions[mealId] === type) {
+        delete newUserReactions[mealId];
+      } else {
+        // Yeni reaksiyonu ekle
+        newUserReactions[mealId] = type;
+        if (!newReactions[mealId]) {
+          newReactions[mealId] = { likes: 0, dislikes: 0 };
+        }
+        if (type === 'like') {
+          newReactions[mealId].likes = (newReactions[mealId]?.likes || 0) + 1;
+        } else {
+          newReactions[mealId].dislikes = (newReactions[mealId]?.dislikes || 0) + 1;
+        }
+      }
+
+      // Yerel state'i güncelle
+      setReactions(newReactions);
+      setUserReactions(newUserReactions);
+
+      // Firebase'i güncelle
+      const reactionQuery = query(
+        collection(FIRESTORE_DB, 'mealReactions'),
+        where('mealId', '==', mealId),
+        where('userId', '==', userId)
+      );
+      const querySnapshot = await getDocs(reactionQuery);
+
+      if (!querySnapshot.empty) {
+        // Kullanıcının önceki reaksiyonu varsa
+        const docRef = doc(FIRESTORE_DB, 'mealReactions', querySnapshot.docs[0].id);
+        if (userReactions[mealId] === type) {
+          // Aynı reaksiyon tekrar tıklandığında kaldır
+          await deleteDoc(docRef);
+        } else {
+          // Farklı reaksiyon seçildiğinde güncelle
+          await updateDoc(docRef, { type });
+        }
+      } else if (type !== userReactions[mealId]) {
+        // Yeni reaksiyon ekle
+        await addDoc(collection(FIRESTORE_DB, 'mealReactions'), {
+          mealId,
+          userId,
+          type,
+          createdAt: Timestamp.now()
+        });
+      }
+
+    } catch (error) {
+      console.error('Error handling reaction:', error);
+      Alert.alert('Hata', 'Reaksiyon eklenirken bir hata oluştu.');
+      // Hata durumunda önceki state'e geri dön
+      fetchReactions();
+    }
+  };
 
   const fetchMealData = async () => {
     try {
@@ -130,7 +243,11 @@ export default function MealSchedule() {
           style={styles.card}
         >
           <View style={styles.dateContainer}>
-            <Text style={styles.dateText}>{formatDate(item.start)}</Text>
+            <View>
+              <Text style={styles.dateText}>{formatDate(item.start)}</Text>
+              <Text style={styles.mealHoursText}>Öğle: 11:00 - 14:00</Text>
+              <Text style={styles.mealHoursText}>Akşam: 16:00 - 18:00</Text>
+            </View>
             {isCurrentDay && <View style={styles.currentDayIndicator} />}
           </View>
           <ScrollView style={styles.mealScrollView}>
@@ -143,11 +260,44 @@ export default function MealSchedule() {
               </View>
             ))}
           </ScrollView>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.feedbackButton}>
-              <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
-              <Text style={styles.feedbackText}>Geri Bildirim</Text>
-            </TouchableOpacity>
+          <View style={styles.reactionContainer}>
+            <View style={styles.reactionButtonGroup}>
+              <TouchableOpacity 
+                style={[
+                  styles.reactionButton, 
+                  styles.likeButton,
+                  userReactions[item.start] === 'like' && styles.activeReactionButton
+                ]}
+                onPress={() => handleReaction(item.start, 'like')}
+              >
+                <Ionicons 
+                  name={userReactions[item.start] === 'like' ? "thumbs-up" : "thumbs-up-outline"} 
+                  size={24} 
+                  color="#fff" 
+                />
+                <Text style={styles.reactionCount}>
+                  {reactions[item.start]?.likes || 0}
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[
+                  styles.reactionButton, 
+                  styles.dislikeButton,
+                  userReactions[item.start] === 'dislike' && styles.activeReactionButton
+                ]}
+                onPress={() => handleReaction(item.start, 'dislike')}
+              >
+                <Ionicons 
+                  name={userReactions[item.start] === 'dislike' ? "thumbs-down" : "thumbs-down-outline"} 
+                  size={24} 
+                  color="#fff" 
+                />
+                <Text style={styles.reactionCount}>
+                  {reactions[item.start]?.dislikes || 0}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </LinearGradient>
       </Animated.View>
@@ -326,12 +476,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    marginBottom: 10,
+    marginBottom: 15,
+    alignItems: 'flex-start',
   },
   dateText: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
+    marginBottom: 5,
+  },
+  mealHoursText: {
+    fontSize: 14,
+    color: '#fff',
+    opacity: 0.9,
   },
   currentDayIndicator: {
     width: 10,
@@ -436,5 +593,41 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  reactionContainer: {
+    width: '100%',
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.2)',
+  },
+  reactionButtonGroup: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 20,
+  },
+  reactionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 8,
+    gap: 5,
+  },
+  likeButton: {
+    backgroundColor: '#4CAF50',
+  },
+  dislikeButton: {
+    backgroundColor: '#FF5252',
+  },
+  activeReactionButton: {
+    opacity: 0.8,
+    transform: [{ scale: 0.95 }],
+  },
+  reactionCount: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 5,
   },
 });

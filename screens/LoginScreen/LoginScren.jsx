@@ -15,6 +15,7 @@ import {
     KeyboardAvoidingView,
     Image,
     ActivityIndicator,
+    Dimensions,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -100,8 +101,14 @@ export default function LoginScreen({ onLogin }) {
                 <KeyboardAvoidingView 
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
                     style={styles.container}
+                    keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
                 >
-                    <ScrollView contentContainerStyle={styles.scrollViewContent} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}>
+                    <ScrollView 
+                        contentContainerStyle={styles.scrollViewContent} 
+                        showsVerticalScrollIndicator={false} 
+                        showsHorizontalScrollIndicator={false}
+                        bounces={false}
+                    >
                         <View style={styles.headerContainer}>
                             <Image
                                 source={require('../../assets/logo.png')}
@@ -128,15 +135,16 @@ export default function LoginScreen({ onLogin }) {
 
                             <View style={styles.inputGroup}>
                                 <Text style={styles.label}>Fakülte</Text>
-                                <View style={styles.pickerContainer}>
+                                <View style={[styles.pickerContainer, Platform.OS === 'ios' && styles.pickerContainerIOS]}>
                                     <Ionicons name="school-outline" size={20} color="#4c669f" style={styles.inputIcon} />
                                     <Picker
-                                        style={styles.picker}
+                                        style={[styles.picker, Platform.OS === 'ios' && styles.pickerIOS]}
                                         selectedValue={faculty}
                                         onValueChange={(itemValue) => {
                                             setFaculty(itemValue);
                                             setDepartment('');
                                         }}
+                                        itemStyle={Platform.OS === 'ios' ? styles.pickerItemIOS : {}}
                                     >
                                         <Picker.Item label="Fakülte Seçin" value="" />
                                         {Object.entries(facultiesData).map(([key, value]) => (
@@ -148,13 +156,14 @@ export default function LoginScreen({ onLogin }) {
 
                             <View style={styles.inputGroup}>
                                 <Text style={styles.label}>Bölüm</Text>
-                                <View style={styles.pickerContainer}>
+                                <View style={[styles.pickerContainer, Platform.OS === 'ios' && styles.pickerContainerIOS]}>
                                     <Ionicons name="book-outline" size={20} color="#4c669f" style={styles.inputIcon} />
                                     <Picker
-                                        style={styles.picker}
+                                        style={[styles.picker, Platform.OS === 'ios' && styles.pickerIOS]}
                                         selectedValue={department}
                                         onValueChange={(itemValue) => setDepartment(itemValue)}
                                         enabled={!!faculty}
+                                        itemStyle={Platform.OS === 'ios' ? styles.pickerItemIOS : {}}
                                     >
                                         <Picker.Item label="Bölüm Seçin" value="" />
                                         {facultiesData[faculty]?.departments.map((dept, index) => (
@@ -227,6 +236,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#4c669f',
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     gradient: {
         flex: 1,
@@ -237,7 +247,8 @@ const styles = StyleSheet.create({
     },
     scrollViewContent: {
         flexGrow: 1,
-        justifyContent: 'center'
+        justifyContent: 'center',
+        paddingBottom: Platform.OS === 'ios' ? 50 : 20,
     },
     headerContainer: {
         marginBottom: 8,
@@ -267,7 +278,8 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
-        elevation: 5
+        elevation: 5,
+        marginHorizontal: Platform.OS === 'ios' ? 10 : 0,
     },
     inputGroup: {
         marginBottom: 15,
@@ -286,16 +298,18 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         paddingHorizontal: 8,
         backgroundColor: '#FFF',
-        paddingVertical: 4
+        paddingVertical: Platform.OS === 'ios' ? 8 : 4,
+        minHeight: Platform.OS === 'ios' ? 50 : 47,
     },
     inputIcon: {
         marginRight: 8,
     },
     input: {
         flex: 1,
-        height: 47,
+        height: Platform.OS === 'ios' ? 50 : 47,
         color: '#333',
-        fontSize: 14
+        fontSize: 14,
+        paddingVertical: Platform.OS === 'ios' ? 12 : 8,
     },
     pickerContainer: {
         flexDirection: 'row',
@@ -304,14 +318,26 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 8,
         backgroundColor: '#FFF',
-        paddingVertical: 4,
+        paddingVertical: Platform.OS === 'ios' ? 8 : 4,
         paddingHorizontal: 8,
+        minHeight: Platform.OS === 'ios' ? 50 : 47,
+    },
+    pickerContainerIOS: {
+        paddingRight: 0,
     },
     picker: {
         flex: 1,
-        height: 50,
+        height: Platform.OS === 'ios' ? 180 : 50,
         color: '#333',
-        fontSize: 14
+        fontSize: 14,
+    },
+    pickerIOS: {
+        marginRight: -8,
+        marginLeft: -8,
+    },
+    pickerItemIOS: {
+        fontSize: 14,
+        height: 120,
     },
     termsContainer: {
         marginVertical: 10
@@ -333,7 +359,7 @@ const styles = StyleSheet.create({
     },
     button: {
         marginTop: 15,
-        paddingVertical: 12,
+        paddingVertical: Platform.OS === 'ios' ? 14 : 12,
         borderRadius: 8,
         alignItems: 'center',
         backgroundColor: '#4CAF50',
