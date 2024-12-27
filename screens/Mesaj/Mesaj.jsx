@@ -1032,4 +1032,28 @@ const styles = StyleSheet.create({
     fontSize: screenWidth * 0.04,
     textAlign: 'center',
   },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    width: screenWidth * 0.8,
+    borderRadius: 15,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(30,30,30,0.9)',
+    padding: 20,
+  },
+  optionButton: {
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+  },
+  optionText: {
+    color: '#fff',
+    fontSize: screenWidth * 0.04,
+    fontWeight: '500',
+  },
 });
