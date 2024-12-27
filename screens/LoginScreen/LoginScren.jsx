@@ -65,16 +65,18 @@ export default function LoginScreen({ onLogin }) {
             });
 
             Alert.alert(
-                'Başarılı', 
-                'Bilgileriniz başarıyla kaydedildi!',
+                '✅ Kayıt Başarılı',
+                'Hoş geldiniz! SOCİALCAMPUS uygulamasına başarıyla kaydoldunuz.\n\nArtık kampüs hayatınızı kolaylaştıracak tüm özelliklere erişebilirsiniz.\n\nİyi kullanımlar dileriz! 🎓',
                 [
                     {
-                        text: 'Tamam',
+                        text: 'Devam Et',
                         onPress: () => {
                             if (onLogin) onLogin();
-                        }
+                        },
+                        style: 'default'
                     }
-                ]
+                ],
+                { cancelable: false }
             );
         } catch (error) {
             setIsSubmitted(false);
