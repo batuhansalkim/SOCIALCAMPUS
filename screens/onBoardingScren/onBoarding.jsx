@@ -6,26 +6,53 @@ import {
   Image,
   TouchableOpacity,
   useWindowDimensions,
+  Platform,
+  StatusBar,
+  SafeAreaView,
+  PanResponder,
 } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   Easing,
+  runOnJS,
 } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { Ionicons } from '@expo/vector-icons';
 import Pagination from '../../components/Pagination';
-import data from '../../data/data'; // Onboarding ekran verileri
+import data from '../../data/data';
 
 const OnboardingScreen = ({ onDone }) => {
   const { width } = useWindowDimensions();
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Animasyon değerleri
   const translateX = useSharedValue(0);
   const opacity = useSharedValue(1);
 
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderMove: (_, gestureState) => {
+      translateX.value = gestureState.dx;
+    },
+    onPanResponderRelease: (_, gestureState) => {
+      if (Math.abs(gestureState.dx) > width * 0.3) {
+        if (gestureState.dx > 0 && currentIndex > 0) {
+          animateTransition(-1);
+        } else if (gestureState.dx < 0 && currentIndex < data.length - 1) {
+          animateTransition(1);
+        } else {
+          translateX.value = withTiming(0);
+        }
+      } else {
+        translateX.value = withTiming(0);
+      }
+    },
+  });
+
   const animateTransition = (direction) => {
-    // Yeni içerik için animasyon başlangıcı
     translateX.value = withTiming(direction * -width, {
       duration: 400,
       easing: Easing.inOut(Easing.ease),
@@ -35,10 +62,7 @@ const OnboardingScreen = ({ onDone }) => {
     });
 
     setTimeout(() => {
-      // Sayfa değişimi
       setCurrentIndex((prev) => prev + direction);
-
-      // Yeni içerik animasyonu
       translateX.value = direction * width;
       opacity.value = 0;
       translateX.value = withTiming(0, {
@@ -53,133 +77,191 @@ const OnboardingScreen = ({ onDone }) => {
 
   const handleNext = () => {
     if (currentIndex < data.length - 1) {
-      animateTransition(1); // İleri geçiş
+      animateTransition(1);
     } else {
-      onDone(); // Bittiğinde yapılacak işlem
+      onDone();
     }
   };
 
   const handleBack = () => {
     if (currentIndex > 0) {
-      animateTransition(-1); // Geri geçiş
+      animateTransition(-1);
     }
   };
 
-  // Animasyonlu stiller
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
     opacity: opacity.value,
   }));
 
-  // Data'dan mevcut öğeyi alırken, undefined veya boş olma durumuna karşı kontrol ekledik
-  const currentItem = data[currentIndex] || {}; // Geçerli öğe yoksa boş bir nesne döndürürüz.
+  const currentItem = data[currentIndex] || {};
 
   return (
-    <View style={[styles.container]}>
-      {/* Animasyonlu içerik */}
-      <Animated.View style={[animatedStyle, styles.animatedContent]}>
-        {/* Görsel */}
-        <Image
-          source={currentItem?.image} // Optional chaining ile image kontrolü
-          style={styles.image}
-        />
-        {/* Başlık */}
-        <Text style={[styles.title, { color: currentItem?.textColor || '#ffffff' }]}>
-          {currentItem?.title}
-        </Text>
-        {/* Açıklama */}
-        <Text style={[styles.text, { color: currentItem?.textColor || '#ffffff' }]}>
-          {currentItem?.text}
-        </Text>
-      </Animated.View>
-
-      {/* Sayfa Noktaları */}
-      <Pagination data={data} currentIndex={currentIndex} />
-
-      {/* İleri ve Geri Butonları */}
-      <View style={styles.buttonContainer}>
-        {/* Geri Butonu */}
-        <TouchableOpacity
-          onPress={handleBack}
-          disabled={currentIndex === 0}
-          style={[
-            styles.button,
-            styles.backButton,
-            currentIndex === 0 && styles.disabledButton,
-          ]}
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" />
+      <LinearGradient
+        colors={['#1a2a6c', '#2a3a7c', '#3a4a8c']}
+        style={styles.container}
+      >
+        <Animated.View 
+          style={[animatedStyle, styles.animatedContent]}
+          {...panResponder.panHandlers}
         >
-          <Text style={styles.buttonText}>Geri</Text>
-        </TouchableOpacity>
+          <View style={styles.imageContainer}>
+            <Image
+              source={currentItem?.image}
+              style={styles.image}
+              resizeMode="contain"
+            />
+          </View>
 
-        {/* Sonraki/Giriş Yap Butonu */}
-        <TouchableOpacity onPress={handleNext} style={[styles.button, styles.nextButton]}>
-          <Text style={styles.buttonText}>
-            {currentIndex === data.length - 1 ? 'Giriş Yap' : 'Sonraki'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          <BlurView intensity={30} tint="dark" style={styles.contentContainer}>
+            <Text style={styles.title}>{currentItem?.title}</Text>
+            <Text style={styles.text}>{currentItem?.text}</Text>
+          </BlurView>
+        </Animated.View>
+
+        <View style={styles.bottomContainer}>
+          <Pagination 
+            data={data} 
+            currentIndex={currentIndex} 
+          />
+
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              onPress={handleBack}
+              disabled={currentIndex === 0}
+              style={[
+                styles.button,
+                styles.backButton,
+                currentIndex === 0 && styles.disabledButton,
+              ]}
+            >
+              <Ionicons 
+                name="chevron-back" 
+                size={24} 
+                color={currentIndex === 0 ? 'rgba(255,255,255,0.3)' : '#fff'} 
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              onPress={handleNext} 
+              style={[styles.button, styles.nextButton]}
+            >
+              {currentIndex === data.length - 1 ? (
+                <Text style={styles.buttonText}>Başla</Text>
+              ) : (
+                <Ionicons name="chevron-forward" size={24} color="#fff" />
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </LinearGradient>
+    </SafeAreaView>
   );
 };
 
-export default OnboardingScreen;
-
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#1a2a6c',
+  },
   container: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  animatedContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  imageContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    backgroundColor: '#002855', // Sabit koyu mavi arka plan
-  },
-  animatedContent: {
-    position: 'absolute',
     width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%',
+    maxHeight: '50%',
+    paddingVertical: 20,
   },
   image: {
-    width: 250,
-    height: 250,
-    marginBottom: 40,
+    width: '80%',
+    height: '80%',
+    maxWidth: 300,
+    maxHeight: 300,
+  },
+  contentContainer: {
+    width: '100%',
+    padding: 25,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   title: {
-    fontSize: 24,
+    fontSize: Platform.OS === 'ios' ? 28 : 24,
     fontWeight: 'bold',
+    color: '#fff',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 15,
+    letterSpacing: 0.5,
+    fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'sans-serif-medium',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   text: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'ios' ? 16 : 14,
+    color: 'rgba(255, 255, 255, 0.95)',
     textAlign: 'center',
-    marginBottom: 50,
+    lineHeight: Platform.OS === 'ios' ? 24 : 22,
+    fontFamily: Platform.OS === 'ios' ? 'Helvetica' : 'sans-serif',
+    letterSpacing: 0.3,
+  },
+  bottomContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: Platform.OS === 'ios' ? 30 : 20,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',
-    position: 'absolute',
-    bottom: 40,
-    paddingHorizontal: 20,
+    alignItems: 'center',
+    marginTop: 20,
   },
   button: {
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 50,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    backgroundColor: '#4ECDC4',
   },
   backButton: {
-    backgroundColor: '#6c757d',
+    backgroundColor: '#4ECDC4',
   },
   nextButton: {
-    backgroundColor: '#007BFF',
+    backgroundColor: '#4ECDC4',
+    shadowColor: '#4ECDC4',
+    shadowOpacity: 0.4,
   },
   disabledButton: {
-    backgroundColor: '#d3d3d3',
+    backgroundColor: 'rgba(78, 205, 196, 0.3)',
   },
   buttonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
+    fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'sans-serif-medium',
   },
 });
+
+export default OnboardingScreen;

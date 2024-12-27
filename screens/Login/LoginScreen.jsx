@@ -13,16 +13,22 @@ const handleRegister = async () => {
     const docRef = await addDoc(collection(FIRESTORE_DB, 'users'), {
       fullName: formData.fullName,
       faculty: formData.faculty,
+      facultyName: getFacultyName(formData.faculty),
       department: formData.department,
+      eulaAccepted: true,
+      termsAccepted: true,
       createdAt: new Date(),
       updatedAt: new Date()
     });
+
+    console.log('User created in Firestore with ID:', docRef.id);
 
     // Kullanıcı bilgilerini hazırla
     const userData = {
       id: docRef.id,
       fullName: formData.fullName,
       faculty: formData.faculty,
+      facultyName: getFacultyName(formData.faculty),
       department: formData.department
     };
 
@@ -30,10 +36,16 @@ const handleRegister = async () => {
     await AsyncStorage.setItem('userId', docRef.id);
     await AsyncStorage.setItem('userData', JSON.stringify(userData));
 
-    console.log('Saved user data:', {
-      userId: docRef.id,
-      userData: userData
-    });
+    // Doğrulama için verileri tekrar oku
+    const savedUserId = await AsyncStorage.getItem('userId');
+    const savedUserData = await AsyncStorage.getItem('userData');
+    
+    console.log('Verification - Saved userId:', savedUserId);
+    console.log('Verification - Saved userData:', savedUserData);
+
+    if (!savedUserId || !savedUserData) {
+      throw new Error('User data was not saved properly to AsyncStorage');
+    }
 
     setLoading(false);
     navigation.replace('TabNavigator');
@@ -42,4 +54,15 @@ const handleRegister = async () => {
     Alert.alert('Hata', 'Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.');
     setLoading(false);
   }
+};
+
+// Fakülte adını getiren yardımcı fonksiyon
+const getFacultyName = (faculty) => {
+  const facultyNames = {
+    'muhendislik': 'Mühendislik Fakültesi',
+    'teknoloji': 'Teknoloji Fakültesi',
+    'mimarlik': 'Mimarlık Fakültesi'
+    // Diğer fakülteler buraya eklenebilir
+  };
+  return facultyNames[faculty] || faculty;
 }; 

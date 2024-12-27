@@ -30,8 +30,9 @@ export default function MessageScreen() {
       try {
         const userId = await AsyncStorage.getItem('userId');
         const userDataStr = await AsyncStorage.getItem('userData');
-        console.log('Stored userId:', userId);
-        console.log('Stored userData:', userDataStr);
+        
+        console.log('Retrieved from AsyncStorage - userId:', userId);
+        console.log('Retrieved from AsyncStorage - userData:', userDataStr);
 
         if (userId && userDataStr) {
           const userData = JSON.parse(userDataStr);
@@ -39,9 +40,11 @@ export default function MessageScreen() {
           console.log('Current user set:', userData);
         } else {
           console.log('No user data found in AsyncStorage');
+          setCurrentUser(null);
         }
       } catch (error) {
         console.error('Kullanıcı bilgisi alınırken hata:', error);
+        setCurrentUser(null);
       }
     };
 
@@ -99,24 +102,19 @@ export default function MessageScreen() {
 
   const handleSend = async () => {
     try {
-      const userId = await AsyncStorage.getItem('userId');
-      const userDataStr = await AsyncStorage.getItem('userData');
-      
-      if (!userId || !userDataStr) {
+      if (!currentUser) {
         Alert.alert('Uyarı', 'Mesaj göndermek için giriş yapmalısınız.');
         return;
       }
-
-      const userData = JSON.parse(userDataStr);
 
       if (!newMessage.trim()) {
         return;
       }
 
       const messageData = {
-        userId: userId,
-        userName: userData.fullName,
         text: newMessage.trim(),
+        userId: currentUser.id,
+        userName: currentUser.fullName,
         likes: 0,
         likedBy: [],
         commentCount: 0,
@@ -124,7 +122,8 @@ export default function MessageScreen() {
         updatedAt: new Date()
       };
 
-      const messageRef = await addDoc(collection(FIRESTORE_DB, 'messages'), messageData);
+      await addDoc(collection(FIRESTORE_DB, 'messages'), messageData);
+      console.log('Message sent successfully');
 
       setNewMessage('');
       fetchMessages();
