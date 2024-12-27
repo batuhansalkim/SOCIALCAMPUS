@@ -17,6 +17,7 @@ import {
     ActivityIndicator,
     Dimensions,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -63,6 +64,33 @@ export default function LoginScreen({ onLogin }) {
                 createdAt: timestamp,
                 updatedAt: timestamp
             });
+
+            console.log('Firestore doc created with ID:', docRef.id);
+
+            // Kullanıcı verilerini AsyncStorage'a kaydet
+            const userData = {
+                id: docRef.id,
+                fullName,
+                faculty,
+                facultyName,
+                department
+            };
+
+            console.log('Saving user data to AsyncStorage:', userData);
+            
+            // Önce mevcut verileri temizle
+            await AsyncStorage.clear();
+            
+            // Yeni verileri kaydet
+            await AsyncStorage.setItem('userData', JSON.stringify(userData));
+            await AsyncStorage.setItem('userLoggedIn', 'true');
+            await AsyncStorage.setItem('hasLaunched', 'true');
+
+            // Kaydedilen verileri kontrol et
+            const savedUserData = await AsyncStorage.getItem('userData');
+            const savedLoginStatus = await AsyncStorage.getItem('userLoggedIn');
+            console.log('Saved user data:', savedUserData);
+            console.log('Saved login status:', savedLoginStatus);
 
             Alert.alert(
                 '✅ Kayıt Başarılı',

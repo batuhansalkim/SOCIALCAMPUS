@@ -18,11 +18,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { collection, query, getDocs, doc, updateDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, getDocs, doc, updateDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { FIRESTORE_DB } from '../../FirebaseConfig';
 import AboutScreen from '../About/About';
 import AppAdd from "../AppAdd/AppAdd";
 import facultiesData from '../../data/faculties.json';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -84,7 +85,7 @@ const AboutAppModal = ({ visible, onClose }) => (
             <FeatureCard
               title="Öğrenci Kulüpleri Portalı"
               icon="people-outline"
-              description="Üniversitemizdeki tüm öğrenci kulüplerinin detaylı bilgilerine, 
+              description="Üniversitemizdeki tüm ��ğrenci kulüplerinin detaylı bilgilerine, 
               yönetim kadrosuna ve iletişim bilgilerine tek bir platformdan erişebilirsiniz."
             />
 
@@ -164,37 +165,29 @@ export default function Profil() {
 
     const fetchUserData = async () => {
         try {
-            const usersRef = collection(FIRESTORE_DB, 'users');
-            const querySnapshot = await getDocs(query(usersRef));
+            const userDataStr = await AsyncStorage.getItem('userData');
+            if (!userDataStr) {
+                console.error('Kullanıcı verisi bulunamadı');
+                return;
+            }
+
+            const userData = JSON.parse(userDataStr);
+            const userDoc = await getDoc(doc(FIRESTORE_DB, 'users', userData.id));
             
-            // En son eklenen kullanıcıyı bul
-            let latestUser = null;
-            let latestTimestamp = new Date(0);
-
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                if (data.createdAt && data.createdAt.toDate) {
-                    const timestamp = data.createdAt.toDate();
-                    if (timestamp > latestTimestamp) {
-                        latestTimestamp = timestamp;
-                        latestUser = { ...data, id: doc.id };
-                    }
-                }
-            });
-
-            if (latestUser) {
-                const facultyName = facultiesData[latestUser.faculty]?.name || latestUser.faculty;
+            if (userDoc.exists()) {
+                const data = userDoc.data();
+                const facultyName = facultiesData[data.faculty]?.name || data.faculty;
                 
                 setUserInfo({
-                    isimSoyisim: latestUser.fullName || "Belirtilmemiş",
+                    isimSoyisim: data.fullName || "Belirtilmemiş",
                     fakulte: facultyName || "Belirtilmemiş",
-                    bolum: latestUser.department || "Belirtilmemiş"
+                    bolum: data.department || "Belirtilmemiş"
                 });
 
                 setEditedInfo({
-                    fullName: latestUser.fullName || "",
-                    faculty: latestUser.faculty || "",
-                    department: latestUser.department || ""
+                    fullName: data.fullName || "",
+                    faculty: data.faculty || "",
+                    department: data.department || ""
                 });
             }
         } catch (error) {
@@ -212,38 +205,26 @@ export default function Profil() {
     };
 
     const updateUserData = async () => {
-        if (isSubmitting) return; // Eğer gönderim devam ediyorsa fonksiyondan çık
+        if (isSubmitting) return;
         
         if (!isFormValid()) {
             Alert.alert('Uyarı', 'Lütfen tüm alanları doldurunuz.');
             return;
         }
 
-        setIsSubmitting(true); // Gönderim başladı
+        setIsSubmitting(true);
 
         try {
-            const usersRef = collection(FIRESTORE_DB, 'users');
-            const querySnapshot = await getDocs(query(usersRef));
-            let userId = null;
-            let latestTimestamp = new Date(0);
-
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                if (data.createdAt && data.createdAt.toDate) {
-                    const timestamp = data.createdAt.toDate();
-                    if (timestamp > latestTimestamp) {
-                        latestTimestamp = timestamp;
-                        userId = doc.id;
-                    }
-                }
-            });
-
-            if (!userId) {
+            const userDataStr = await AsyncStorage.getItem('userData');
+            if (!userDataStr) {
                 Alert.alert('Hata', 'Kullanıcı bilgisi bulunamadı.');
                 return;
             }
 
-            const userRef = doc(FIRESTORE_DB, 'users', userId);
+            const userData = JSON.parse(userDataStr);
+            const userRef = doc(FIRESTORE_DB, 'users', userData.id);
+
+            // Firebase'i güncelle
             await updateDoc(userRef, {
                 fullName: editedInfo.fullName.trim(),
                 faculty: editedInfo.faculty.trim(),
@@ -252,6 +233,16 @@ export default function Profil() {
             });
 
             const facultyName = facultiesData[editedInfo.faculty]?.name || editedInfo.faculty;
+
+            // AsyncStorage'ı güncelle
+            const updatedUserData = {
+                ...userData,
+                fullName: editedInfo.fullName.trim(),
+                faculty: editedInfo.faculty.trim(),
+                facultyName: facultyName,
+                department: editedInfo.department.trim()
+            };
+            await AsyncStorage.setItem('userData', JSON.stringify(updatedUserData));
 
             setUserInfo({
                 isimSoyisim: editedInfo.fullName.trim(),
@@ -265,7 +256,7 @@ export default function Profil() {
             console.error('Veri güncellenirken hata oluştu:', error);
             Alert.alert('Hata', 'Bilgiler güncellenemedi.');
         } finally {
-            setIsSubmitting(false); // Gönderim bitti
+            setIsSubmitting(false);
         }
     };
 

@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { collection, addDoc, getDocs, query, orderBy, Timestamp, where, doc, deleteDoc } from 'firebase/firestore';
 import { FIRESTORE_DB } from '../../FirebaseConfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -71,25 +72,15 @@ export default function BookSellingPage() {
 
   const getCurrentUser = async () => {
     try {
-      const usersRef = collection(FIRESTORE_DB, 'users');
-      const querySnapshot = await getDocs(query(usersRef));
-      let latestUser = null;
-      let latestTimestamp = new Date(0);
-
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        if (data.createdAt && data.createdAt.toDate) {
-          const timestamp = data.createdAt.toDate();
-          if (timestamp > latestTimestamp) {
-            latestTimestamp = timestamp;
-            latestUser = { ...data, id: doc.id };
-          }
-        }
-      });
-
-      if (latestUser) {
-        setCurrentUserId(latestUser.id);
+      const userDataStr = await AsyncStorage.getItem('userData');
+      if (!userDataStr) {
+        console.error('Kullanıcı verisi bulunamadı');
+        return;
       }
+
+      const userData = JSON.parse(userDataStr);
+      setCurrentUserId(userData.id);
+      return userData; // Kullanıcı verisini döndür
     } catch (error) {
       console.error('Kullanıcı bilgisi alınırken hata:', error);
     }
@@ -135,31 +126,10 @@ export default function BookSellingPage() {
       setLoading(true);
       
       // Kullanıcı bilgilerini al
-      const usersRef = collection(FIRESTORE_DB, 'users');
-      const userSnapshot = await getDocs(usersRef);
+      const userData = await getCurrentUser();
       
-      if (userSnapshot.empty) {
+      if (!userData) {
         Alert.alert('Hata', 'Kullanıcı bilgileri bulunamadı. Lütfen tekrar giriş yapın.');
-        return;
-      }
-
-      // En son giriş yapan kullanıcıyı bul
-      let latestUser = null;
-      let latestTimestamp = new Date(0);
-
-      userSnapshot.forEach((doc) => {
-        const userData = doc.data();
-        if (userData.createdAt && userData.createdAt.toDate) {
-          const userTimestamp = userData.createdAt.toDate();
-          if (userTimestamp > latestTimestamp) {
-            latestTimestamp = userTimestamp;
-            latestUser = { ...userData, id: doc.id };
-          }
-        }
-      });
-
-      if (!latestUser) {
-        Alert.alert('Hata', 'Geçerli bir kullanıcı bulunamadı. Lütfen tekrar giriş yapın.');
         return;
       }
 
@@ -185,10 +155,10 @@ export default function BookSellingPage() {
         price: Number(newBook.price),
         instagram: newBook.instagram.trim(),
         imageUrl: imageUrl,
-        sellerId: latestUser.id,
-        sellerName: latestUser.fullName,
-        sellerFaculty: latestUser.faculty,
-        sellerDepartment: latestUser.department,
+        sellerId: userData.id,
+        sellerName: userData.fullName,
+        sellerFaculty: userData.faculty,
+        sellerDepartment: userData.department,
         createdAt: timestamp,
         updatedAt: timestamp,
         status: "available"

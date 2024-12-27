@@ -16,8 +16,10 @@ export default function App() {
 
   const checkFirstTime = async () => {
     try {
-      const hasLaunched = await AsyncStorage.getItem('hasLaunched');
-      const userLoggedIn = await AsyncStorage.getItem('userLoggedIn');
+      const [hasLaunched, userLoggedIn] = await Promise.all([
+        AsyncStorage.getItem('hasLaunched'),
+        AsyncStorage.getItem('userLoggedIn')
+      ]);
 
       if (hasLaunched === 'true') {
         setShowOnboarding(false);
@@ -52,7 +54,7 @@ export default function App() {
   };
 
   if (isLoading) {
-    return null; // veya bir loading spinner gösterebilirsiniz
+    return null;
   }
 
   return (

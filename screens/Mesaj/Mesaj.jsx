@@ -21,44 +21,72 @@ export default function MessageScreen() {
   const [showComments, setShowComments] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [currentMessage, setCurrentMessage] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const scrollViewRef = useRef(null);
 
+  // Yenileme işlemi için fonksiyon
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    fetchMessages().then(() => setRefreshing(false));
+  }, []);
+
   // Kullanıcı bilgisini al
   useEffect(() => {
-    const getCurrentUser = async () => {
+    getCurrentUser();
+    const checkUserDataInterval = setInterval(async () => {
       try {
-        const userId = await AsyncStorage.getItem('userId');
         const userDataStr = await AsyncStorage.getItem('userData');
-        
-        console.log('Retrieved from AsyncStorage - userId:', userId);
-        console.log('Retrieved from AsyncStorage - userData:', userDataStr);
-
-        if (userId && userDataStr) {
+        if (userDataStr) {
           const userData = JSON.parse(userDataStr);
-          setCurrentUser(userData);
-          console.log('Current user set:', userData);
-        } else {
-          console.log('No user data found in AsyncStorage');
-          setCurrentUser(null);
+          const currentUserStr = JSON.stringify(currentUser);
+          const newUserStr = JSON.stringify(userData);
+          
+          if (currentUserStr !== newUserStr) {
+            setCurrentUser(userData);
+          }
         }
       } catch (error) {
-        console.error('Kullanıcı bilgisi alınırken hata:', error);
+        console.error('Error checking user data updates:', error);
+      }
+    }, 2000); // Her 2 saniyede bir kontrol et
+
+    return () => clearInterval(checkUserDataInterval);
+  }, []); // currentUser dependency'sini kaldırdık
+
+  // Kullanıcı bilgisini al
+  const getCurrentUser = async () => {
+    try {
+      const userLoggedIn = await AsyncStorage.getItem('userLoggedIn');
+      const userDataStr = await AsyncStorage.getItem('userData');
+      
+      if (userLoggedIn === 'true' && userDataStr) {
+        const userData = JSON.parse(userDataStr);
+        setCurrentUser(userData);
+      } else {
         setCurrentUser(null);
       }
-    };
-
-    getCurrentUser();
-  }, []);
+    } catch (error) {
+      console.error('Error in getCurrentUser:', error);
+      setCurrentUser(null);
+    }
+  };
 
   // Mesajları getir
   useEffect(() => {
     fetchMessages();
+
+    // Her 10 saniyede bir mesajları güncelle
+    const messageInterval = setInterval(() => {
+      fetchMessages();
+    }, 10000);
+
+    // Component unmount olduğunda interval'i temizle
+    return () => clearInterval(messageInterval);
   }, []);
 
   const fetchMessages = async () => {
     try {
-      setLoading(true);
       const messagesRef = collection(FIRESTORE_DB, 'messages');
       const q = query(messagesRef, orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
@@ -73,30 +101,28 @@ export default function MessageScreen() {
         // Mesajın beğenilip beğenilmediğini kontrol et
         messageData.isLiked = currentUser ? messageData.likedBy?.includes(currentUser.id) : false;
         
-        // Yorumları getir
+        // Yorumları getir ve en yeniden eskiye sırala
         const commentsRef = collection(FIRESTORE_DB, `messages/${doc.id}/comments`);
         const commentsQuery = query(commentsRef, orderBy('createdAt', 'desc'));
         const commentsSnapshot = await getDocs(commentsQuery);
         
         messageData.commentList = commentsSnapshot.docs.map(commentDoc => {
           const commentData = { id: commentDoc.id, ...commentDoc.data() };
-          // Yorumun beğenilip beğenilmediğini kontrol et
           commentData.isLiked = currentUser ? commentData.likedBy?.includes(currentUser.id) : false;
           return commentData;
         });
         
-        // Yorum sayısını güncelle
         messageData.comments = messageData.commentList.length;
-        
         messagesData.push(messageData);
       }
       
       setMessages(messagesData);
+      setLoading(false);
     } catch (error) {
       console.error('Mesajlar alınırken hata:', error);
-      Alert.alert('Hata', 'Mesajlar yüklenirken bir hata oluştu.');
-    } finally {
-      setLoading(false);
+      if (!messages.length) { // Sadece hiç mesaj yoksa hata göster
+        Alert.alert('Hata', 'Mesajlar yüklenirken bir hata oluştu.');
+      }
     }
   };
 
@@ -123,10 +149,14 @@ export default function MessageScreen() {
       };
 
       await addDoc(collection(FIRESTORE_DB, 'messages'), messageData);
-      console.log('Message sent successfully');
+      console.log('Message sent successfully by:', currentUser.fullName);
 
       setNewMessage('');
-      fetchMessages();
+      await fetchMessages();
+      
+      // Yeni mesaj gönderildikten sonra en üste scroll yap
+      scrollViewRef.current?.scrollToOffset({ offset: 0, animated: true });
+      
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
       console.error('Mesaj gönderilirken hata:', error);
@@ -415,7 +445,14 @@ export default function MessageScreen() {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.messageList}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          onContentSizeChange={() => {
+            // Yeni mesaj eklendiğinde en üste scroll yap
+            scrollViewRef.current?.scrollToOffset({ offset: 0, animated: true });
+          }}
         />
+
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
