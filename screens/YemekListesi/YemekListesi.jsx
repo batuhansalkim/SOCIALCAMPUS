@@ -430,65 +430,73 @@ export default function MealSchedule() {
       source={{ uri: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/food-pattern-background-8Wd9Hy0Ue5Ue9Ue9Ue9Ue9Ue9Ue9.png' }}
       style={styles.container}
     >
-      <StatusBar style="light" />
-      <LinearGradient colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']} style={styles.header}>
-        <Ionicons name="restaurant" size={40} color="#FFD700" style={styles.headerIcon} />
-        <Text style={styles.headerText}>Okul Yemek Listesi</Text>
-        <Text style={styles.subHeaderText}>
-          {formatDate(mealList[0]?.start)} - {formatDate(mealList[mealList.length - 1]?.start)}
-        </Text>
-      </LinearGradient>
-      
-      <Animated.FlatList
-        ref={flatListRef}
-        data={mealList}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          { useNativeDriver: true }
-        )}
-        contentContainerStyle={styles.flatListContent}
-        style={styles.flatList}
-        initialScrollIndex={0}
-        getItemLayout={(data, index) => ({
-          length: screenWidth,
-          offset: screenWidth * index,
-          index,
-        })}
-      />
+      <LinearGradient 
+        colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']} 
+        style={styles.container}
+      >
+        <StatusBar style="light" />
+        <LinearGradient 
+          colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']} 
+          style={styles.header}
+        >
+          <Ionicons name="restaurant" size={40} color="#FFD700" style={styles.headerIcon} />
+          <Text style={styles.headerText}>Okul Yemek Listesi</Text>
+          <Text style={styles.subHeaderText}>
+            {formatDate(mealList[0]?.start)} - {formatDate(mealList[mealList.length - 1]?.start)}
+          </Text>
+        </LinearGradient>
 
-      <View style={styles.pagination}>
-        {mealList.map((_, i) => {
-          const scale = scrollX.interpolate({
-            inputRange: [
-              (i - 1) * screenWidth,
-              i * screenWidth,
-              (i + 1) * screenWidth,
-            ],
-            outputRange: [0.8, 1.4, 0.8],
-            extrapolate: 'clamp',
-          });
-          const opacity = scrollX.interpolate({
-            inputRange: [
-              (i - 1) * screenWidth,
-              i * screenWidth,
-              (i + 1) * screenWidth,
-            ],
-            outputRange: [0.3, 1, 0.3],
-            extrapolate: 'clamp',
-          });
-          return (
-            <Animated.View
-              key={i}
-              style={[styles.dot, { transform: [{ scale }], opacity }]}
-            />
-          );
-        })}
-      </View>
+        <Animated.FlatList
+          ref={flatListRef}
+          data={mealList}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+            { useNativeDriver: true }
+          )}
+          contentContainerStyle={styles.flatListContent}
+          style={styles.flatList}
+          initialScrollIndex={0}
+          getItemLayout={(data, index) => ({
+            length: screenWidth,
+            offset: screenWidth * index,
+            index,
+          })}
+        />
+
+        <View style={styles.pagination}>
+          {mealList.map((_, i) => {
+            const scale = scrollX.interpolate({
+              inputRange: [
+                (i - 1) * screenWidth,
+                i * screenWidth,
+                (i + 1) * screenWidth,
+              ],
+              outputRange: [0.8, 1.4, 0.8],
+              extrapolate: 'clamp',
+            });
+            const opacity = scrollX.interpolate({
+              inputRange: [
+                (i - 1) * screenWidth,
+                i * screenWidth,
+                (i + 1) * screenWidth,
+              ],
+              outputRange: [0.3, 1, 0.3],
+              extrapolate: 'clamp',
+            });
+            return (
+              <Animated.View
+                key={i}
+                style={[styles.dot, { transform: [{ scale }], opacity }]}
+              />
+            );
+          })}
+        </View>
+      </LinearGradient>
     </ImageBackground>
   );
 }
@@ -497,12 +505,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f0f0f0',
-    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight || 0,
   },
   header: {
     padding: screenWidth * 0.04,
-    paddingTop: Platform.OS === 'ios' ? screenHeight * 0.02 : screenHeight * 0.015,
-    borderBottomLeftRadius: 25,
+paddingTop: Platform.OS === 'ios' ? screenHeight * 0.05 : screenHeight * 0.02,    borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
     alignItems: 'center',
   },

@@ -140,74 +140,66 @@ const Kulüp = ({ navigation }) => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView 
-  style={styles.container} 
-  behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
-  keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0} // iOS için boşluk, Android için sıfır
->
-  <LinearGradient
-    colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']}
-    style={styles.gradient}
-  >
-    <View style={styles.innerContainer}>
-      <BlurView intensity={100} tint="dark" style={styles.searchContainer}>
-        <Ionicons name="search" size={24} color="#4ECDC4" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Kulüp Ara..."
-          placeholderTextColor="#aaa"
-          value={searchQuery}
-          onChangeText={(text) => setSearchQuery(text)}
-          onFocus={() => {
-            if (navigation) {
-              navigation.getParent()?.setOptions({
-                tabBarStyle: {
-                  display: 'flex',
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  backgroundColor: 'rgba(0,0,0,0.8)', // Alt menüyü sabit bırak
-                  borderTopWidth: 0,
-                  height: 60,
-                  paddingBottom: 10,
-                },
-              });
-            }
-          }}
-          onBlur={() => {
-            if (navigation) {
-              navigation.getParent()?.setOptions({
-                tabBarStyle: {
-                  display: 'flex',
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  backgroundColor: 'rgba(0,0,0,0.8)',
-                  borderTopWidth: 0,
-                  height: 60,
-                  paddingBottom: 10,
-                },
-              });
-            }
-          }}
-        />
-      </BlurView>
-      <FlatList
-        data={filteredClubs}
-        renderItem={renderItem}
-        keyExtractor={(item, index) => index.toString()}
-        style={styles.list}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
-        keyboardShouldPersistTaps="handled"
-        onScrollBeginDrag={Keyboard.dismiss}
-      />
-      <ClubDetailsModal visible={modalVisible} club={selectedClub} onClose={closeModal} />
-    </View>
-  </LinearGradient>
-</KeyboardAvoidingView>
-
+        style={styles.container} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -500}
+      >
+        <LinearGradient
+          colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']}
+          style={styles.gradient}
+        >
+          <View style={styles.innerContainer}>
+            <BlurView intensity={100} tint="dark" style={styles.searchContainer}>
+              <Ionicons name="search" size={24} color="#4ECDC4" style={styles.searchIcon} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Kulüp Ara..."
+                placeholderTextColor="#aaa"
+                value={searchQuery}
+                onChangeText={(text) => setSearchQuery(text)}
+                onFocus={() => {
+                  if (navigation) {
+                    navigation.getParent()?.setOptions({
+                      tabBarStyle: {
+                        display: 'none'
+                      }
+                    });
+                  }
+                }}
+                onBlur={() => {
+                  if (navigation) {
+                    navigation.getParent()?.setOptions({
+                      tabBarStyle: {
+                        display: 'flex',
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        elevation: 0,
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        borderTopWidth: 0,
+                        height: 60,
+                        paddingBottom: 10
+                      }
+                    });
+                  }
+                }}
+              />
+            </BlurView>
+            <FlatList
+              data={filteredClubs}
+              renderItem={renderItem}
+              keyExtractor={(item, index) => index.toString()}
+              style={styles.list}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.listContent}
+              keyboardShouldPersistTaps="handled"
+              onScrollBeginDrag={Keyboard.dismiss}
+            />
+            <ClubDetailsModal visible={modalVisible} club={selectedClub} onClose={closeModal} />
+          </View>
+        </LinearGradient>
+      </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
 };
