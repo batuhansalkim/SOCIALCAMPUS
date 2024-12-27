@@ -561,18 +561,20 @@ export default function MessageScreen() {
       <SafeAreaView style={styles.safeArea}>
         <BlurView intensity={100} tint="dark" style={styles.commentsHeader}>
           <TouchableOpacity onPress={() => setShowComments(false)} style={styles.backButton}>
-            <MaterialIcons name="arrow-back" size={24} color="#4ECDC4" />
+            <Ionicons name="arrow-back" size={24} color="#4ECDC4" />
           </TouchableOpacity>      
           <Text style={styles.commentsTitle}>Yorumlar</Text>
         </BlurView>
+
         <BlurView intensity={80} tint="dark" style={styles.selectedMessageContainer}>
           <View style={styles.selectedMessageContent}>
-            <Text style={styles.selectedMessageUsername}>{selectedMessage.user}</Text>
-            <Text style={styles.selectedMessageText}>{selectedMessage.text}</Text>
+            <Text style={styles.selectedMessageUsername}>{selectedMessage?.userName}</Text>
+            <Text style={styles.selectedMessageText}>{selectedMessage?.text}</Text>
           </View>
         </BlurView>
+
         <FlatList
-          data={selectedMessage.commentList}
+          data={selectedMessage?.commentList}
           renderItem={renderCommentItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.commentsList}
@@ -580,10 +582,13 @@ export default function MessageScreen() {
           refreshing={refreshingComments}
           onRefresh={onRefreshComments}
         />
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
-        >
+      </SafeAreaView>
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.keyboardAvoidingView}
+      >
+        <View style={styles.commentInputWrapper}>
           <BlurView intensity={100} tint="dark" style={styles.commentInputContainer}>
             <TextInput
               style={styles.commentInput}
@@ -596,8 +601,8 @@ export default function MessageScreen() {
               <Ionicons name="send" size={24} color="#fff" />
             </TouchableOpacity>
           </BlurView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+        </View>
+      </KeyboardAvoidingView>
     </LinearGradient>
   );
 
@@ -663,11 +668,13 @@ export default function MessageScreen() {
             </View>
           )}
         />
+      </SafeAreaView>
 
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
-        >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.keyboardAvoidingView}
+      >
+      <View style={styles.inputWrapper}>
           <BlurView intensity={100} tint="dark" style={styles.inputContainer}>
             <TextInput
               style={styles.input}
@@ -680,8 +687,8 @@ export default function MessageScreen() {
               <Ionicons name="send" size={24} color="#fff" />
             </TouchableOpacity>
           </BlurView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+      </View>
+      </KeyboardAvoidingView>
     </LinearGradient>
   );
 
@@ -731,6 +738,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    marginBottom: 60, // Tab bar height için margin
   },
   agendaContainer: {
     padding: 8,
@@ -806,6 +814,7 @@ const styles = StyleSheet.create({
   },
   messageList: {
     paddingHorizontal: 10,
+    paddingBottom: 60,
   },
   messageContainer: {
     flexDirection: 'row',
@@ -864,6 +873,12 @@ const styles = StyleSheet.create({
     padding: 10,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.1)',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    height: 60,
   },
   input: {
     flex: 1,
@@ -893,9 +908,11 @@ const styles = StyleSheet.create({
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.8)',
   },
   backButton: {
-    marginRight: 15,
+    padding: 5,
+    marginRight: 10,
   },
   commentsTitle: {
     fontSize: screenWidth * 0.045,
@@ -929,6 +946,7 @@ const styles = StyleSheet.create({
   },
   commentsList: {
     paddingHorizontal: 15,
+    paddingBottom: 60,
   },
   commentContainer: {
     flexDirection: 'row',
@@ -972,12 +990,16 @@ const styles = StyleSheet.create({
   commentLiked: {
     color: '#ff0000',
   },
+  commentInputWrapper: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.8)',
+  },
   commentInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
+    height: 60,
   },
   commentInput: {
     flex: 1,
@@ -985,11 +1007,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 15,
     paddingVertical: 10,
-    fontSize: screenWidth * 0.035,
+    fontSize: screenWidth * 0.04,
     color: '#fff',
+    marginRight: 10,
   },
   commentButton: {
-    marginLeft: 10,
     backgroundColor: '#4ECDC4',
     borderRadius: 20,
     width: 40,
@@ -1055,5 +1077,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: screenWidth * 0.04,
     fontWeight: '500',
+  },
+  keyboardAvoidingView: {
+    position: 'absolute',
+    bottom: 60, // Tab bar height
+    left: 0,
+    right: 0,
+  },
+  inputWrapper: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.8)',
   },
 });
