@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, FlatList, Text, TextInput, StyleSheet, TouchableOpacity, Image, Animated, Dimensions, KeyboardAvoidingView, Platform, Modal, Alert, ActivityIndicator, Keyboard } from 'react-native';
+import { View, FlatList, Text, TextInput, StyleSheet, TouchableOpacity, Image, Animated, Dimensions, KeyboardAvoidingView, Platform, Modal, Alert, ActivityIndicator, Keyboard, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
-import { collection, addDoc, getDocs, query, orderBy, updateDoc, doc, deleteDoc, getDoc, increment, arrayUnion, arrayRemove, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, updateDoc, doc, deleteDoc, getDoc, increment, arrayUnion, arrayRemove, writeBatch, onSnapshot } from 'firebase/firestore';
 import { FIRESTORE_DB } from '../../FirebaseConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -27,6 +27,8 @@ export default function MessageScreen() {
   const [showCommentOptions, setShowCommentOptions] = useState(false);
   const [refreshingComments, setRefreshingComments] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [agendaTopics, setAgendaTopics] = useState([]);
+  const [selectedTopic, setSelectedTopic] = useState(null);
   const navigation = useNavigation();
 
   const scrollViewRef = useRef(null);
@@ -191,7 +193,7 @@ export default function MessageScreen() {
           }
         );
 
-        // Ana mesajın yorum sayısını güncelle
+        // Ana mesajn yorum sayısını güncelle
         await updateDoc(doc(FIRESTORE_DB, 'messages', selectedMessage.id), {
           commentCount: increment(1)
         });
@@ -418,6 +420,29 @@ export default function MessageScreen() {
     }
   }, [selectedMessage, currentUser]);
 
+  // Gündem konularını Firebase'den çek
+  useEffect(() => {
+    console.log('Fetching agenda topics...');
+    const topicsQuery = query(
+      collection(FIRESTORE_DB, 'agendaTopics'),
+      orderBy('order', 'asc')
+    );
+
+    const unsubscribe = onSnapshot(topicsQuery, (snapshot) => {
+      console.log('Snapshot received:', snapshot.size, 'documents');
+      const topics = snapshot.docs.map(doc => {
+        const data = { id: doc.id, ...doc.data() };
+        console.log('Topic data:', data);
+        return data;
+      });
+      setAgendaTopics(topics);
+    }, (error) => {
+      console.error('Error fetching topics:', error);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const renderItem = ({ item }) => (
     <TouchableOpacity onPress={() => openComments(item)}>
       <BlurView intensity={80} tint="dark" style={styles.messageContainer}>
@@ -583,14 +608,34 @@ export default function MessageScreen() {
     >
       <SafeAreaView style={styles.safeArea}>
         <BlurView intensity={80} tint="dark" style={styles.agendaContainer}>
-          <Text style={styles.agendaTitle}>📅 Üniversite Gündemi</Text>
-          <Text style={styles.agendaText}>Bu haftanın gündemi:</Text>
-          <View style={styles.eventList}>
-            <View style={styles.eventItem}>
-              <MaterialIcons name="event" size={20} color="#4ECDC4" />
-              <Text style={styles.eventText}>📍 Öğrenci Topluluğu Tanıtım Günü - 21 Ekim</Text>
+          <View style={styles.agendaHeader}>
+            <Text style={styles.agendaTitle}>🎯 Gündem Konuları</Text>
             </View>
-          </View>
+          
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.topicsScrollView}
+            contentContainerStyle={{ paddingRight: 20 }}
+          >
+            {agendaTopics.length > 0 ? (
+              agendaTopics.map((topic) => (
+                <View
+                key={topic.id}
+                  style={styles.topicCard}
+              >
+                  <View style={styles.topicRow}>
+                <Text style={styles.topicEmoji}>{topic.emoji}</Text>
+                <Text style={styles.topicTitle}>{topic.title}</Text>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <View style={styles.noTopicsContainer}>
+                <Text style={styles.noTopicsText}>Gündem konuları yükleniyor...</Text>
+              </View>
+            )}
+          </ScrollView>
         </BlurView>
         
         <FlatList
@@ -626,7 +671,7 @@ export default function MessageScreen() {
           <BlurView intensity={100} tint="dark" style={styles.inputContainer}>
             <TextInput
               style={styles.input}
-              placeholder="Mesajınızı yazın..."
+              placeholder="Mesajınız yazın..."
               placeholderTextColor="#aaa"
               value={newMessage}
               onChangeText={setNewMessage}
@@ -688,62 +733,76 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   agendaContainer: {
-    padding: 15,
+    padding: 8,
     borderRadius: 10,
     margin: 10,
+    marginBottom: 5,
     overflow: 'hidden',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderWidth: 1,
+    borderColor: '#4ECDC4',
+  },
+  agendaHeader: {
+    marginBottom: 5,
+    alignItems: 'center',
   },
   agendaTitle: {
-    fontSize: screenWidth * 0.055,
+    fontSize: screenWidth * 0.05,
     color: '#4ECDC4',
     fontWeight: 'bold',
-    marginBottom: 5,
+    textAlign: 'center',
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center", // Dikey eksende ortala
-    alignItems: "center", // Yatay eksende ortala
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Arka plan karartması
+  agendaSubtitle: {
+    display: 'none',
   },
-  modalContent: {
-    width: 200, // Daha küçük modal genişliği
-    padding: 15, // İçerik boşluğu
-    backgroundColor: "rgba(255, 255, 255, 0.95)", // Modal arka planı
-    borderRadius: 12, // Köşeleri yuvarlatma
-    alignItems: "center", // İçeriği ortala
-  },
-  optionButton: {
-    width: "90%", // Buton genişliği modal genişliğine uyumlu
-    paddingVertical: 8, // Daha küçük dikey boşluk
-    marginBottom: 8, // Butonlar arası daha dar boşluk
-    borderRadius: 6, // Köşeleri yuvarlatma
-    backgroundColor: "#007BFF", // Buton rengi (mavi)
-    alignItems: "center", // Yazıyı ortala
-  },
-  optionText: {
-    color: "#fff", // Yazı rengi
-    fontSize: 14, // Daha küçük yazı boyutu
-    fontWeight: "600", // Orta kalınlıkta yazı
-  },
-  agendaText: {
-    fontSize: screenWidth * 0.04,
-    color: '#fff',
-    marginBottom: 10,
-  },
-  eventList: {
+  topicsScrollView: {
     marginTop: 5,
   },
-  eventItem: {
+  topicCard: {
+    backgroundColor: 'rgba(78,205,196,0.1)',
+    padding: 6,
+    borderRadius: 8,
+    marginRight: 6,
+    width: 'auto',
+    minWidth: screenWidth * 0.3,
+    borderWidth: 1,
+    borderColor: 'rgba(78,205,196,0.2)',
+  },
+  topicRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(78,205,196,0.1)',
-    padding: 10,
-    borderRadius: 5,
+    paddingRight: 10,
   },
-  eventText: {
+  topicEmoji: {
+    fontSize: screenWidth * 0.05,
+    marginRight: 8,
+  },
+  topicTitle: {
     color: '#fff',
-    marginLeft: 10,
     fontSize: screenWidth * 0.035,
+    fontWeight: '600',
+  },
+  topicStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  participantCount: {
+    color: '#aaa',
+    fontSize: screenWidth * 0.035,
+  },
+  hotBadge: {
+    backgroundColor: 'rgba(255,82,82,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FF5252',
+  },
+  hotBadgeText: {
+    color: '#FF5252',
+    fontSize: screenWidth * 0.035,
+    fontWeight: '600',
   },
   messageList: {
     paddingHorizontal: 10,
@@ -961,5 +1020,16 @@ const styles = StyleSheet.create({
   commentOptionsButton: {
     marginLeft: 10,
     padding: 5,
+  },
+  noTopicsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  noTopicsText: {
+    color: '#aaa',
+    fontSize: screenWidth * 0.04,
+    textAlign: 'center',
   },
 });
