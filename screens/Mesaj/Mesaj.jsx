@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, FlatList, Text, TextInput, StyleSheet, TouchableOpacity, Image, Animated, Dimensions, KeyboardAvoidingView, Platform, Modal, Alert } from 'react-native';
+import { View, FlatList, Text, TextInput, StyleSheet, TouchableOpacity, Image, Animated, Dimensions, KeyboardAvoidingView, Platform, Modal, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,6 +22,9 @@ export default function MessageScreen() {
   const [showOptions, setShowOptions] = useState(false);
   const [currentMessage, setCurrentMessage] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [currentComment, setCurrentComment] = useState(null);
+  const [showCommentOptions, setShowCommentOptions] = useState(false);
+  const [refreshingComments, setRefreshingComments] = useState(false);
 
   const scrollViewRef = useRef(null);
 
@@ -191,7 +194,28 @@ export default function MessageScreen() {
         });
 
         setNewComment('');
-        fetchMessages(); // Mesajları yenile
+        
+        // Seçili mesajın yorumlarını güncelle
+        const commentsRef = collection(FIRESTORE_DB, `messages/${selectedMessage.id}/comments`);
+        const commentsQuery = query(commentsRef, orderBy('createdAt', 'desc'));
+        const commentsSnapshot = await getDocs(commentsQuery);
+        
+        const updatedComments = commentsSnapshot.docs.map(commentDoc => {
+          const commentData = { id: commentDoc.id, ...commentDoc.data() };
+          commentData.isLiked = currentUser ? commentData.likedBy?.includes(currentUser.id) : false;
+          return commentData;
+        });
+        
+        // Seçili mesajı güncelle
+        setSelectedMessage(prev => ({
+          ...prev,
+          commentList: updatedComments,
+          comments: updatedComments.length
+        }));
+
+        // Tüm mesajları da güncelle
+        fetchMessages();
+        
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch (error) {
         console.error('Yorum eklenirken hata:', error);
@@ -247,7 +271,25 @@ export default function MessageScreen() {
           likedBy: isLiked ? arrayRemove(currentUser.id) : arrayUnion(currentUser.id)
         });
         
-        fetchMessages(); // Mesajları yenile
+        // Seçili mesajın yorumlarını hemen güncelle
+        const updatedComments = selectedMessage.commentList.map(comment => {
+          if (comment.id === commentId) {
+            return {
+              ...comment,
+              likes: isLiked ? comment.likes - 1 : comment.likes + 1,
+              isLiked: !isLiked
+            };
+          }
+          return comment;
+        });
+
+        setSelectedMessage(prev => ({
+          ...prev,
+          commentList: updatedComments
+        }));
+        
+        // Arka planda tüm mesajları da güncelle
+        fetchMessages();
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
     } catch (error) {
@@ -296,6 +338,82 @@ export default function MessageScreen() {
     setCurrentMessage(message);
     setShowOptions(true);
   };
+
+  const handleDeleteComment = async () => {
+    if (!currentUser || !currentComment || currentComment.userId !== currentUser.id) {
+      Alert.alert('Uyarı', 'Bu yorumu silme yetkiniz yok.');
+      return;
+    }
+
+    try {
+      // Yorumu sil
+      await deleteDoc(doc(FIRESTORE_DB, `messages/${selectedMessage.id}/comments`, currentComment.id));
+      
+      // Ana mesajın yorum sayısını güncelle
+      await updateDoc(doc(FIRESTORE_DB, 'messages', selectedMessage.id), {
+        commentCount: increment(-1)
+      });
+
+      // Seçili mesajın yorumlarını güncelle
+      const commentsRef = collection(FIRESTORE_DB, `messages/${selectedMessage.id}/comments`);
+      const commentsQuery = query(commentsRef, orderBy('createdAt', 'desc'));
+      const commentsSnapshot = await getDocs(commentsQuery);
+      
+      const updatedComments = commentsSnapshot.docs.map(commentDoc => {
+        const commentData = { id: commentDoc.id, ...commentDoc.data() };
+        commentData.isLiked = currentUser ? commentData.likedBy?.includes(currentUser.id) : false;
+        return commentData;
+      });
+      
+      // Seçili mesajı güncelle
+      setSelectedMessage(prev => ({
+        ...prev,
+        commentList: updatedComments,
+        comments: updatedComments.length
+      }));
+
+      setShowCommentOptions(false);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.error('Yorum silinirken hata:', error);
+      Alert.alert('Hata', 'Yorum silinemedi.');
+    }
+  };
+
+  const handleCommentOptions = (comment) => {
+    setCurrentComment(comment);
+    setShowCommentOptions(true);
+  };
+
+  // Yorumları yenileme fonksiyonu
+  const onRefreshComments = React.useCallback(async () => {
+    if (!selectedMessage) return;
+    
+    setRefreshingComments(true);
+    try {
+      // Yorumları getir
+      const commentsRef = collection(FIRESTORE_DB, `messages/${selectedMessage.id}/comments`);
+      const commentsQuery = query(commentsRef, orderBy('createdAt', 'desc'));
+      const commentsSnapshot = await getDocs(commentsQuery);
+      
+      const updatedComments = commentsSnapshot.docs.map(commentDoc => {
+        const commentData = { id: commentDoc.id, ...commentDoc.data() };
+        commentData.isLiked = currentUser ? commentData.likedBy?.includes(currentUser.id) : false;
+        return commentData;
+      });
+      
+      // Seçili mesajı güncelle
+      setSelectedMessage(prev => ({
+        ...prev,
+        commentList: updatedComments,
+        comments: updatedComments.length
+      }));
+    } catch (error) {
+      console.error('Yorumlar yenilenirken hata:', error);
+    } finally {
+      setRefreshingComments(false);
+    }
+  }, [selectedMessage, currentUser]);
 
   const renderItem = ({ item }) => (
     <TouchableOpacity onPress={() => openComments(item)}>
@@ -357,11 +475,22 @@ export default function MessageScreen() {
   
   const renderCommentItem = ({ item }) => (
     <BlurView intensity={80} tint="dark" style={styles.commentContainer}>
-      {/* <Image source={{ uri: item.profileImage }} style={styles.commentProfileImage} /> */}
       <View style={styles.commentContent}>
         <View style={styles.commentHeader}>
-          <Text style={styles.commentUsername}>{item.user}</Text>
-          <Text style={styles.commentTimestamp}>{item.timestamp}</Text>
+          <Text style={styles.commentUsername}>{item.userName}</Text>
+          <View style={styles.commentHeaderRight}>
+          <Text style={styles.commentTimestamp}>
+            {item.createdAt?.toDate().toLocaleString('tr-TR')}
+          </Text>
+            {currentUser && currentUser.id === item.userId && (
+              <TouchableOpacity 
+                onPress={() => handleCommentOptions(item)} 
+                style={styles.commentOptionsButton}
+              >
+                <Ionicons name="menu" size={20} color="#aaa" />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
         <Text style={styles.commentText}>{item.text}</Text>
         <TouchableOpacity 
@@ -374,6 +503,26 @@ export default function MessageScreen() {
         </TouchableOpacity>
       </View>
     </BlurView>
+  );
+
+  const renderCommentOptionsModal = () => (
+    <Modal
+      transparent={true}
+      animationType="fade"
+      visible={showCommentOptions}
+      onRequestClose={() => setShowCommentOptions(false)}
+    >
+      <View style={styles.modalContainer}>
+        <BlurView intensity={100} tint="dark" style={styles.modalContent}>
+          <TouchableOpacity onPress={handleDeleteComment} style={styles.optionButton}>
+            <Text style={styles.optionText}>Sil</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setShowCommentOptions(false)} style={styles.optionButton}>
+            <Text style={styles.optionText}>Kapat</Text>
+          </TouchableOpacity>
+        </BlurView>
+      </View>
+    </Modal>
   );
 
   const renderComments = () => (
@@ -389,7 +538,6 @@ export default function MessageScreen() {
           <Text style={styles.commentsTitle}>Yorumlar</Text>
         </BlurView>
         <BlurView intensity={80} tint="dark" style={styles.selectedMessageContainer}>
-          {/* <Image source={{ uri: selectedMessage.profileImage }} style={styles.selectedMessageProfileImage} /> */}
           <View style={styles.selectedMessageContent}>
             <Text style={styles.selectedMessageUsername}>{selectedMessage.user}</Text>
             <Text style={styles.selectedMessageText}>{selectedMessage.text}</Text>
@@ -400,6 +548,9 @@ export default function MessageScreen() {
           renderItem={renderCommentItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.commentsList}
+          showsVerticalScrollIndicator={false}
+          refreshing={refreshingComments}
+          onRefresh={onRefreshComments}
         />
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -447,10 +598,22 @@ export default function MessageScreen() {
           contentContainerStyle={styles.messageList}
           refreshing={refreshing}
           onRefresh={onRefresh}
+          showsVerticalScrollIndicator={false}
           onContentSizeChange={() => {
-            // Yeni mesaj eklendiğinde en üste scroll yap
             scrollViewRef.current?.scrollToOffset({ offset: 0, animated: true });
           }}
+          ListEmptyComponent={() => (
+            <View style={styles.loadingContainer}>
+              {loading ? (
+                <>
+                  <ActivityIndicator size="large" color="#4ECDC4" />
+                  <Text style={styles.loadingText}>Mesajlar yükleniyor...</Text>
+                </>
+              ) : (
+                <Text style={styles.noMessagesText}>Henüz hiç mesaj yok.</Text>
+              )}
+            </View>
+          )}
         />
 
         <KeyboardAvoidingView
@@ -478,6 +641,7 @@ export default function MessageScreen() {
   <>
     {showComments ? renderComments() : renderMainScreen()}
     {renderOptionsModal()}
+    {renderCommentOptionsModal()}
   </>
 );
 }
@@ -713,7 +877,7 @@ const styles = StyleSheet.create({
     color: '#aaa',
   },
   commentLiked: {
-    color: '#4ECDC4',
+    color: '#ff0000',
   },
   commentInputContainer: {
     flexDirection: 'row',
@@ -739,5 +903,29 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  loadingText: {
+    color: '#4ECDC4',
+    fontSize: screenWidth * 0.04,
+    marginTop: 10,
+  },
+  noMessagesText: {
+    color: '#aaa',
+    fontSize: screenWidth * 0.04,
+    textAlign: 'center',
+  },
+  commentHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  commentOptionsButton: {
+    marginLeft: 10,
+    padding: 5,
   },
 });
