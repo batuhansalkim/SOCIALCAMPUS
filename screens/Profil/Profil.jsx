@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { collection, query, getDocs, doc, updateDoc, Timestamp, getDoc } from 'firebase/firestore';
+import { collection, query, getDocs, doc, updateDoc, Timestamp, getDoc, writeBatch, where } from 'firebase/firestore';
 import { FIRESTORE_DB } from '../../FirebaseConfig';
 import AboutScreen from '../About/About';
 import AppAdd from "../AppAdd/AppAdd";
@@ -231,6 +231,35 @@ export default function Profil() {
                 department: editedInfo.department.trim(),
                 updatedAt: Timestamp.now()
             });
+
+            // Kullanıcının tüm mesajlarını güncelle
+            const messagesRef = collection(FIRESTORE_DB, 'messages');
+            const messagesQuery = query(messagesRef, where('userId', '==', userData.id));
+            const messagesSnapshot = await getDocs(messagesQuery);
+
+            const batch = writeBatch(FIRESTORE_DB);
+
+            // Mesajları güncelle
+            messagesSnapshot.docs.forEach((messageDoc) => {
+                batch.update(doc(FIRESTORE_DB, 'messages', messageDoc.id), {
+                    userName: editedInfo.fullName.trim()
+                });
+
+                // Her mesajın yorumlarını da güncelle
+                getDocs(collection(FIRESTORE_DB, `messages/${messageDoc.id}/comments`))
+                    .then((commentsSnapshot) => {
+                        commentsSnapshot.docs.forEach((commentDoc) => {
+                            if (commentDoc.data().userId === userData.id) {
+                                batch.update(doc(FIRESTORE_DB, `messages/${messageDoc.id}/comments`, commentDoc.id), {
+                                    userName: editedInfo.fullName.trim()
+                                });
+                            }
+                        });
+                    });
+            });
+
+            // Batch işlemini uygula
+            await batch.commit();
 
             const facultyName = facultiesData[editedInfo.faculty]?.name || editedInfo.faculty;
 
