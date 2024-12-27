@@ -243,36 +243,30 @@ export default function BookSellingPage() {
 
     return (
       <View style={styles.bookCard}>
-        <LinearGradient
-          colors={['rgba(78,205,196,0.2)', 'rgba(78,205,196,0.1)', 'rgba(78,205,196,0.05)']}
-          style={styles.cardGradient}
-        >
         <View style={styles.imageContainer}>
-        <TouchableOpacity onPress={() => handleImagePress(item.imageUrl)}>
-          <Image 
-            source={{ uri: item.imageUrl }} 
-            style={styles.bookImage}
-            resizeMode="cover"
-          />
+          <TouchableOpacity onPress={() => handleImagePress(item.imageUrl)}>
+            <Image 
+              source={{ uri: item.imageUrl }} 
+              style={styles.bookImage}
+              resizeMode="cover"
+            />
           </TouchableOpacity>
         </View>
         <View style={styles.bookInfo}>
           <View style={styles.titleContainer}>
-              <Text style={styles.bookTitle} numberOfLines={2}>{item.title}</Text>
-          {isOwnBook && (
-            <TouchableOpacity 
-              style={styles.deleteButton}
-              onPress={() => handleDeleteBook(item.id)}
-            >
+            <Text style={styles.bookTitle} numberOfLines={2}>{item.title}</Text>
+            {isOwnBook && (
+              <TouchableOpacity 
+                style={styles.deleteButton}
+                onPress={() => handleDeleteBook(item.id)}
+              >
                 <Ionicons name="trash-outline" size={20} color="#FF3B30" />
-            </TouchableOpacity>
-          )}
+              </TouchableOpacity>
+            )}
           </View>
           <Text style={styles.bookSection}>Bölüm: {item.section}</Text>
           <Text style={styles.bookPrice}>Fiyat: {item.price} TL</Text>
-          <View style={styles.sellerInfo}>
-            <Text style={styles.sellerName}>Satıcı: {item.sellerName}</Text>
-          </View>
+          <Text style={styles.sellerName}>Satıcı: {item.sellerName}</Text>
           <TouchableOpacity 
             style={styles.contactButton}
             onPress={() => Linking.openURL(`https://instagram.com/${item.instagram}`)}
@@ -281,7 +275,6 @@ export default function BookSellingPage() {
             <Text style={styles.contactButtonText}>@{item.instagram}</Text>
           </TouchableOpacity>
         </View>
-        </LinearGradient>
       </View>
     );
   };
@@ -550,13 +543,11 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(78,205,196,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 25,
     paddingHorizontal: SCREEN_WIDTH * 0.04,
     marginBottom: SCREEN_HEIGHT * 0.02,
     height: SCREEN_HEIGHT * 0.06,
-    borderWidth: 1,
-    borderColor: 'rgba(78,205,196,0.3)',
   },
   searchIcon: {
     marginRight: SCREEN_WIDTH * 0.02,
@@ -568,22 +559,19 @@ const styles = StyleSheet.create({
     fontSize: SCREEN_WIDTH * 0.04,
   },
   bookList: {
-    paddingBottom: SCREEN_HEIGHT * 0.02,
+    paddingBottom: SCREEN_HEIGHT * 0.1,
   },
   bookCard: {
     flex: 1,
     margin: SCREEN_WIDTH * 0.02,
     borderRadius: 15,
     overflow: 'hidden',
+    backgroundColor: '#2C2C2E',
     elevation: 5,
-    shadowColor: '#4ECDC4',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-  },
-  cardGradient: {
-    flex: 1,
-    borderRadius: 15,
   },
   imageContainer: {
     width: '100%',
@@ -607,7 +595,7 @@ const styles = StyleSheet.create({
   bookTitle: {
     fontSize: SCREEN_WIDTH * 0.045,
     fontWeight: '600',
-    color: '#fff',
+    color: '#4ECDC4',
     flex: 1,
     marginRight: SCREEN_WIDTH * 0.02,
   },
@@ -617,9 +605,8 @@ const styles = StyleSheet.create({
   },
   bookSection: {
     fontSize: SCREEN_WIDTH * 0.04,
-    color: '#fff',
+    color: '#FFFFFF',
     marginBottom: SCREEN_HEIGHT * 0.01,
-    opacity: 0.9,
   },
   bookPrice: {
     fontSize: SCREEN_WIDTH * 0.045,
@@ -627,17 +614,10 @@ const styles = StyleSheet.create({
     color: '#4ECDC4',
     marginBottom: SCREEN_HEIGHT * 0.015,
   },
-  sellerInfo: {
-    padding: SCREEN_WIDTH * 0.03,
-    borderRadius: 10,
-    marginBottom: SCREEN_HEIGHT * 0.015,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
   sellerName: {
     fontSize: SCREEN_WIDTH * 0.04,
-    fontWeight: '500',
-    color: '#fff',
-    opacity: 0.9,
+    color: '#FFFFFF',
+    marginBottom: SCREEN_HEIGHT * 0.015,
   },
   contactButton: {
     flexDirection: 'row',
@@ -665,10 +645,10 @@ const styles = StyleSheet.create({
     borderRadius: SCREEN_WIDTH * 0.075,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#4ECDC4',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
     elevation: 8,
   },
   modalOverlay: {
@@ -678,12 +658,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContainer: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#2C2C2E',
     borderRadius: 20,
     width: '90%',
     maxHeight: '85%',
-    borderWidth: 1,
-    borderColor: 'rgba(78,205,196,0.3)',
   },
   modalContent: {
     padding: SCREEN_WIDTH * 0.05,
@@ -698,13 +676,11 @@ const styles = StyleSheet.create({
   imagePicker: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(78,205,196,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 15,
     padding: SCREEN_WIDTH * 0.04,
     marginBottom: SCREEN_HEIGHT * 0.02,
     height: SCREEN_HEIGHT * 0.2,
-    borderWidth: 1,
-    borderColor: 'rgba(78,205,196,0.3)',
   },
   imagePickerContent: {
     alignItems: 'center',
@@ -718,13 +694,11 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(78,205,196,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 12,
     marginBottom: SCREEN_HEIGHT * 0.015,
     paddingHorizontal: SCREEN_WIDTH * 0.04,
     height: SCREEN_HEIGHT * 0.06,
-    borderWidth: 1,
-    borderColor: 'rgba(78,205,196,0.3)',
   },
   inputIcon: {
     marginRight: SCREEN_WIDTH * 0.03,
