@@ -243,6 +243,10 @@ export default function BookSellingPage() {
 
     return (
       <View style={styles.bookCard}>
+        <LinearGradient
+          colors={['rgba(78,205,196,0.2)', 'rgba(78,205,196,0.1)', 'rgba(78,205,196,0.05)']}
+          style={styles.cardGradient}
+        >
         <View style={styles.imageContainer}>
         <TouchableOpacity onPress={() => handleImagePress(item.imageUrl)}>
           <Image 
@@ -266,7 +270,9 @@ export default function BookSellingPage() {
           </View>
           <Text style={styles.bookSection}>Bölüm: {item.section}</Text>
           <Text style={styles.bookPrice}>Fiyat: {item.price} TL</Text>
+          <View style={styles.sellerInfo}>
             <Text style={styles.sellerName}>Satıcı: {item.sellerName}</Text>
+          </View>
           <TouchableOpacity 
             style={styles.contactButton}
             onPress={() => Linking.openURL(`https://instagram.com/${item.instagram}`)}
@@ -275,6 +281,7 @@ export default function BookSellingPage() {
             <Text style={styles.contactButtonText}>@{item.instagram}</Text>
           </TouchableOpacity>
         </View>
+        </LinearGradient>
       </View>
     );
   };
@@ -564,15 +571,19 @@ const styles = StyleSheet.create({
     paddingBottom: SCREEN_HEIGHT * 0.02,
   },
   bookCard: {
-    backgroundColor: '#2C2C2E',
+    flex: 1,
     margin: SCREEN_WIDTH * 0.02,
     borderRadius: 15,
     overflow: 'hidden',
     elevation: 5,
-    shadowColor: '#000',
+    shadowColor: '#4ECDC4',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+  },
+  cardGradient: {
+    flex: 1,
+    borderRadius: 15,
   },
   imageContainer: {
     width: '100%',
@@ -596,7 +607,7 @@ const styles = StyleSheet.create({
   bookTitle: {
     fontSize: SCREEN_WIDTH * 0.045,
     fontWeight: '600',
-    color: '#4ECDC4',
+    color: '#fff',
     flex: 1,
     marginRight: SCREEN_WIDTH * 0.02,
   },
@@ -608,6 +619,7 @@ const styles = StyleSheet.create({
     fontSize: SCREEN_WIDTH * 0.04,
     color: '#fff',
     marginBottom: SCREEN_HEIGHT * 0.01,
+    opacity: 0.9,
   },
   bookPrice: {
     fontSize: SCREEN_WIDTH * 0.045,
@@ -615,16 +627,23 @@ const styles = StyleSheet.create({
     color: '#4ECDC4',
     marginBottom: SCREEN_HEIGHT * 0.015,
   },
+  sellerInfo: {
+    padding: SCREEN_WIDTH * 0.03,
+    borderRadius: 10,
+    marginBottom: SCREEN_HEIGHT * 0.015,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
   sellerName: {
     fontSize: SCREEN_WIDTH * 0.04,
+    fontWeight: '500',
     color: '#fff',
-    marginBottom: SCREEN_HEIGHT * 0.015,
+    opacity: 0.9,
   },
   contactButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(78,205,196,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 10,
     padding: SCREEN_WIDTH * 0.03,
   },
