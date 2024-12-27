@@ -232,12 +232,12 @@ export default function Profil() {
                 updatedAt: Timestamp.now()
             });
 
+            const batch = writeBatch(FIRESTORE_DB);
+
             // Kullanıcının tüm mesajlarını güncelle
             const messagesRef = collection(FIRESTORE_DB, 'messages');
             const messagesQuery = query(messagesRef, where('userId', '==', userData.id));
             const messagesSnapshot = await getDocs(messagesQuery);
-
-            const batch = writeBatch(FIRESTORE_DB);
 
             // Mesajları güncelle
             messagesSnapshot.docs.forEach((messageDoc) => {
@@ -255,6 +255,20 @@ export default function Profil() {
                                 });
                             }
                         });
+                    });
+            });
+
+            // Kullanıcının tüm kitaplarını güncelle
+            const booksRef = collection(FIRESTORE_DB, 'books');
+            const booksQuery = query(booksRef, where('sellerId', '==', userData.id));
+            const booksSnapshot = await getDocs(booksQuery);
+
+            // Kitapları güncelle
+            booksSnapshot.docs.forEach((bookDoc) => {
+                batch.update(doc(FIRESTORE_DB, 'books', bookDoc.id), {
+                    sellerName: editedInfo.fullName.trim(),
+                    sellerFaculty: editedInfo.faculty.trim(),
+                    sellerDepartment: editedInfo.department.trim()
                     });
             });
 
