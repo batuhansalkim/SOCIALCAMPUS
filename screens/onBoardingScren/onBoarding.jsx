@@ -9,13 +9,13 @@ import {
   Platform,
   StatusBar,
   SafeAreaView,
-  PanResponder,
 } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   Easing,
+  withSpring,
   runOnJS,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -31,48 +31,35 @@ const OnboardingScreen = ({ onDone }) => {
   const translateX = useSharedValue(0);
   const opacity = useSharedValue(1);
 
-  const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
-    onPanResponderMove: (_, gestureState) => {
-      translateX.value = gestureState.dx;
-    },
-    onPanResponderRelease: (_, gestureState) => {
-      if (Math.abs(gestureState.dx) > width * 0.3) {
-        if (gestureState.dx > 0 && currentIndex > 0) {
-          animateTransition(-1);
-        } else if (gestureState.dx < 0 && currentIndex < data.length - 1) {
-          animateTransition(1);
-        } else {
-          translateX.value = withTiming(0);
-        }
-      } else {
-        translateX.value = withTiming(0);
-      }
-    },
-  });
-
   const animateTransition = (direction) => {
+    const duration = Platform.OS === 'ios' ? 500 : 400;
+    
     translateX.value = withTiming(direction * -width, {
-      duration: 400,
-      easing: Easing.inOut(Easing.ease),
+      duration,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
     });
+    
     opacity.value = withTiming(0, {
-      duration: 300,
+      duration: duration * 0.75,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
     });
 
     setTimeout(() => {
       setCurrentIndex((prev) => prev + direction);
       translateX.value = direction * width;
       opacity.value = 0;
-      translateX.value = withTiming(0, {
-        duration: 400,
-        easing: Easing.inOut(Easing.ease),
+      
+      translateX.value = withSpring(0, {
+        damping: Platform.OS === 'ios' ? 20 : 15,
+        stiffness: Platform.OS === 'ios' ? 90 : 80,
+        mass: 1,
       });
+      
       opacity.value = withTiming(1, {
-        duration: 300,
+        duration: duration * 0.5,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
       });
-    }, 300);
+    }, duration * 0.75);
   };
 
   const handleNext = () => {
@@ -90,8 +77,11 @@ const OnboardingScreen = ({ onDone }) => {
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
+    transform: [
+      { translateX: translateX.value },
+    ],
     opacity: opacity.value,
+    backfaceVisibility: 'hidden',
   }));
 
   const currentItem = data[currentIndex] || {};
@@ -105,7 +95,6 @@ const OnboardingScreen = ({ onDone }) => {
       >
         <Animated.View 
           style={[animatedStyle, styles.animatedContent]}
-          {...panResponder.panHandlers}
         >
           <View style={styles.imageContainer}>
             <Image
@@ -146,7 +135,11 @@ const OnboardingScreen = ({ onDone }) => {
 
             <TouchableOpacity 
               onPress={handleNext} 
-              style={[styles.button, styles.nextButton]}
+              style={[
+                styles.button, 
+                styles.nextButton,
+                currentIndex === data.length - 1 && styles.startButton
+              ]}
             >
               {currentIndex === data.length - 1 ? (
                 <Text style={styles.buttonText}>Başla</Text>
@@ -253,12 +246,18 @@ const styles = StyleSheet.create({
     shadowColor: '#4ECDC4',
     shadowOpacity: 0.4,
   },
+  startButton: {
+    width: 160,
+    borderRadius: 15,
+    backgroundColor: '#FF6B6B',
+    shadowColor: '#FF6B6B',
+  },
   disabledButton: {
     backgroundColor: 'rgba(78, 205, 196, 0.3)',
   },
   buttonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'sans-serif-medium',
   },

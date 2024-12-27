@@ -10,6 +10,8 @@ const screenHeight = Dimensions.get('window').height;
 const ClubDetailsModal = ({ visible, club, onClose }) => {
   if (!club) return null;
 
+  const isDefaultImage = club.image.includes('defaultLogo.jpg');
+
   const handleInstagramPress = () => {
     if (club.instagram) {
       Linking.openURL(club.instagram).catch((err) => console.error('An error occurred', err));
@@ -28,7 +30,15 @@ const ClubDetailsModal = ({ visible, club, onClose }) => {
               <Ionicons name="close" size={24} color="#4ECDC4" />
             </TouchableOpacity>
             <ScrollView contentContainerStyle={styles.scrollContent}>
-              <Image source={{ uri: club.image }} style={styles.image} />
+              {isDefaultImage ? (
+                <View style={[styles.image, styles.letterContainer]}>
+                  <Text style={styles.letterText}>
+                    {club.name.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              ) : (
+                <Image source={{ uri: club.image }} style={styles.image} />
+              )}
               <Text style={styles.name}>{club.name}</Text>
               <View style={styles.detailsContainer}>
                 <View style={styles.detailRow}>
@@ -159,6 +169,17 @@ const styles = StyleSheet.create({
     fontSize: screenWidth * 0.04,
     fontWeight: 'bold',
     marginLeft: screenWidth * 0.02,
+  },
+  letterContainer: {
+    backgroundColor: '#4ECDC4',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  letterText: {
+    fontSize: screenWidth * 0.12,
+    fontWeight: 'bold',
+    color: '#fff',
+    textTransform: 'uppercase',
   },
 });
 

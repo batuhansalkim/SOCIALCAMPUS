@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import cheerio from 'cheerio-without-node-native';
 import ClubDetailsModal from './ClubDetailsModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -65,35 +66,112 @@ const Kulüp = ({ navigation }) => {
 
   const fetchClubs = async () => {
     try {
+      setLoading(true);
+      setError(null);
       console.log('Fetching clubs...');
-      const response = await axios.get('https://ogrkulup.klu.edu.tr/');
+
+      // Timeout kontrolü ekle
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 saniye timeout
+
+      const response = await axios.get('https://ogrkulup.klu.edu.tr/', {
+        signal: controller.signal,
+        timeout: 30000,
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'tr-TR,tr;q=0.8,en-US;q=0.5,en;q=0.3',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        }
+      });
+
+      clearTimeout(timeoutId);
       console.log('Response received:', response.status);
+
+      if (!response.data) {
+        throw new Error('Veri alınamadı');
+      }
+
       const $ = cheerio.load(response.data);
       const clubsData = [];
 
       $('.col-lg-4').each((index, element) => {
-        const name = $(element).find('h3 a').text().trim();
-        const image = $(element).find('img').attr('src');
-        const details = $(element).find('.card-text').text().trim().split('\n');
-        const president = details[0].replace('Kulüp Başkanı:', '').trim();
-        const advisor = details[1].replace('Kulüp Danışmanı:', '').trim();
-        const instagramLink = $(element).find('a.btn-instagram').attr('href');
-        
-        clubsData.push({ 
-          name, 
-          image: image.startsWith('http') ? image : `https://ogrkulup.klu.edu.tr${image}`,
-          president, 
-          advisor, 
-          instagram: instagramLink 
-        });
+        try {
+          const name = $(element).find('h3 a').text().trim();
+          const image = $(element).find('img').attr('src');
+          const details = $(element).find('.card-text').text().trim().split('\n');
+          const president = details[0]?.replace('Kulüp Başkanı:', '').trim() || 'Belirtilmemiş';
+          const advisor = details[1]?.replace('Kulüp Danışmanı:', '').trim() || 'Belirtilmemiş';
+          const instagramLink = $(element).find('a.btn-instagram').attr('href');
+
+          // Veri doğrulama
+          if (!name) {
+            console.warn(`Kulüp #${index + 1} için isim bulunamadı, atlanıyor`);
+            return;
+          }
+
+          clubsData.push({
+            id: index.toString(),
+            name,
+            image: image ? (image.startsWith('http') ? image : `https://ogrkulup.klu.edu.tr${image}`) : 'https://via.placeholder.com/150',
+            president,
+            advisor,
+            instagram: instagramLink || null
+          });
+        } catch (parseError) {
+          console.warn(`Kulüp #${index + 1} parse edilirken hata oluştu:`, parseError);
+        }
       });
+
+      if (clubsData.length === 0) {
+        throw new Error('Hiç kulüp verisi bulunamadı');
+      }
 
       console.log('Clubs found:', clubsData.length);
       setClubs(clubsData);
-      setLoading(false);
+      
+      // Verileri önbelleğe al
+      try {
+        await AsyncStorage.setItem('clubs_data', JSON.stringify({
+          timestamp: Date.now(),
+          data: clubsData
+        }));
+      } catch (cacheError) {
+        console.warn('Veriler önbelleğe alınamadı:', cacheError);
+      }
+
     } catch (err) {
       console.error('Error fetching clubs:', err);
-      setError('Kulüp verileri yüklenirken bir hata oluştu: ' + err.message);
+      let errorMessage = 'Kulüp verileri yüklenirken bir hata oluştu';
+      
+      if (err.name === 'AbortError') {
+        errorMessage = 'Bağlantı zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edin.';
+      } else if (err.response) {
+        // Sunucu hatası
+        errorMessage = 'Sunucu hatası: ' + (err.response.status === 404 ? 'Sayfa bulunamadı' : 'Sunucu yanıt vermiyor');
+      } else if (err.request) {
+        // Ağ hatası
+        errorMessage = 'İnternet bağlantınızı kontrol edin';
+      }
+
+      setError(errorMessage);
+      
+      // Önbellekteki verileri kullan
+      try {
+        const cachedData = await AsyncStorage.getItem('clubs_data');
+        if (cachedData) {
+          const { timestamp, data } = JSON.parse(cachedData);
+          // Son 1 saat içinde kaydedilmiş verileri kullan
+          if (Date.now() - timestamp < 3600000) {
+            console.log('Using cached data');
+            setClubs(data);
+            setError(errorMessage + ' (Önbellek verileri gösteriliyor)');
+          }
+        }
+      } catch (cacheError) {
+        console.warn('Önbellek verileri okunamadı:', cacheError);
+      }
+    } finally {
       setLoading(false);
     }
   };
@@ -113,13 +191,21 @@ const Kulüp = ({ navigation }) => {
   );
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity onPress={() => handleClubPress(item)}>
-      <BlurView intensity={80} tint="dark" style={styles.card}>
+  <TouchableOpacity onPress={() => handleClubPress(item)}>
+    <BlurView intensity={80} tint="dark" style={styles.card}>
+      {item.image.includes('defaultLogo.jpg') ? (
+        <View style={[styles.image, styles.letterContainer]}>
+          <Text style={styles.letterText}>
+            {item.name.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+      ) : (
         <Image source={{ uri: item.image }} style={styles.image} />
-        <Text style={styles.name}>{item.name}</Text>
-      </BlurView>
-    </TouchableOpacity>
-  );
+      )}
+      <Text style={styles.name}>{item.name}</Text>
+    </BlurView>
+  </TouchableOpacity>
+);
 
   if (loading) {
     return (
@@ -284,6 +370,17 @@ const styles = StyleSheet.create({
     fontSize: screenWidth * 0.04,
     textAlign: 'center',
     marginBottom: screenHeight * 0.02,
+  },
+  letterContainer: {
+    backgroundColor: '#4ECDC4',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  letterText: {
+    fontSize: screenWidth * 0.08,
+    fontWeight: 'bold',
+    color: '#fff',
+    textTransform: 'uppercase',
   },
 });
 

@@ -321,7 +321,7 @@ export default function Profil() {
                 >
                   <Text style={{color:"white"}}>Yapay Zeka Destekli Asistanınız</Text>
                   <Text style={{color:"white"}}>
-                    KLUCAMPUS AI Asistan, üniversite yaşamınızı kolaylaştırmak için tasarlanmış akıllı bir yardımcıdır. 
+                    SOCİALCAMPUS AI Asistan, üniversite yaşamınızı kolaylaştırmak için tasarlanmış akıllı bir yardımcıdır. 
                     Anlık sorularınıza hızlı ve doğru yanıtlar sunar, kampüs hayatınızı daha verimli hale getirir.
               </Text>
                 </LinearGradient>
