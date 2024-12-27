@@ -124,11 +124,12 @@ export default function LoginScreen({ onLogin }) {
                                 <View style={styles.inputWrapper}>
                                     <Ionicons name="person-outline" size={20} color="#4c669f" style={styles.inputIcon} />
                                     <TextInput
-                                        style={styles.input}
+                                        style={[styles.input, isSubmitted && styles.disabledInput]}
                                         placeholder="İsim ve soyisminizi giriniz"
                                         value={fullName}
                                         onChangeText={setFullName}
                                         placeholderTextColor="#999"
+                                        editable={!isSubmitted}
                                     />
                                 </View>
                             </View>
@@ -138,12 +139,15 @@ export default function LoginScreen({ onLogin }) {
                                 <View style={[styles.pickerContainer, Platform.OS === 'ios' && styles.pickerContainerIOS]}>
                                     <Ionicons name="school-outline" size={20} color="#4c669f" style={styles.inputIcon} />
                                     <Picker
-                                        style={[styles.picker, Platform.OS === 'ios' && styles.pickerIOS]}
+                                        style={[styles.picker, Platform.OS === 'ios' && styles.pickerIOS, isSubmitted && styles.disabledPicker]}
                                         selectedValue={faculty}
                                         onValueChange={(itemValue) => {
-                                            setFaculty(itemValue);
-                                            setDepartment('');
+                                            if (!isSubmitted) {
+                                                setFaculty(itemValue);
+                                                setDepartment('');
+                                            }
                                         }}
+                                        enabled={!isSubmitted}
                                         itemStyle={Platform.OS === 'ios' ? styles.pickerItemIOS : {}}
                                     >
                                         <Picker.Item label="Fakülte Seçin" value="" />
@@ -159,10 +163,10 @@ export default function LoginScreen({ onLogin }) {
                                 <View style={[styles.pickerContainer, Platform.OS === 'ios' && styles.pickerContainerIOS]}>
                                     <Ionicons name="book-outline" size={20} color="#4c669f" style={styles.inputIcon} />
                                     <Picker
-                                        style={[styles.picker, Platform.OS === 'ios' && styles.pickerIOS]}
+                                        style={[styles.picker, Platform.OS === 'ios' && styles.pickerIOS, isSubmitted && styles.disabledPicker]}
                                         selectedValue={department}
-                                        onValueChange={(itemValue) => setDepartment(itemValue)}
-                                        enabled={!!faculty}
+                                        onValueChange={(itemValue) => !isSubmitted && setDepartment(itemValue)}
+                                        enabled={!!faculty && !isSubmitted}
                                         itemStyle={Platform.OS === 'ios' ? styles.pickerItemIOS : {}}
                                     >
                                         <Picker.Item label="Bölüm Seçin" value="" />
@@ -377,5 +381,13 @@ const styles = StyleSheet.create({
         marginTop: 10,
         color: '#4c669f',
         fontSize: 16,
+    },
+    disabledInput: {
+        opacity: 0.7,
+        backgroundColor: 'rgba(0,0,0,0.05)',
+    },
+    disabledPicker: {
+        opacity: 0.7,
+        backgroundColor: 'rgba(0,0,0,0.05)',
     },
 }); 
