@@ -129,7 +129,7 @@ const OnboardingScreen = ({ onDone }) => {
               <Ionicons 
                 name="chevron-back" 
                 size={24} 
-                color={currentIndex === 0 ? 'rgba(255,255,255,0.3)' : '#fff'} 
+                color={currentIndex === 0 ? 'rgba(255,255,255,0.2)' : '#fff'} 
               />
             </TouchableOpacity>
 
@@ -236,7 +236,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    backgroundColor: '#4ECDC4',
   },
   backButton: {
     backgroundColor: '#4ECDC4',
@@ -253,7 +252,9 @@ const styles = StyleSheet.create({
     shadowColor: '#FF6B6B',
   },
   disabledButton: {
-    backgroundColor: 'rgba(78, 205, 196, 0.3)',
+    backgroundColor: 'transparent',
+    elevation: 0,
+    shadowOpacity: 0,
   },
   buttonText: {
     color: '#fff',
