@@ -591,9 +591,11 @@ const InfoItem = ({ icon, title, value }) => (
 const styles = StyleSheet.create({
     safeContainer: {
         flex: 1,
+        backgroundColor: 'transparent',
     },
     gradient: {
         flex: 1,
+        paddingBottom: Platform.OS === 'ios' ? 90 : 0,
     },
     header: {
         alignItems: 'center',
@@ -610,7 +612,7 @@ const styles = StyleSheet.create({
     scrollContent: {
         flexGrow: 1,
         alignItems: "center",
-        paddingBottom: screenWidth * 0.05,
+        paddingBottom: Platform.OS === 'ios' ? 20 : screenWidth * 0.05,
     },
     infoContainer: {
         width: '90%',
@@ -760,7 +762,7 @@ const styles = StyleSheet.create({
         borderRadius: screenWidth * 0.08,
         alignSelf: 'center',
         marginTop: screenWidth * 0.05,
-        marginBottom: screenWidth * 0.1,
+        marginBottom: Platform.OS === 'ios' ? screenWidth * 0.05 : screenWidth * 0.1,
         overflow: 'hidden',
         elevation: 8,
         shadowColor: '#4ECDC4',

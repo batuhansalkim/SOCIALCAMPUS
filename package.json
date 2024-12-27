@@ -29,7 +29,7 @@
     "expo-image-picker": "^16.0.2",
     "expo-linear-gradient": "^14.0.1",
     "expo-status-bar": "^2.0.0",
-    "firebase": "6.3.10",
+    "firebase": "^10.7.1",
     "fs-minipass": "^3.0.3",
     "i": "^0.3.7",
     "ionicons": "^7.4.0",
