@@ -10,18 +10,28 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
+const PAGE_SIZE = 10; // Her sayfada gösterilecek kulüp sayısı
 
 const Kulüp = ({ navigation }) => {
   const [clubs, setClubs] = useState([]);
+  const [displayedClubs, setDisplayedClubs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClub, setSelectedClub] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchClubs();
   }, []);
+
+  useEffect(() => {
+    if (clubs.length > 0) {
+      loadMoreClubs();
+    }
+  }, [clubs]);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -64,15 +74,46 @@ const Kulüp = ({ navigation }) => {
     };
   }, [navigation]);
 
+  const loadMoreClubs = () => {
+    if (loadingMore || searchQuery) return;
+
+    setLoadingMore(true);
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const endIndex = startIndex + PAGE_SIZE;
+    const newClubs = clubs.slice(0, endIndex);
+    
+    setDisplayedClubs(newClubs);
+    setCurrentPage(prev => prev + 1);
+    setLoadingMore(false);
+  };
+
+  const handleEndReached = () => {
+    if (!searchQuery) {
+      loadMoreClubs();
+    }
+  };
+
   const fetchClubs = async () => {
     try {
       setLoading(true);
       setError(null);
       console.log('Fetching clubs...');
 
-      // Timeout kontrolü ekle
+      // Önce önbellekteki verileri kontrol et
+      const cachedData = await AsyncStorage.getItem('clubs_data');
+      if (cachedData) {
+        const { timestamp, data } = JSON.parse(cachedData);
+        // Son 1 saat içinde kaydedilmiş veriler varsa kullan
+        if (Date.now() - timestamp < 3600000) {
+          console.log('Using cached data');
+          setClubs(data);
+          setLoading(false);
+          return;
+        }
+      }
+
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 saniye timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
       const response = await axios.get('https://ogrkulup.klu.edu.tr/', {
         signal: controller.signal,
@@ -104,7 +145,6 @@ const Kulüp = ({ navigation }) => {
           const advisor = details[1]?.replace('Kulüp Danışmanı:', '').trim() || 'Belirtilmemiş';
           const instagramLink = $(element).find('a.btn-instagram').attr('href');
 
-          // Veri doğrulama
           if (!name) {
             console.warn(`Kulüp #${index + 1} için isim bulunamadı, atlanıyor`);
             return;
@@ -131,14 +171,10 @@ const Kulüp = ({ navigation }) => {
       setClubs(clubsData);
       
       // Verileri önbelleğe al
-      try {
-        await AsyncStorage.setItem('clubs_data', JSON.stringify({
-          timestamp: Date.now(),
-          data: clubsData
-        }));
-      } catch (cacheError) {
-        console.warn('Veriler önbelleğe alınamadı:', cacheError);
-      }
+      await AsyncStorage.setItem('clubs_data', JSON.stringify({
+        timestamp: Date.now(),
+        data: clubsData
+      }));
 
     } catch (err) {
       console.error('Error fetching clubs:', err);
@@ -147,10 +183,8 @@ const Kulüp = ({ navigation }) => {
       if (err.name === 'AbortError') {
         errorMessage = 'Bağlantı zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edin.';
       } else if (err.response) {
-        // Sunucu hatası
         errorMessage = 'Sunucu hatası: ' + (err.response.status === 404 ? 'Sayfa bulunamadı' : 'Sunucu yanıt vermiyor');
       } else if (err.request) {
-        // Ağ hatası
         errorMessage = 'İnternet bağlantınızı kontrol edin';
       }
 
@@ -161,7 +195,6 @@ const Kulüp = ({ navigation }) => {
         const cachedData = await AsyncStorage.getItem('clubs_data');
         if (cachedData) {
           const { timestamp, data } = JSON.parse(cachedData);
-          // Son 1 saat içinde kaydedilmiş verileri kullan
           if (Date.now() - timestamp < 3600000) {
             console.log('Using cached data');
             setClubs(data);
@@ -186,26 +219,44 @@ const Kulüp = ({ navigation }) => {
     setSelectedClub(null);
   };
 
-  const filteredClubs = clubs.filter(club => 
-    club.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    if (searchQuery) {
+      const filtered = clubs.filter(club => 
+        club.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setDisplayedClubs(filtered);
+      setCurrentPage(1);
+    } else {
+      loadMoreClubs();
+    }
+  }, [searchQuery]);
+
+  const renderFooter = () => {
+    if (!loadingMore || searchQuery) return null;
+
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" color="#4ECDC4" />
+      </View>
+    );
+  };
 
   const renderItem = ({ item }) => (
-  <TouchableOpacity onPress={() => handleClubPress(item)}>
-    <BlurView intensity={80} tint="dark" style={styles.card}>
-      {item.image.includes('defaultLogo.jpg') ? (
-        <View style={[styles.image, styles.letterContainer]}>
-          <Text style={styles.letterText}>
-            {item.name.charAt(0).toUpperCase()}
-          </Text>
-        </View>
-      ) : (
-        <Image source={{ uri: item.image }} style={styles.image} />
-      )}
-      <Text style={styles.name}>{item.name}</Text>
-    </BlurView>
-  </TouchableOpacity>
-);
+    <TouchableOpacity onPress={() => handleClubPress(item)}>
+      <BlurView intensity={80} tint="dark" style={styles.card}>
+        {item.image.includes('defaultLogo.jpg') ? (
+          <View style={[styles.image, styles.letterContainer]}>
+            <Text style={styles.letterText}>
+              {item.name.charAt(0).toUpperCase()}
+            </Text>
+          </View>
+        ) : (
+          <Image source={{ uri: item.image }} style={styles.image} />
+        )}
+        <Text style={styles.name}>{item.name}</Text>
+      </BlurView>
+    </TouchableOpacity>
+  );
 
   if (loading) {
     return (
@@ -215,7 +266,7 @@ const Kulüp = ({ navigation }) => {
     );
   }
 
-  if (error) {
+  if (error && !displayedClubs.length) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
@@ -242,7 +293,7 @@ const Kulüp = ({ navigation }) => {
                 placeholder="Kulüp Ara..."
                 placeholderTextColor="#aaa"
                 value={searchQuery}
-                onChangeText={(text) => setSearchQuery(text)}
+                onChangeText={setSearchQuery}
                 onFocus={() => {
                   if (navigation) {
                     navigation.getParent()?.setOptions({
@@ -273,7 +324,7 @@ const Kulüp = ({ navigation }) => {
               />
             </BlurView>
             <FlatList
-              data={filteredClubs}
+              data={displayedClubs}
               renderItem={renderItem}
               keyExtractor={(item, index) => index.toString()}
               style={styles.list}
@@ -281,6 +332,9 @@ const Kulüp = ({ navigation }) => {
               contentContainerStyle={styles.listContent}
               keyboardShouldPersistTaps="handled"
               onScrollBeginDrag={Keyboard.dismiss}
+              onEndReached={handleEndReached}
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={renderFooter}
             />
             <ClubDetailsModal visible={modalVisible} club={selectedClub} onClose={closeModal} />
           </View>
@@ -382,6 +436,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     textTransform: 'uppercase',
   },
+  footerLoader: {
+    marginVertical: 20,
+    alignItems: 'center'
+  }
 });
 
 export default Kulüp;
