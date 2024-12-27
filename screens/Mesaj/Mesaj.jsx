@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, FlatList, Text, TextInput, StyleSheet, TouchableOpacity, Image, Animated, Dimensions, KeyboardAvoidingView, Platform, Modal, Alert, ActivityIndicator } from 'react-native';
+import { View, FlatList, Text, TextInput, StyleSheet, TouchableOpacity, Image, Animated, Dimensions, KeyboardAvoidingView, Platform, Modal, Alert, ActivityIndicator, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,6 +8,7 @@ import * as Haptics from 'expo-haptics';
 import { collection, addDoc, getDocs, query, orderBy, updateDoc, doc, deleteDoc, getDoc, increment, arrayUnion, arrayRemove, writeBatch } from 'firebase/firestore';
 import { FIRESTORE_DB } from '../../FirebaseConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -25,6 +26,8 @@ export default function MessageScreen() {
   const [currentComment, setCurrentComment] = useState(null);
   const [showCommentOptions, setShowCommentOptions] = useState(false);
   const [refreshingComments, setRefreshingComments] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const navigation = useNavigation();
 
   const scrollViewRef = useRef(null);
 
@@ -636,6 +639,37 @@ export default function MessageScreen() {
       </SafeAreaView>
     </LinearGradient>
   );
+
+  useEffect(() => {
+    const keyboardWillShowListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      () => {
+        setKeyboardVisible(true);
+        navigation.getParent()?.setOptions({
+          tabBarStyle: { display: 'none' }
+        });
+      }
+    );
+
+    const keyboardWillHideListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+        navigation.getParent()?.setOptions({
+          tabBarStyle: { display: 'flex' }
+        });
+      }
+    );
+
+    return () => {
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
+      // Ekran kapandığında navigation bar'ı tekrar göster
+      navigation.getParent()?.setOptions({
+        tabBarStyle: { display: 'flex' }
+      });
+    };
+  }, [navigation]);
 
   return (
   <>

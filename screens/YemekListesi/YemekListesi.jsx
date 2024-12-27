@@ -17,8 +17,10 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
-import { collection, addDoc, query, where, getDocs, updateDoc, doc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, updateDoc, doc, deleteDoc, Timestamp, onSnapshot } from 'firebase/firestore';
 import { FIRESTORE_DB } from "../../FirebaseConfig";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Haptics from 'expo-haptics';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -31,6 +33,7 @@ export default function MealSchedule() {
   const [userReactions, setUserReactions] = useState({});
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef(null);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     fetchMealData();
@@ -41,6 +44,54 @@ export default function MealSchedule() {
       fetchReactions();
     }
   }, [mealList]);
+
+  useEffect(() => {
+    getCurrentUser();
+  }, []);
+
+  const getCurrentUser = async () => {
+    try {
+      const userDataStr = await AsyncStorage.getItem('userData');
+      if (userDataStr) {
+        const userData = JSON.parse(userDataStr);
+        setCurrentUser(userData);
+      }
+    } catch (error) {
+      console.error('Error getting user data:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (mealList.length === 0) return;
+
+    const reactionQuery = query(collection(FIRESTORE_DB, 'mealReactions'));
+    const unsubscribe = onSnapshot(reactionQuery, (snapshot) => {
+      const reactionData = {};
+      const userReactionData = {};
+
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        if (!reactionData[data.mealId]) {
+          reactionData[data.mealId] = { likes: 0, dislikes: 0 };
+        }
+        if (data.type === 'like') {
+          reactionData[data.mealId].likes++;
+        } else {
+          reactionData[data.mealId].dislikes++;
+        }
+        if (currentUser && data.userId === currentUser.id) {
+          userReactionData[data.mealId] = data.type;
+        }
+      });
+
+      setReactions(reactionData);
+      setUserReactions(userReactionData);
+    }, (error) => {
+      console.error('Error in reaction listener:', error);
+    });
+
+    return () => unsubscribe();
+  }, [mealList, currentUser]);
 
   const fetchReactions = async () => {
     try {
@@ -73,43 +124,14 @@ export default function MealSchedule() {
 
   const handleReaction = async (mealId, type) => {
     try {
-      const userId = 'user123';
-      
-      // Önce yerel state'i güncelle (anlık geri bildirim için)
-      const newReactions = { ...reactions };
-      const newUserReactions = { ...userReactions };
-      
-      // Eğer kullanıcının önceki reaksiyonu varsa
-      if (userReactions[mealId]) {
-        // Önceki reaksiyonu kaldır
-        if (userReactions[mealId] === 'like') {
-          newReactions[mealId].likes = Math.max(0, (newReactions[mealId]?.likes || 0) - 1);
-        } else {
-          newReactions[mealId].dislikes = Math.max(0, (newReactions[mealId]?.dislikes || 0) - 1);
-        }
+      if (!currentUser) {
+        Alert.alert('Uyarı', 'Beğeni/beğenmeme için giriş yapmalısınız.');
+        return;
       }
 
-      // Eğer aynı reaksiyona tıklanmışsa, sadece kaldır
-      if (userReactions[mealId] === type) {
-        delete newUserReactions[mealId];
-      } else {
-        // Yeni reaksiyonu ekle
-        newUserReactions[mealId] = type;
-        if (!newReactions[mealId]) {
-          newReactions[mealId] = { likes: 0, dislikes: 0 };
-        }
-        if (type === 'like') {
-          newReactions[mealId].likes = (newReactions[mealId]?.likes || 0) + 1;
-        } else {
-          newReactions[mealId].dislikes = (newReactions[mealId]?.dislikes || 0) + 1;
-        }
-      }
-
-      // Yerel state'i güncelle
-      setReactions(newReactions);
-      setUserReactions(newUserReactions);
-
-      // Firebase'i güncelle
+      const userId = currentUser.id;
+      
+      // Firebase'de reaksiyon kontrolü
       const reactionQuery = query(
         collection(FIRESTORE_DB, 'mealReactions'),
         where('mealId', '==', mealId),
@@ -120,28 +142,32 @@ export default function MealSchedule() {
       if (!querySnapshot.empty) {
         // Kullanıcının önceki reaksiyonu varsa
         const docRef = doc(FIRESTORE_DB, 'mealReactions', querySnapshot.docs[0].id);
-        if (userReactions[mealId] === type) {
+        if (querySnapshot.docs[0].data().type === type) {
           // Aynı reaksiyon tekrar tıklandığında kaldır
           await deleteDoc(docRef);
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         } else {
           // Farklı reaksiyon seçildiğinde güncelle
-          await updateDoc(docRef, { type });
+          await updateDoc(docRef, { 
+            type,
+            updatedAt: Timestamp.now()
+          });
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
-      } else if (type !== userReactions[mealId]) {
+      } else {
         // Yeni reaksiyon ekle
         await addDoc(collection(FIRESTORE_DB, 'mealReactions'), {
           mealId,
           userId,
           type,
-          createdAt: Timestamp.now()
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now()
         });
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }
-
     } catch (error) {
       console.error('Error handling reaction:', error);
-      Alert.alert('Hata', 'Reaksiyon eklenirken bir hata oluştu.');
-      // Hata durumunda önceki state'e geri dön
-      fetchReactions();
+      Alert.alert('Hata', 'İşlem gerçekleştirilemedi. Lütfen tekrar deneyin.');
     }
   };
 
@@ -533,48 +559,49 @@ paddingTop: Platform.OS === 'ios' ? screenHeight * 0.05 : screenHeight * 0.02,  
   },
   cardContainer: {
     width: screenWidth,
-    paddingHorizontal: screenWidth * 0.04,
+    paddingHorizontal: screenWidth * 0.02,
     justifyContent: 'center',
-    paddingBottom: screenHeight * 0.03,
+    paddingBottom: screenHeight * 0.02,
+    paddingTop: screenHeight * 0.01,
   },
   card: {
     borderRadius: 15,
     padding: screenWidth * 0.04,
-    marginVertical: screenHeight * 0.005,
+    marginVertical: screenHeight * 0.01,
     alignItems: 'flex-start',
-    height: Platform.OS === 'ios' ? screenHeight * 0.38 : screenHeight * 0.42,
-    maxHeight: screenHeight * 0.45,
+    height: Platform.OS === 'ios' ? screenHeight * 0.52 : screenHeight * 0.55,
+    maxHeight: screenHeight * 0.58,
   },
   dateContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    marginBottom: screenHeight * 0.01,
+    marginBottom: screenHeight * 0.015,
     alignItems: 'flex-start',
   },
   dateText: {
-    fontSize: screenWidth * 0.048,
+    fontSize: screenWidth * 0.05,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: screenHeight * 0.005,
+    marginBottom: screenHeight * 0.008,
   },
   mealHoursContainer: {
-    marginTop: screenHeight * 0.005,
+    marginTop: screenHeight * 0.008,
   },
   mealHourBox: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.2)',
-    paddingVertical: screenHeight * 0.005,
-    paddingHorizontal: screenWidth * 0.02,
-    borderRadius: 5,
+    paddingVertical: screenHeight * 0.006,
+    paddingHorizontal: screenWidth * 0.025,
+    borderRadius: 8,
     marginVertical: 2,
   },
   timeIcon: {
-    marginRight: screenWidth * 0.01,
+    marginRight: screenWidth * 0.02,
   },
   mealHoursText: {
-    fontSize: screenWidth * 0.034,
+    fontSize: screenWidth * 0.038,
     color: '#fff',
     fontWeight: '500',
   },
@@ -592,19 +619,22 @@ paddingTop: Platform.OS === 'ios' ? screenHeight * 0.05 : screenHeight * 0.02,  
   yemekContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: screenHeight * 0.008,
+    marginBottom: screenHeight * 0.012,
     paddingHorizontal: screenWidth * 0.02,
+    paddingVertical: screenHeight * 0.008,
   },
   yemekIcon: {
-    marginRight: screenWidth * 0.02,
+    marginRight: screenWidth * 0.03,
+    fontSize: screenWidth * 0.07,
   },
   yemekDetails: {
     flex: 1,
   },
   yemekText: {
-    fontSize: screenWidth * 0.038,
+    fontSize: screenWidth * 0.04,
     color: '#fff',
     flexWrap: 'wrap',
+    lineHeight: screenHeight * 0.028,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -680,7 +710,8 @@ paddingTop: Platform.OS === 'ios' ? screenHeight * 0.05 : screenHeight * 0.02,  
   reactionContainer: {
     width: '100%',
     marginTop: 'auto',
-    paddingTop: screenHeight * 0.01,
+    paddingTop: screenHeight * 0.015,
+    paddingBottom: screenHeight * 0.008,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.2)',
   },
@@ -688,14 +719,14 @@ paddingTop: Platform.OS === 'ios' ? screenHeight * 0.05 : screenHeight * 0.02,  
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: Platform.OS === 'ios' ? screenWidth * 0.04 : screenWidth * 0.03,
+    gap: Platform.OS === 'ios' ? screenWidth * 0.06 : screenWidth * 0.05,
   },
   reactionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: screenWidth * 0.02,
-    borderRadius: 6,
-    gap: screenWidth * 0.01,
+    padding: screenWidth * 0.03,
+    borderRadius: 8,
+    gap: screenWidth * 0.02,
   },
   likeButton: {
     backgroundColor: '#4CAF50',
