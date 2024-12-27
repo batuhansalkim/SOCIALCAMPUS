@@ -28,7 +28,6 @@ export default function MealSchedule() {
   const [userReactions, setUserReactions] = useState({});
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef(null);
-  const [gununSozu] = useState('Başarı, sabır ve azimle gelir.');
 
   useEffect(() => {
     fetchMealData();
@@ -145,68 +144,113 @@ export default function MealSchedule() {
 
   const fetchMealData = async () => {
     try {
+      setLoading(true);
       console.log('Fetching meal data...');
-      const response = await axios.get('https://sks.klu.edu.tr/Takvimler/73-yemek-takvimi.klu');
+      
+      // Timeout ekleyelim
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 saniye timeout
+
+      const response = await axios.get('https://sks.klu.edu.tr/Takvimler/73-yemek-takvimi.klu', {
+        signal: controller.signal,
+        timeout: 10000
+      });
+      
+      clearTimeout(timeoutId);
       console.log('Response received:', response.status);
 
       const htmlContent = response.data;
       const jsonDataMatch = htmlContent.match(/<textarea[^>]*>(.*?)<\/textarea>/s);
       
-      if (jsonDataMatch && jsonDataMatch[1]) {
-        const jsonData = JSON.parse(jsonDataMatch[1]);
-        console.log('Parsed JSON data:', jsonData);
-        
-        // Sort the data by date
-        const sortedData = jsonData.sort((a, b) => new Date(a.start) - new Date(b.start));
-        
-        // Get the current date
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        // Find the index of today's date
-        const todayIndex = sortedData.findIndex(item => {
-          const itemDate = new Date(item.start);
-          return itemDate.getTime() === today.getTime();
-        });
-
-        // If today's date is found, start from there. Otherwise, start from the first weekday
-        let startIndex = todayIndex !== -1 ? todayIndex : sortedData.findIndex(item => {
-          const itemDate = new Date(item.start);
-          return itemDate >= today && itemDate.getDay() !== 0 && itemDate.getDay() !== 6;
-        });
-
-        // Get 5 weekdays starting from the found index
-        let selectedData = [];
-        let currentIndex = startIndex;
-        while (selectedData.length < 5 && currentIndex < sortedData.length) {
-          const itemDate = new Date(sortedData[currentIndex].start);
-          if (itemDate.getDay() !== 0 && itemDate.getDay() !== 6) {
-            selectedData.push(sortedData[currentIndex]);
-          }
-          currentIndex++;
-        }
-
-        // If we don't have 5 days, add days from the beginning of the next available weekdays
-        if (selectedData.length < 5) {
-          currentIndex = 0;
-          while (selectedData.length < 5 && currentIndex < sortedData.length) {
-            const itemDate = new Date(sortedData[currentIndex].start);
-            if (itemDate.getDay() !== 0 && itemDate.getDay() !== 6 && !selectedData.some(item => item.id === sortedData[currentIndex].id)) {
-              selectedData.push(sortedData[currentIndex]);
-            }
-            currentIndex++;
-          }
-        }
-        
-        setMealList(selectedData);
-      } else {
-        throw new Error('Yemek listesi verisi bulunamadı.');
+      if (!jsonDataMatch || !jsonDataMatch[1]) {
+        throw new Error('Veri formatı beklendiği gibi değil.');
       }
 
+      let jsonData;
+      try {
+        jsonData = JSON.parse(jsonDataMatch[1]);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        throw new Error('Yemek listesi verisi geçerli bir format değil.');
+      }
+
+      if (!Array.isArray(jsonData)) {
+        throw new Error('Yemek listesi verisi dizi formatında değil.');
+      }
+
+      console.log('Parsed JSON data:', jsonData);
+      
+      // Geçerli tarihleri filtrele
+      const validData = jsonData.filter(item => {
+        try {
+          const date = new Date(item.start);
+          return !isNaN(date.getTime()) && item.aciklama;
+        } catch {
+          return false;
+        }
+      });
+      
+      // Sort the data by date
+      const sortedData = validData.sort((a, b) => new Date(a.start) - new Date(b.start));
+      
+      // Get the current date
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Find the index of today's date
+      const todayIndex = sortedData.findIndex(item => {
+        const itemDate = new Date(item.start);
+        return itemDate.getTime() === today.getTime();
+      });
+
+      // If today's date is found, start from there. Otherwise, start from the first weekday
+      let startIndex = todayIndex !== -1 ? todayIndex : sortedData.findIndex(item => {
+        const itemDate = new Date(item.start);
+        return itemDate >= today && itemDate.getDay() !== 0 && itemDate.getDay() !== 6;
+      });
+
+      if (startIndex === -1) {
+        throw new Error('Gösterilecek yemek listesi bulunamadı.');
+      }
+
+      // Get 5 weekdays starting from the found index
+      let selectedData = [];
+      let currentIndex = startIndex;
+      let attempts = 0;
+      const maxAttempts = sortedData.length; // Sonsuz döngüyü önlemek için
+
+      while (selectedData.length < 5 && currentIndex < sortedData.length && attempts < maxAttempts) {
+        const itemDate = new Date(sortedData[currentIndex].start);
+        if (itemDate.getDay() !== 0 && itemDate.getDay() !== 6) {
+          selectedData.push(sortedData[currentIndex]);
+        }
+        currentIndex++;
+        attempts++;
+      }
+
+      // If we don't have 5 days, add days from the beginning
+      currentIndex = 0;
+      attempts = 0;
+      while (selectedData.length < 5 && attempts < maxAttempts) {
+        const itemDate = new Date(sortedData[currentIndex].start);
+        if (itemDate.getDay() !== 0 && 
+            itemDate.getDay() !== 6 && 
+            !selectedData.some(item => item.start === sortedData[currentIndex].start)) {
+          selectedData.push(sortedData[currentIndex]);
+        }
+        currentIndex = (currentIndex + 1) % sortedData.length;
+        attempts++;
+      }
+      
+      if (selectedData.length === 0) {
+        throw new Error('Gösterilecek yemek listesi bulunamadı.');
+      }
+
+      setMealList(selectedData);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching meal data:', err);
-      setError('Yemek verileri yüklenirken bir hata oluştu: ' + (err instanceof Error ? err.message : String(err)));
+      setError(err instanceof Error ? err.message : 'Yemek listesi yüklenirken bir hata oluştu.');
       setLoading(false);
     }
   };
@@ -245,8 +289,16 @@ export default function MealSchedule() {
           <View style={styles.dateContainer}>
             <View>
               <Text style={styles.dateText}>{formatDate(item.start)}</Text>
+              <View style={styles.mealHoursContainer}>
+                <View style={styles.mealHourBox}>
+                  <Ionicons name="time" size={16} color="#FFD700" style={styles.timeIcon} />
               <Text style={styles.mealHoursText}>Öğle: 11:00 - 14:00</Text>
+                </View>
+                <View style={styles.mealHourBox}>
+                  <Ionicons name="time" size={16} color="#FFD700" style={styles.timeIcon} />
               <Text style={styles.mealHoursText}>Akşam: 16:00 - 18:00</Text>
+                </View>
+              </View>
             </View>
             {isCurrentDay && <View style={styles.currentDayIndicator} />}
           </View>
@@ -410,18 +462,9 @@ export default function MealSchedule() {
           );
         })}
       </View>
-
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          Günün Sözü: <Text style={styles.gununSozu}>{gununSozu}</Text>
-        </Text>
-      </View>
     </ImageBackground>
   );
 }
-
-// ... styles remain unchanged
-
 
 const styles = StyleSheet.create({
   container: {
@@ -485,10 +528,25 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginBottom: 5,
   },
+  mealHoursContainer: {
+    marginTop: 5,
+  },
+  mealHourBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    marginVertical: 2,
+  },
+  timeIcon: {
+    marginRight: 6,
+  },
   mealHoursText: {
     fontSize: 14,
     color: '#fff',
-    opacity: 0.9,
+    fontWeight: '500',
   },
   currentDayIndicator: {
     width: 10,
@@ -533,19 +591,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginLeft: 5,
     fontWeight: 'bold',
-  },
-  footer: {
-    padding: 20,
-    backgroundColor: '#000',
-    alignItems: 'center',
-  },
-  footerText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  gununSozu: {
-    fontStyle: 'italic',
-    color: '#FFD700',
   },
   pagination: {
     flexDirection: 'row',
