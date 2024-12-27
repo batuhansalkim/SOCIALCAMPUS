@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image, FlatList, Modal, TextInput, ScrollView, Animated, Easing, Linking, Dimensions, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, FlatList, Modal, TextInput, ScrollView, Animated, Easing, Linking, Dimensions, Alert, ActivityIndicator, Platform, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,7 +8,7 @@ import { BlurView } from 'expo-blur';
 import { collection, addDoc, getDocs, query, orderBy, Timestamp, where, doc, deleteDoc } from 'firebase/firestore';
 import { FIRESTORE_DB } from '../../FirebaseConfig';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const IMGUR_CLIENT_ID = '0250b8b91223111'; // Imgur Client ID eklendi
 
@@ -254,7 +254,7 @@ export default function BookSellingPage() {
         </View>
         <View style={styles.bookInfo}>
           <View style={styles.titleContainer}>
-            <Text style={styles.bookTitle}>{item.title}</Text>
+              <Text style={styles.bookTitle} numberOfLines={2}>{item.title}</Text>
           {isOwnBook && (
             <TouchableOpacity 
               style={styles.deleteButton}
@@ -266,9 +266,7 @@ export default function BookSellingPage() {
           </View>
           <Text style={styles.bookSection}>Bölüm: {item.section}</Text>
           <Text style={styles.bookPrice}>Fiyat: {item.price} TL</Text>
-          <View style={styles.sellerInfo}>
             <Text style={styles.sellerName}>Satıcı: {item.sellerName}</Text>
-          </View>
           <TouchableOpacity 
             style={styles.contactButton}
             onPress={() => Linking.openURL(`https://instagram.com/${item.instagram}`)}
@@ -532,45 +530,43 @@ const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
   },
-  gradient: {
-    flex: 1,
-  },
   container: {
     flex: 1,
     backgroundColor: '#1C1C1E',
-    padding: 20,
+    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight || 0,
   },
   innerContainer: {
     flex: 1,
-    paddingHorizontal: 15,
-    paddingTop: 20,
+    paddingHorizontal: SCREEN_WIDTH * 0.04,
+    paddingTop: SCREEN_HEIGHT * 0.02,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2C2C2E',
+    backgroundColor: 'rgba(78,205,196,0.1)',
     borderRadius: 25,
-    paddingHorizontal: 15,
-    marginBottom: 20,
-    height: 50,
+    paddingHorizontal: SCREEN_WIDTH * 0.04,
+    marginBottom: SCREEN_HEIGHT * 0.02,
+    height: SCREEN_HEIGHT * 0.06,
+    borderWidth: 1,
+    borderColor: 'rgba(78,205,196,0.3)',
   },
   searchIcon: {
-    marginRight: 10,
+    marginRight: SCREEN_WIDTH * 0.02,
     color: '#4ECDC4',
   },
   searchInput: {
     flex: 1,
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: SCREEN_WIDTH * 0.04,
   },
   bookList: {
-    paddingBottom: 80,
+    paddingBottom: SCREEN_HEIGHT * 0.02,
   },
   bookCard: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: '#2C2C2E',
+    margin: SCREEN_WIDTH * 0.02,
     borderRadius: 15,
-    margin: 8,
     overflow: 'hidden',
     elevation: 5,
     shadowColor: '#000',
@@ -578,77 +574,76 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
+  imageContainer: {
+    width: '100%',
+    height: SCREEN_WIDTH * 0.4,
+  },
   bookImage: {
     width: '100%',
-    height: 150,
+    height: '100%',
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
   },
   bookInfo: {
-    padding: 12,
+    padding: SCREEN_WIDTH * 0.04,
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: SCREEN_HEIGHT * 0.01,
   },
   bookTitle: {
-    fontSize: SCREEN_WIDTH * 0.035,
+    fontSize: SCREEN_WIDTH * 0.045,
     fontWeight: '600',
     color: '#4ECDC4',
-    marginBottom: 2,
+    flex: 1,
+    marginRight: SCREEN_WIDTH * 0.02,
+  },
+  deleteButton: {
+    padding: SCREEN_WIDTH * 0.02,
+    borderRadius: 8,
   },
   bookSection: {
-    fontSize: SCREEN_WIDTH * 0.035,
+    fontSize: SCREEN_WIDTH * 0.04,
     color: '#fff',
-    marginBottom: 2,
+    marginBottom: SCREEN_HEIGHT * 0.01,
   },
   bookPrice: {
-    fontSize: SCREEN_WIDTH * 0.04,
+    fontSize: SCREEN_WIDTH * 0.045,
     fontWeight: '600',
     color: '#4ECDC4',
-    marginBottom: 8,
-  },
-  sellerInfo: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    padding: 8,
-    borderRadius: 6,
-    marginBottom: 8,
+    marginBottom: SCREEN_HEIGHT * 0.015,
   },
   sellerName: {
-    fontSize: SCREEN_WIDTH * 0.035,
-    fontWeight: '600',
-    color: '#4ECDC4',
-    marginBottom: 2,
-  },
-  sellerFaculty: {
-    fontSize: SCREEN_WIDTH * 0.035,
+    fontSize: SCREEN_WIDTH * 0.04,
     color: '#fff',
-    marginBottom: 2,
-  },
-  sellerDepartment: {
-    fontSize: SCREEN_WIDTH * 0.035,
-    color: '#fff',
+    marginBottom: SCREEN_HEIGHT * 0.015,
   },
   contactButton: {
-    backgroundColor: 'rgba(78,205,196,0.1)',
-    borderRadius: 10,
-    padding: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(78,205,196,0.1)',
+    borderRadius: 10,
+    padding: SCREEN_WIDTH * 0.03,
   },
   instagramIcon: {
-    marginRight: 5,
+    marginRight: SCREEN_WIDTH * 0.02,
   },
   contactButtonText: {
     color: '#4ECDC4',
     fontSize: SCREEN_WIDTH * 0.04,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   addButton: {
     position: 'absolute',
-    right: 20,
-    bottom: 20,
+    right: SCREEN_WIDTH * 0.05,
+    bottom: SCREEN_HEIGHT * 0.03,
     backgroundColor: '#4ECDC4',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: SCREEN_WIDTH * 0.15,
+    height: SCREEN_WIDTH * 0.15,
+    borderRadius: SCREEN_WIDTH * 0.075,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#4ECDC4',
@@ -665,51 +660,55 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     backgroundColor: '#1A1A1A',
-    borderRadius: 15,
-    padding: 20,
+    borderRadius: 20,
     width: '90%',
-    maxHeight: '80%',
+    maxHeight: '85%',
+    borderWidth: 1,
+    borderColor: 'rgba(78,205,196,0.3)',
   },
   modalContent: {
-    padding: 20,
+    padding: SCREEN_WIDTH * 0.05,
   },
   modalHeader: {
     fontSize: SCREEN_WIDTH * 0.06,
     fontWeight: 'bold',
     color: '#4ECDC4',
-    marginBottom: 20,
-    marginTop: 10,
+    marginBottom: SCREEN_HEIGHT * 0.02,
     textAlign: 'center',
   },
   imagePicker: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(78,205,196,0.1)',
     borderRadius: 15,
-    padding: 20,
-    marginBottom: 20,
-    height: 150,
+    padding: SCREEN_WIDTH * 0.04,
+    marginBottom: SCREEN_HEIGHT * 0.02,
+    height: SCREEN_HEIGHT * 0.2,
+    borderWidth: 1,
+    borderColor: 'rgba(78,205,196,0.3)',
   },
   imagePickerContent: {
     alignItems: 'center',
   },
   pickedImage: {
-    width: 100,
-    height: 100,
+    width: SCREEN_WIDTH * 0.3,
+    height: SCREEN_WIDTH * 0.3,
     borderRadius: 10,
-    marginTop: 10,
+    marginTop: SCREEN_HEIGHT * 0.01,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 8,
-    marginBottom: 15,
-    paddingHorizontal: 15,
-    height: 50,
+    backgroundColor: 'rgba(78,205,196,0.1)',
+    borderRadius: 12,
+    marginBottom: SCREEN_HEIGHT * 0.015,
+    paddingHorizontal: SCREEN_WIDTH * 0.04,
+    height: SCREEN_HEIGHT * 0.06,
+    borderWidth: 1,
+    borderColor: 'rgba(78,205,196,0.3)',
   },
   inputIcon: {
-    marginRight: 10,
+    marginRight: SCREEN_WIDTH * 0.03,
     color: '#4ECDC4',
   },
   input: {
@@ -719,21 +718,21 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: '#4ECDC4',
-    borderRadius: 8,
-    padding: 15,
+    borderRadius: 12,
+    padding: SCREEN_HEIGHT * 0.02,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: SCREEN_HEIGHT * 0.02,
   },
   saveButtonText: {
     color: '#000',
-    fontSize: SCREEN_WIDTH * 0.04,
+    fontSize: SCREEN_WIDTH * 0.045,
     fontWeight: '600',
   },
   closeButtonModal: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    padding: 10,
+    top: SCREEN_HEIGHT * 0.015,
+    right: SCREEN_WIDTH * 0.04,
+    padding: SCREEN_WIDTH * 0.02,
     zIndex: 1,
   },
   enlargedImageContainer: {
@@ -741,26 +740,26 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 10,
+    padding: SCREEN_WIDTH * 0.02,
   },
   enlargedImage: {
     width: '100%',
-    height: '90%',
-    borderRadius: 10,
+    height: '80%',
+    borderRadius: 15,
   },
   closeButton: {
     position: 'absolute',
-    top: 40,
-    right: 20,
-    padding: 10,
+    top: Platform.OS === 'ios' ? SCREEN_HEIGHT * 0.05 : SCREEN_HEIGHT * 0.02,
+    right: SCREEN_WIDTH * 0.05,
+    padding: SCREEN_WIDTH * 0.02,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 20,
+    borderRadius: SCREEN_WIDTH * 0.04,
   },
   emptyListText: {
     color: '#A9A9A9',
-    fontSize: 16,
+    fontSize: SCREEN_WIDTH * 0.04,
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: SCREEN_HEIGHT * 0.02,
   },
   centerContent: {
     flex: 1,
@@ -768,24 +767,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    marginTop: 10,
+    marginTop: SCREEN_HEIGHT * 0.01,
     color: '#4ECDC4',
-    fontSize: 16,
-  },
-  imageContainer: {
-    position: 'relative',
-    width: '100%',
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  deleteButton: {
-    backgroundColor: 'rgba(255, 59, 48, 0.1)',
-    borderRadius: 8,
-    padding: 6,
-    marginLeft: 8,
+    fontSize: SCREEN_WIDTH * 0.04,
   },
 });
