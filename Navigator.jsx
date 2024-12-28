@@ -113,14 +113,14 @@ export default function Navigator() {
           bottom: 0,
           left: 0,
           right: 0,
-          height: Platform.OS === 'ios' ? 130 : 60,
+          height: Platform.OS === 'ios' ? 220 : 60,
           backgroundColor: Platform.OS === 'ios' ? '#000' : 'transparent',
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
           zIndex: 9999,
-          paddingTop: Platform.OS === 'ios' ? 15 : 5,
-          paddingBottom: Platform.OS === 'ios' ? 20 : 0,
+          paddingTop: Platform.OS === 'ios' ? 25 : 5,
+          paddingBottom: Platform.OS === 'ios' ? 30 : 0,
         },
         tabBarBackground: () => (
           <LinearGradient
@@ -129,7 +129,7 @@ export default function Navigator() {
               : ['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0.7)']}
             style={{ 
               flex: 1,
-              height: Platform.OS === 'ios' ? 130 : '100%',
+              height: Platform.OS === 'ios' ? 220 : '100%',
             }}
           />
         ),
