@@ -248,7 +248,6 @@ export default function MessageScreen() {
           likedBy: isLiked ? arrayRemove(currentUser.id) : arrayUnion(currentUser.id)
         });
         
-        fetchMessages(); // Mesajları yenile
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
     } catch (error) {
@@ -276,25 +275,6 @@ export default function MessageScreen() {
           likedBy: isLiked ? arrayRemove(currentUser.id) : arrayUnion(currentUser.id)
         });
         
-        // Seçili mesajın yorumlarını hemen güncelle
-        const updatedComments = selectedMessage.commentList.map(comment => {
-          if (comment.id === commentId) {
-            return {
-              ...comment,
-              likes: isLiked ? comment.likes - 1 : comment.likes + 1,
-              isLiked: !isLiked
-            };
-          }
-          return comment;
-        });
-
-        setSelectedMessage(prev => ({
-          ...prev,
-          commentList: updatedComments
-        }));
-        
-        // Arka planda tüm mesajları da güncelle
-        fetchMessages();
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
     } catch (error) {
@@ -442,6 +422,72 @@ export default function MessageScreen() {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (messages.length === 0) return;
+
+    // Tüm mesajlar için beğeni dinleyicisi
+    const unsubscribers = messages.map(message => {
+      const messageRef = doc(FIRESTORE_DB, 'messages', message.id);
+      return onSnapshot(messageRef, (doc) => {
+        if (doc.exists()) {
+          const messageData = doc.data();
+          setMessages(prevMessages => prevMessages.map(msg => {
+            if (msg.id === message.id) {
+              return {
+                ...msg,
+                likes: messageData.likes || 0,
+                likedBy: messageData.likedBy || [],
+                isLiked: currentUser ? messageData.likedBy?.includes(currentUser.id) : false
+              };
+            }
+            return msg;
+          }));
+        }
+      });
+    });
+
+    // Cleanup
+    return () => {
+      unsubscribers.forEach(unsubscribe => unsubscribe());
+    };
+  }, [messages, currentUser]);
+
+  useEffect(() => {
+    if (!selectedMessage) return;
+
+    // Seçili mesajın yorumları için beğeni dinleyicisi
+    const commentUnsubscribers = selectedMessage.commentList.map(comment => {
+      const commentRef = doc(FIRESTORE_DB, `messages/${selectedMessage.id}/comments`, comment.id);
+      return onSnapshot(commentRef, (doc) => {
+        if (doc.exists()) {
+          const commentData = doc.data();
+          setSelectedMessage(prevMessage => {
+            if (!prevMessage) return prevMessage;
+            return {
+              ...prevMessage,
+              commentList: prevMessage.commentList.map(c => {
+                if (c.id === comment.id) {
+                  return {
+                    ...c,
+                    likes: commentData.likes || 0,
+                    likedBy: commentData.likedBy || [],
+                    isLiked: currentUser ? commentData.likedBy?.includes(currentUser.id) : false
+                  };
+                }
+                return c;
+              })
+            };
+          });
+        }
+      });
+    });
+
+    // Cleanup
+    return () => {
+      commentUnsubscribers.forEach(unsubscribe => unsubscribe());
+    };
+  }, [selectedMessage, currentUser]);
 
   const renderItem = ({ item }) => (
     <TouchableOpacity onPress={() => openComments(item)}>
