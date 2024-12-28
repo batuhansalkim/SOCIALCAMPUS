@@ -118,6 +118,7 @@ export default function Navigator() {
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
+          zIndex: 1,
         },
         tabBarBackground: () => (
           <LinearGradient

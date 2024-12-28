@@ -652,9 +652,6 @@ export default function MessageScreen() {
           refreshing={refreshing}
           onRefresh={onRefresh}
           showsVerticalScrollIndicator={false}
-          onContentSizeChange={() => {
-            scrollViewRef.current?.scrollToOffset({ offset: 0, animated: true });
-          }}
           ListEmptyComponent={() => (
             <View style={styles.loadingContainer}>
               {loading ? (
@@ -670,25 +667,20 @@ export default function MessageScreen() {
         />
       </SafeAreaView>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.keyboardAvoidingView}
-      >
       <View style={styles.inputWrapper}>
-          <BlurView intensity={100} tint="dark" style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Mesajınız yazın..."
-              placeholderTextColor="#aaa"
-              value={newMessage}
-              onChangeText={setNewMessage}
-            />
-            <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
-              <Ionicons name="send" size={24} color="#fff" />
-            </TouchableOpacity>
-          </BlurView>
+        <BlurView intensity={100} tint="dark" style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Mesajınız yazın..."
+            placeholderTextColor="#aaa"
+            value={newMessage}
+            onChangeText={setNewMessage}
+          />
+          <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+            <Ionicons name="send" size={24} color="#fff" />
+          </TouchableOpacity>
+        </BlurView>
       </View>
-      </KeyboardAvoidingView>
     </LinearGradient>
   );
 
@@ -738,7 +730,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    marginBottom: 60, // Tab bar height için margin
+    marginBottom: 120, // Input + Tab bar height
   },
   agendaContainer: {
     padding: 8,
@@ -814,7 +806,7 @@ const styles = StyleSheet.create({
   },
   messageList: {
     paddingHorizontal: 10,
-    paddingBottom: 60,
+    paddingBottom: 120,
   },
   messageContainer: {
     flexDirection: 'row',
@@ -879,6 +871,8 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: 'rgba(0,0,0,0.8)',
     height: 60,
+    zIndex: 999,
+    elevation: 999,
   },
   input: {
     flex: 1,
@@ -946,7 +940,7 @@ const styles = StyleSheet.create({
   },
   commentsList: {
     paddingHorizontal: 15,
-    paddingBottom: 60,
+    paddingBottom: 120,
   },
   commentContainer: {
     flexDirection: 'row',
@@ -991,9 +985,13 @@ const styles = StyleSheet.create({
     color: '#ff0000',
   },
   commentInputWrapper: {
+    position: 'absolute',
+    bottom: 60,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.95)',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(0,0,0,0.8)',
   },
   commentInputContainer: {
     flexDirection: 'row',
@@ -1080,13 +1078,43 @@ const styles = StyleSheet.create({
   },
   keyboardAvoidingView: {
     position: 'absolute',
-    bottom: 60, // Tab bar height
+    bottom: 60,
     left: 0,
     right: 0,
+    zIndex: 999,
+    elevation: 999,
   },
   inputWrapper: {
+    position: 'absolute',
+    bottom: 60,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.95)',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(0,0,0,0.8)',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    height: 60,
+  },
+  input: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    fontSize: screenWidth * 0.04,
+    color: '#fff',
+    marginRight: 10,
+  },
+  sendButton: {
+    backgroundColor: '#4ECDC4',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
