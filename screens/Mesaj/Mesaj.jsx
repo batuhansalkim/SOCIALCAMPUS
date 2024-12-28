@@ -771,7 +771,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    marginBottom: 120, // Input + Tab bar height
+    marginBottom: Platform.OS === 'ios' ? 190 : 120, // Margin'i de artır
   },
   agendaContainer: {
     padding: 8,
@@ -847,7 +847,7 @@ const styles = StyleSheet.create({
   },
   messageList: {
     paddingHorizontal: 10,
-    paddingBottom: 120,
+    paddingBottom: Platform.OS === 'ios' ? 190 : 120, // Padding'i de artır
   },
   messageContainer: {
     flexDirection: 'row',
@@ -1027,7 +1027,7 @@ const styles = StyleSheet.create({
   },
   commentInputWrapper: {
     position: 'absolute',
-    bottom: 60,
+    bottom: Platform.OS === 'ios' ? 130 : 60, // iOS için daha yukarı taşı
     left: 0,
     right: 0,
     backgroundColor: 'rgba(0,0,0,0.95)',
@@ -1041,6 +1041,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 10,
     height: 60,
+    zIndex: 999,
+    elevation: 999,
   },
   commentInput: {
     flex: 1,
@@ -1129,18 +1131,22 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     position: 'absolute',
-    bottom: 60,
+    bottom: Platform.OS === 'ios' ? 130 : 60, // iOS için daha yukarı taşı
     left: 0,
     right: 0,
     backgroundColor: 'rgba(0,0,0,0.95)',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.1)',
+    zIndex: 999,
+    elevation: 999,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
     height: 60,
+    zIndex: 999,
+    elevation: 999,
   },
   input: {
     flex: 1,

@@ -522,11 +522,15 @@ const styles = StyleSheet.create({
   searchIcon: {
     marginRight: SCREEN_WIDTH * 0.02,
     color: '#4ECDC4',
+    zIndex: 999,
+    elevation: 999,
   },
   searchInput: {
     flex: 1,
     color: '#FFFFFF',
     fontSize: SCREEN_WIDTH * 0.04,
+    zIndex: 999,
+    elevation: 999,
   },
   bookList: {
     paddingBottom: SCREEN_HEIGHT * 0.1,
@@ -542,6 +546,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    
   },
   imageContainer: {
     width: '100%',
@@ -572,6 +577,8 @@ const styles = StyleSheet.create({
   deleteButton: {
     padding: SCREEN_WIDTH * 0.02,
     borderRadius: 8,
+    zIndex: 999,
+    elevation: 999,
   },
   bookSection: {
     fontSize: SCREEN_WIDTH * 0.04,
@@ -596,9 +603,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 10,
     padding: SCREEN_WIDTH * 0.03,
+    
   },
   instagramIcon: {
     marginRight: SCREEN_WIDTH * 0.02,
+    
   },
   contactButtonText: {
     color: '#4ECDC4',
@@ -674,6 +683,7 @@ const styles = StyleSheet.create({
   inputIcon: {
     marginRight: SCREEN_WIDTH * 0.03,
     color: '#4ECDC4',
+    
   },
   input: {
     flex: 1,
@@ -686,6 +696,7 @@ const styles = StyleSheet.create({
     padding: SCREEN_HEIGHT * 0.02,
     alignItems: 'center',
     marginTop: SCREEN_HEIGHT * 0.02,
+    
   },
   saveButtonText: {
     color: '#000',
@@ -718,6 +729,7 @@ const styles = StyleSheet.create({
     padding: SCREEN_WIDTH * 0.02,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: SCREEN_WIDTH * 0.04,
+    
   },
   emptyListText: {
     color: '#A9A9A9',

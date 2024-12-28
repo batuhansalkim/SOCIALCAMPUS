@@ -113,12 +113,13 @@ export default function Navigator() {
           bottom: 0,
           left: 0,
           right: 0,
-          height: 60,
+          height: Platform.OS === 'ios' ? 110 : 60,
           backgroundColor: 'transparent',
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
-          zIndex: 1,
+          zIndex: 9999,
+          paddingTop: Platform.OS === 'ios' ? 15 : 5,
         },
         tabBarBackground: () => (
           <LinearGradient
@@ -179,10 +180,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: 'transparent',
+    zIndex: 99999,
+    elevation: Platform.OS === 'android' ? 0 : 24,
+    height: Platform.OS === 'ios' ? 130 : 60,
   },
   tabBar: {
     flexDirection: 'row',
-    height: 60,
+    height: Platform.OS === 'ios' ? 130 : 60,
     paddingBottom: 0,
   },
   tabItem: {
@@ -190,12 +194,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     height: '100%',
+    paddingTop: Platform.OS === 'ios' ? 15 : 5,
   },
   tabItemContent: {
     alignItems: 'center',
     justifyContent: 'center',
     position: 'absolute',
-    bottom: 5,
+    bottom: Platform.OS === 'ios' ? 45 : 15,
+    zIndex: 1000,
   },
   iconContainer: {
     padding: 8,
@@ -207,3 +213,4 @@ const styles = StyleSheet.create({
     padding: 6,
   },
 });
+
