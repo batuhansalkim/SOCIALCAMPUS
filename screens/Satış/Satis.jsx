@@ -608,7 +608,7 @@ const styles = StyleSheet.create({
   addButton: {
     position: 'absolute',
     right: SCREEN_WIDTH * 0.05,
-    bottom: SCREEN_HEIGHT * 0.03,
+    bottom: Platform.OS === 'ios' ? SCREEN_HEIGHT * 0.12 : SCREEN_HEIGHT * 0.1,
     backgroundColor: '#4ECDC4',
     width: SCREEN_WIDTH * 0.15,
     height: SCREEN_WIDTH * 0.15,
@@ -620,6 +620,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 8,
+    zIndex: 999,
   },
   modalOverlay: {
     flex: 1,
