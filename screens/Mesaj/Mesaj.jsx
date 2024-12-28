@@ -39,6 +39,59 @@ export default function MessageScreen() {
   const [allLoaded, setAllLoaded] = useState(false);
   const MESSAGES_PER_PAGE = 15;
 
+  // iOS için mesaj modal state'i
+  const [showMessageModal, setShowMessageModal] = useState(false);
+
+  // iOS için mesaj modalını aç/kapa
+  const toggleMessageModal = () => {
+    setShowMessageModal(!showMessageModal);
+  };
+
+  // iOS için mesaj modalı
+  const renderMessageModal = () => (
+    <Modal
+      transparent={true}
+      visible={showMessageModal}
+      animationType="slide"
+      onRequestClose={toggleMessageModal}
+    >
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      >
+      <View style={styles.messageModalContainer}>
+        <BlurView intensity={100} tint="dark" style={styles.messageModalContent}>
+          <View style={styles.messageModalHeader}>
+            <Text style={styles.messageModalTitle}>Yeni Mesaj</Text>
+            <TouchableOpacity onPress={toggleMessageModal} style={styles.messageModalClose}>
+              <Ionicons name="close" size={24} color="#4ECDC4" />
+            </TouchableOpacity>
+          </View>
+          <TextInput
+            style={styles.messageModalInput}
+            placeholder="Mesajınızı yazın..."
+            placeholderTextColor="#aaa"
+            value={newMessage}
+            onChangeText={setNewMessage}
+            multiline
+            autoFocus
+          />
+          <TouchableOpacity 
+            style={styles.messageModalSend} 
+            onPress={() => {
+              handleSend();
+              toggleMessageModal();
+            }}
+          >
+            <Text style={styles.messageModalSendText}>Gönder</Text>
+          </TouchableOpacity>
+        </BlurView>
+      </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+
   // Yenileme işlemi için fonksiyon
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -746,31 +799,12 @@ export default function MessageScreen() {
       </SafeAreaView>
 
       {Platform.OS === 'ios' ? (
-        <KeyboardAvoidingView
-          behavior="padding"
-          keyboardVerticalOffset={130}
-          style={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            bottom: 0,
-          }}
+        <TouchableOpacity 
+          style={styles.addMessageButton}
+          onPress={toggleMessageModal}
         >
-          <View style={[styles.inputWrapper, keyboardVisible && { bottom: 0 }]}>
-            <BlurView intensity={100} tint="dark" style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Mesajınız yazın..."
-                placeholderTextColor="#aaa"
-                value={newMessage}
-                onChangeText={setNewMessage}
-              />
-              <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
-                <Ionicons name="send" size={24} color="#fff" />
+          <Ionicons name="add" size={24} color="#fff" />
               </TouchableOpacity>
-            </BlurView>
-          </View>
-        </KeyboardAvoidingView>
       ) : (
       <View style={styles.inputWrapper}>
         <BlurView intensity={100} tint="dark" style={styles.inputContainer}>
@@ -787,6 +821,7 @@ export default function MessageScreen() {
         </BlurView>
       </View>
       )}
+      {Platform.OS === 'ios' && renderMessageModal()}
     </LinearGradient>
   );
 
@@ -911,7 +946,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    marginBottom: Platform.OS === 'ios' ? 190 : 120, // Margin'i de artır
+    marginBottom: Platform.OS === 'ios' ? 110 : 60, // Margin değerini azalttım
   },
   agendaContainer: {
     padding: 8,
@@ -987,7 +1022,7 @@ const styles = StyleSheet.create({
   },
   messageList: {
     paddingHorizontal: 10,
-    paddingBottom: Platform.OS === 'ios' ? 190 : 120, // Padding'i de artır
+    paddingBottom: Platform.OS === 'ios' ? 110 : 60, // Padding değerini azalttım
   },
   messageContainer: {
     flexDirection: 'row',
@@ -1311,5 +1346,68 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 20,
+  },
+  addMessageButton: {
+    position: 'absolute',
+    right: screenWidth * 0.05,
+    bottom: Platform.OS === 'ios' ? screenHeight * 0.15 : screenHeight * 0.1,
+    backgroundColor: '#4ECDC4',
+    width: screenWidth * 0.15,
+    height: screenWidth * 0.15,
+    borderRadius: screenWidth * 0.075,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8,
+    zIndex: 999,
+  },
+  messageModalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  messageModalContent: {
+    backgroundColor: '#2C2C2E',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    minHeight: screenHeight * 0.3,
+  },
+  messageModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  messageModalTitle: {
+    fontSize: screenWidth * 0.05,
+    fontWeight: 'bold',
+    color: '#4ECDC4',
+  },
+  messageModalClose: {
+    padding: 5,
+  },
+  messageModalInput: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 15,
+    padding: 15,
+    color: '#fff',
+    fontSize: screenWidth * 0.04,
+    minHeight: screenHeight * 0.15,
+    textAlignVertical: 'top',
+  },
+  messageModalSend: {
+    backgroundColor: '#4ECDC4',
+    borderRadius: 15,
+    padding: 15,
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  messageModalSendText: {
+    color: '#000',
+    fontSize: screenWidth * 0.045,
+    fontWeight: '600',
   },
 });
