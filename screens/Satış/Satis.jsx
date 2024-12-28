@@ -396,7 +396,7 @@ export default function BookSellingPage() {
               </TouchableOpacity>
 
               <ScrollView contentContainerStyle={styles.modalContent} showsVerticalScrollIndicator={false}>
-                <Text style={styles.modalHeader}>Yeni Kitap Ekle</Text>
+                <Text style={styles.modalHeader}>Yeni Ürün Ekle</Text>
 
                 <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
                   <View style={styles.imagePickerContent}>
@@ -411,7 +411,7 @@ export default function BookSellingPage() {
                   <Ionicons name="book" size={20} color="#4ECDC4" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Kitap Adı"
+                    placeholder="Eklenecek Ürün Adı"
                     placeholderTextColor="#aaa"
                     value={newBook.name}
                     onChangeText={(text) => handleInputChange('name', text)}
@@ -422,7 +422,7 @@ export default function BookSellingPage() {
                   <Ionicons name="list" size={20} color="#4ECDC4" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Bölüm"
+                    placeholder="Ürün Kategorisi "
                     placeholderTextColor="#aaa"
                     value={newBook.section}
                     onChangeText={(text) => handleInputChange('section', text)}
