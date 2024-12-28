@@ -519,50 +519,79 @@ export default function Profil() {
             </LinearGradient>
 
             {modalVisible && (
-                <BlurView intensity={100} tint="dark" style={[styles.modalContent, { backgroundColor: 'rgba(0, 0, 0, 0.8)' }]}>
-                    <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-                        <Ionicons name="close-outline" size={24} color="#FFFFFF" />
-                    </TouchableOpacity>
+                <Modal
+                    visible={modalVisible}
+                    transparent={true}
+                    animationType="slide"
+                    onRequestClose={() => setModalVisible(false)}
+                >
+                    <BlurView intensity={100} tint="dark" style={styles.modalContainer}>
+                        <LinearGradient
+                            colors={['rgba(0,0,0,0.95)', 'rgba(0,0,0,0.9)']}
+                            style={styles.modalContent}
+                        >
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>Profili Düzenle</Text>
+                                <TouchableOpacity 
+                                    style={styles.modalCloseButton} 
+                                    onPress={() => setModalVisible(false)}
+                                >
+                                    <Ionicons name="close-circle" size={32} color="#4ECDC4" />
+                                </TouchableOpacity>
+                            </View>
 
-                    <Text style={styles.modalTitle}>Profili Düzenle</Text>
-                    
-                    <TextInput
-                        style={styles.input}
-                        placeholder="İsim Soyisim"
-                        value={editedInfo.fullName}
-                        onChangeText={(text) => updateEditedInfo('fullName', text)}
-                        placeholderTextColor="#aaa"
-                    />
-                    
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Fakülte"
-                        value={editedInfo.faculty}
-                        onChangeText={(text) => updateEditedInfo('faculty', text)}
-                        placeholderTextColor="#aaa"
-                    />
-                    
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Bölüm"
-                        value={editedInfo.department}
-                        onChangeText={(text) => updateEditedInfo('department', text)}
-                        placeholderTextColor="#aaa"
-                    />
+                            <View style={styles.inputContainer}>
+                                <View style={styles.inputWrapper}>
+                                    <Ionicons name="person-outline" size={24} color="#4ECDC4" style={styles.inputIcon} />
+                                    <TextInput
+                                        style={styles.modalInput}
+                                        placeholder="İsim Soyisim"
+                                        value={editedInfo.fullName}
+                                        onChangeText={(text) => updateEditedInfo('fullName', text)}
+                                        placeholderTextColor="#aaa"
+                                    />
+                                </View>
 
-                    <TouchableOpacity 
-                        style={[
-                            styles.saveButton, 
-                            !isFormValid() && styles.saveButtonDisabled
-                        ]} 
-                        onPress={updateUserData}
-                        disabled={!isFormValid() || isSubmitting}
-                    >
-                        <Text style={styles.saveButtonText}>
-                            {isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}
-                        </Text>
-                    </TouchableOpacity>
-                </BlurView>
+                                <View style={styles.inputWrapper}>
+                                    <Ionicons name="school-outline" size={24} color="#4ECDC4" style={styles.inputIcon} />
+                                    <TextInput
+                                        style={styles.modalInput}
+                                        placeholder="Fakülte"
+                                        value={editedInfo.faculty}
+                                        onChangeText={(text) => updateEditedInfo('faculty', text)}
+                                        placeholderTextColor="#aaa"
+                                    />
+                                </View>
+
+                                <View style={styles.inputWrapper}>
+                                    <Ionicons name="book-outline" size={24} color="#4ECDC4" style={styles.inputIcon} />
+                                    <TextInput
+                                        style={styles.modalInput}
+                                        placeholder="Bölüm"
+                                        value={editedInfo.department}
+                                        onChangeText={(text) => updateEditedInfo('department', text)}
+                                        placeholderTextColor="#aaa"
+                                    />
+                                </View>
+                            </View>
+
+                            <TouchableOpacity 
+                                style={[styles.modalSaveButton, !isFormValid() && styles.modalSaveButtonDisabled]} 
+                                onPress={updateUserData}
+                                disabled={!isFormValid() || isSubmitting}
+                            >
+                                <LinearGradient
+                                    colors={['#4ECDC4', '#45B7AF']}
+                                    style={styles.saveButtonGradient}
+                                >
+                                    <Text style={styles.modalSaveButtonText}>
+                                        {isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}
+                                    </Text>
+                                </LinearGradient>
+                            </TouchableOpacity>
+                        </LinearGradient>
+                    </BlurView>
+                </Modal>
             )}
 
             <AboutScreen modalVisible={aboutModalVisible} setModalVisible={setAboutModalVisible} />
@@ -848,100 +877,71 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
     },
     modalContent: {
-        flex: 1,
+        width: screenWidth * 0.9,
+        borderRadius: 20,
         padding: 20,
-        paddingTop: 40,
+        backgroundColor: 'rgba(0,0,0,0.9)',
     },
     modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 20,
+        paddingBottom: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(78,205,196,0.2)',
     },
     modalTitle: {
         fontSize: screenWidth * 0.06,
         fontWeight: 'bold',
         color: '#4ECDC4',
     },
-    closeButton: {
+    modalCloseButton: {
         padding: 5,
     },
-    closeButtonText: {
-        color: '#4ECDC4',
-        fontSize: screenWidth * 0.04,
-        fontWeight: '600',
+    inputContainer: {
+        marginBottom: 20,
     },
-    modalSubtitle: {
+    inputWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderRadius: 12,
+        marginBottom: 15,
+        paddingHorizontal: 15,
+        borderWidth: 1,
+        borderColor: 'rgba(78,205,196,0.2)',
+    },
+    inputIcon: {
+        marginRight: 10,
+    },
+    modalInput: {
+        flex: 1,
+        paddingVertical: 15,
+        fontSize: screenWidth * 0.04,
+        color: '#fff',
+    },
+    modalSaveButton: {
+        borderRadius: 12,
+        overflow: 'hidden',
+        marginTop: 10,
+    },
+    modalSaveButtonDisabled: {
+        opacity: 0.5,
+    },
+    saveButtonGradient: {
+        paddingVertical: 15,
+        alignItems: 'center',
+    },
+    modalSaveButtonText: {
+        color: '#000',
         fontSize: screenWidth * 0.045,
         fontWeight: '600',
-        color: '#4ECDC4',
-        marginBottom: 15,
-        textAlign: 'center',
-    },
-    sectionTitle: {
-        fontSize: screenWidth * 0.05,
-        fontWeight: 'bold',
-        color: '#4ECDC4',
-        marginTop: 25,
-        marginBottom: 15,
-        textAlign: 'center',
-    },
-    featureTitle: {
-        fontSize: screenWidth * 0.04,
-        fontWeight: '600',
-        color: '#fff',
-        marginTop: 20,
-        marginBottom: 10,
-    },
-    modalText: {
-        fontSize: screenWidth * 0.035,
-        color: '#ddd',
-        lineHeight: screenWidth * 0.05,
-        marginBottom: 15,
-        textAlign: 'justify',
-    },
-    button: {
-        backgroundColor: 'rgba(78,205,196,0.1)',
-        borderRadius: 10,
-        padding: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '30%',
-    },
-    buttonText: {
-        color: '#4ECDC4',
-        fontSize: screenWidth * 0.035,
-        fontWeight: '600',
-        marginLeft: 8,
-    },
-    buttonInnerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    iconButton: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: 'rgba(0,0,0,0.7)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        alignSelf: 'center',
-        marginTop: 20,
-        borderWidth: 1.5,
-        borderColor: '#4ECDC4',
-        shadowColor: '#4ECDC4',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
     },
     chatbotButton: {
         width: screenWidth * 0.15,
