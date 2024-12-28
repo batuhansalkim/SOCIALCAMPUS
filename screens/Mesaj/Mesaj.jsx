@@ -20,6 +20,7 @@ export default function MessageScreen() {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [newComment, setNewComment] = useState('');
   const [showComments, setShowComments] = useState(false);
+  const [showCommentModal, setShowCommentModal] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [currentMessage, setCurrentMessage] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -704,22 +705,74 @@ export default function MessageScreen() {
           refreshing={refreshingComments}
           onRefresh={onRefreshComments}
         />
-      </SafeAreaView>
 
-        <View style={styles.commentInputWrapper}>
-          <BlurView intensity={100} tint="dark" style={styles.commentInputContainer}>
+        {Platform.OS === 'ios' ? (
+        <TouchableOpacity 
+          style={styles.addCommentButton}
+          onPress={() => setShowCommentModal(true)}
+        >
+          <Ionicons name="add" size={24} color="#fff" />
+        </TouchableOpacity>
+        ) : (
+          <View style={styles.commentInputWrapper}>
+            <BlurView intensity={100} tint="dark" style={styles.commentInputContainer}>
+              <TextInput
+                style={styles.commentInput}
+                placeholder="Yorumunuzu yazın..."
+                placeholderTextColor="#aaa"
+                value={newComment}
+                onChangeText={setNewComment}
+                multiline
+              />
+              <TouchableOpacity style={styles.commentButton} onPress={handleAddComment}>
+                <Ionicons name="send" size={24} color="#fff" />
+              </TouchableOpacity>
+            </BlurView>
+          </View>
+        )}
+
+        <Modal
+          transparent={true}
+          visible={showCommentModal}
+          animationType="slide"
+          onRequestClose={() => setShowCommentModal(false)}
+        >
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={{ flex: 1 }}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+          >
+            <View style={styles.commentModalContainer}>
+              <BlurView intensity={100} tint="dark" style={styles.commentModalContent}>
+                <View style={styles.commentModalHeader}>
+                  <Text style={styles.commentModalTitle}>Yeni Yorum</Text>
+                  <TouchableOpacity onPress={() => setShowCommentModal(false)} style={styles.commentModalClose}>
+                    <Ionicons name="close" size={24} color="#4ECDC4" />
+                  </TouchableOpacity>
+                </View>
             <TextInput
-              style={styles.commentInput}
-              placeholder="Yorum ekleyin..."
+                  style={styles.commentModalInput}
+                  placeholder="Yorumunuzu yazın..."
               placeholderTextColor="#aaa"
               value={newComment}
               onChangeText={setNewComment}
-            />
-            <TouchableOpacity style={styles.commentButton} onPress={handleAddComment}>
-              <Ionicons name="send" size={24} color="#fff" />
+                  multiline
+                  autoFocus
+                />
+                <TouchableOpacity 
+                  style={styles.commentModalSend} 
+                  onPress={() => {
+                    handleAddComment();
+                    setShowCommentModal(false);
+                  }}
+                >
+                  <Text style={styles.commentModalSendText}>Gönder</Text>
             </TouchableOpacity>
           </BlurView>
         </View>
+          </KeyboardAvoidingView>
+        </Modal>
+      </SafeAreaView>
     </LinearGradient>
   );
 
@@ -1202,7 +1255,7 @@ const styles = StyleSheet.create({
   },
   commentInputWrapper: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 130 : 60, // iOS için daha yukarı taşı
+    bottom: Platform.OS === 'ios' ? 110 : 0,
     left: 0,
     right: 0,
     backgroundColor: 'rgba(0,0,0,0.95)',
@@ -1216,8 +1269,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 10,
     height: 60,
-    zIndex: 999,
-    elevation: 999,
   },
   commentInput: {
     flex: 1,
@@ -1350,7 +1401,24 @@ const styles = StyleSheet.create({
   addMessageButton: {
     position: 'absolute',
     right: screenWidth * 0.05,
-    bottom: Platform.OS === 'ios' ? screenHeight * 0.15 : screenHeight * 0.1,
+    bottom: Platform.OS === 'ios' ? screenHeight * 0.2 : screenHeight * 0.12,
+    backgroundColor: '#4ECDC4',
+    width: screenWidth * 0.15,
+    height: screenWidth * 0.15,
+    borderRadius: screenWidth * 0.075,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8,
+    zIndex: 999,
+  },
+  addCommentButton: {
+    position: 'absolute',
+    right: screenWidth * 0.05,
+    bottom: Platform.OS === 'ios' ? screenHeight * 0.13 : screenHeight * 0.12,
     backgroundColor: '#4ECDC4',
     width: screenWidth * 0.15,
     height: screenWidth * 0.15,
@@ -1406,6 +1474,52 @@ const styles = StyleSheet.create({
     marginTop: 15,
   },
   messageModalSendText: {
+    color: '#000',
+    fontSize: screenWidth * 0.045,
+    fontWeight: '600',
+  },
+  commentModalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  commentModalContent: {
+    backgroundColor: '#2C2C2E',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    minHeight: screenHeight * 0.3,
+  },
+  commentModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  commentModalTitle: {
+    fontSize: screenWidth * 0.05,
+    fontWeight: 'bold',
+    color: '#4ECDC4',
+  },
+  commentModalClose: {
+    padding: 5,
+  },
+  commentModalInput: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 15,
+    padding: 15,
+    color: '#fff',
+    fontSize: screenWidth * 0.04,
+    minHeight: screenHeight * 0.15,
+    textAlignVertical: 'top',
+  },
+  commentModalSend: {
+    backgroundColor: '#4ECDC4',
+    borderRadius: 15,
+    padding: 15,
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  commentModalSendText: {
     color: '#000',
     fontSize: screenWidth * 0.045,
     fontWeight: '600',

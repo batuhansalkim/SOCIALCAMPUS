@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
   addButton: {
     position: 'absolute',
     right: SCREEN_WIDTH * 0.05,
-    bottom: Platform.OS === 'ios' ? SCREEN_HEIGHT * 0.12 : SCREEN_HEIGHT * 0.1,
+    bottom: Platform.OS === 'ios' ? SCREEN_HEIGHT * 0.2 : SCREEN_HEIGHT * 0.12,
     backgroundColor: '#4ECDC4',
     width: SCREEN_WIDTH * 0.15,
     height: SCREEN_WIDTH * 0.15,

@@ -26,6 +26,7 @@ import facultiesData from '../../data/faculties.json';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
 
 const AboutAppModal = ({ visible, onClose }) => (
   <Modal visible={visible} animationType="slide" transparent>
@@ -1068,5 +1069,22 @@ const styles = StyleSheet.create({
         color: '#fff',
         marginLeft: 10,
         opacity: 0.9,
+    },
+    addButton: {
+        position: 'absolute',
+        right: screenWidth * 0.05,
+        bottom: Platform.OS === 'ios' ? screenHeight * 0.2 : screenHeight * 0.12,
+        backgroundColor: '#4ECDC4',
+        width: screenWidth * 0.15,
+        height: screenWidth * 0.15,
+        borderRadius: screenWidth * 0.075,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 8,
+        zIndex: 999,
     },
 });
