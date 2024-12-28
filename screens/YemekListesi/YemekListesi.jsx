@@ -356,7 +356,7 @@ export default function MealSchedule() {
             style={styles.mealScrollView}
             showsVerticalScrollIndicator={false}
           >
-            {item.aciklama.split(',').map((meal, idx) => (
+            {item.aciklama.split(/[,،]+/).filter(meal => meal.trim()).map((meal, idx) => (
               <View key={idx} style={styles.yemekContainer}>
                 <Ionicons name={getIconForMeal(idx)} size={28} color="#FFF" style={styles.yemekIcon} />
                 <View style={styles.yemekDetails}>
@@ -563,8 +563,10 @@ const styles = StyleSheet.create({
     width: screenWidth,
     paddingHorizontal: screenWidth * 0.02,
     justifyContent: 'center',
-    paddingBottom: Platform.OS === 'ios' ? screenHeight * 0.17 : screenHeight * 0.14,
+    paddingBottom: Platform.OS === 'ios' ? screenHeight * 0.12 : screenHeight * 0.1,
     marginTop: -10,
+    zIndex: 0,
+    elevation: 0,
   },
   card: {
     borderRadius: 15,
@@ -573,6 +575,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     height: Platform.OS === 'ios' ? screenHeight * 0.46 : screenHeight * 0.48,
     maxHeight: screenHeight * 0.5,
+    zIndex: 0,
+    elevation: 0,
   },
   dateContainer: {
     flexDirection: 'row',
@@ -661,11 +665,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? screenHeight * 0.13 : screenHeight * 0.11,
+    bottom: Platform.OS === 'ios' ? screenHeight * 0.15 : screenHeight * 0.13,
     left: 0,
     right: 0,
     height: screenHeight * 0.02,
-    zIndex: 999,
+    zIndex: 99999,
+    elevation: 99999,
   },
   dot: {
     height: screenWidth * 0.02,
@@ -673,7 +678,9 @@ const styles = StyleSheet.create({
     borderRadius: screenWidth * 0.01,
     backgroundColor: '#4ECDC4',
     marginHorizontal: screenWidth * 0.015,
-    opacity: 0.7,
+    opacity: 0.9,
+    zIndex: 99999,
+    elevation: 99999,
   },
   loadingContainer: {
     flex: 1,
