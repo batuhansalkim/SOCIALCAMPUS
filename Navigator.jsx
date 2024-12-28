@@ -113,18 +113,24 @@ export default function Navigator() {
           bottom: 0,
           left: 0,
           right: 0,
-          height: Platform.OS === 'ios' ? 110 : 60,
-          backgroundColor: 'transparent',
+          height: Platform.OS === 'ios' ? 130 : 60,
+          backgroundColor: Platform.OS === 'ios' ? '#000' : 'transparent',
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
           zIndex: 9999,
           paddingTop: Platform.OS === 'ios' ? 15 : 5,
+          paddingBottom: Platform.OS === 'ios' ? 20 : 0,
         },
         tabBarBackground: () => (
           <LinearGradient
-            colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0.7)']}
-            style={{ flex: 1 }}
+            colors={Platform.OS === 'ios' 
+              ? ['#000', '#000', '#000'] 
+              : ['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0.7)']}
+            style={{ 
+              flex: 1,
+              height: Platform.OS === 'ios' ? 130 : '100%',
+            }}
           />
         ),
       }}
@@ -179,7 +185,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'transparent',
+    backgroundColor: Platform.OS === 'ios' ? '#000' : 'transparent',
     zIndex: 99999,
     elevation: Platform.OS === 'android' ? 0 : 24,
     height: Platform.OS === 'ios' ? 130 : 60,
@@ -187,7 +193,7 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: 'row',
     height: Platform.OS === 'ios' ? 130 : 60,
-    paddingBottom: 0,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 0,
   },
   tabItem: {
     flex: 1,
@@ -213,4 +219,3 @@ const styles = StyleSheet.create({
     padding: 6,
   },
 });
-
