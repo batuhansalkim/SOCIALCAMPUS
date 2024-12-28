@@ -946,7 +946,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    marginBottom: Platform.OS === 'ios' ? 110 : 60, // Margin değerini azalttım
+    marginBottom: Platform.OS === 'ios' ? 90 : 60,
   },
   agendaContainer: {
     padding: 8,
@@ -1022,7 +1022,7 @@ const styles = StyleSheet.create({
   },
   messageList: {
     paddingHorizontal: 10,
-    paddingBottom: Platform.OS === 'ios' ? 110 : 60, // Padding değerini azalttım
+    paddingBottom: Platform.OS === 'ios' ? 70 : 60,
   },
   messageContainer: {
     flexDirection: 'row',
