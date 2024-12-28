@@ -399,11 +399,12 @@ export default function BookSellingPage() {
                 <Text style={styles.modalHeader}>Yeni Ürün Ekle</Text>
 
                 <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+                  {newBook.photoUri ? (
+                    <Image source={{ uri: newBook.photoUri }} style={styles.pickedImage} />
+                  ) : (
                   <View style={styles.imagePickerContent}>
                     <Ionicons name="camera" size={40} color="#4ECDC4" />
                   </View>
-                  {newBook.photoUri && (
-                    <Image source={{ uri: newBook.photoUri }} style={styles.pickedImage} />
                   )}
                 </TouchableOpacity>
 
