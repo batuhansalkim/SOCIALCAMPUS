@@ -584,10 +584,6 @@ export default function MessageScreen() {
         />
       </SafeAreaView>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.keyboardAvoidingView}
-      >
         <View style={styles.commentInputWrapper}>
           <BlurView intensity={100} tint="dark" style={styles.commentInputContainer}>
             <TextInput
@@ -602,7 +598,6 @@ export default function MessageScreen() {
             </TouchableOpacity>
           </BlurView>
         </View>
-      </KeyboardAvoidingView>
     </LinearGradient>
   );
 
@@ -992,6 +987,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.95)',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.1)',
+    zIndex: 999,
+    elevation: 999,
   },
   commentInputContainer: {
     flexDirection: 'row',
