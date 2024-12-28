@@ -708,6 +708,33 @@ export default function MessageScreen() {
         />
       </SafeAreaView>
 
+      {Platform.OS === 'ios' ? (
+        <KeyboardAvoidingView
+          behavior="padding"
+          keyboardVerticalOffset={130}
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+          }}
+        >
+          <View style={[styles.inputWrapper, keyboardVisible && { bottom: 0 }]}>
+            <BlurView intensity={100} tint="dark" style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Mesajınız yazın..."
+                placeholderTextColor="#aaa"
+                value={newMessage}
+                onChangeText={setNewMessage}
+              />
+              <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+                <Ionicons name="send" size={24} color="#fff" />
+              </TouchableOpacity>
+            </BlurView>
+          </View>
+        </KeyboardAvoidingView>
+      ) : (
       <View style={styles.inputWrapper}>
         <BlurView intensity={100} tint="dark" style={styles.inputContainer}>
           <TextInput
@@ -722,13 +749,16 @@ export default function MessageScreen() {
           </TouchableOpacity>
         </BlurView>
       </View>
+      )}
     </LinearGradient>
   );
 
+  // Klavye event listener'ları
   useEffect(() => {
+    if (Platform.OS === 'ios') {
     const keyboardWillShowListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      () => {
+        'keyboardWillShow',
+        (e) => {
         setKeyboardVisible(true);
         navigation.getParent()?.setOptions({
           tabBarStyle: { display: 'none' }
@@ -737,7 +767,7 @@ export default function MessageScreen() {
     );
 
     const keyboardWillHideListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+        'keyboardWillHide',
       () => {
         setKeyboardVisible(false);
         navigation.getParent()?.setOptions({
@@ -749,11 +779,11 @@ export default function MessageScreen() {
     return () => {
       keyboardWillShowListener.remove();
       keyboardWillHideListener.remove();
-      // Ekran kapandığında navigation bar'ı tekrar göster
       navigation.getParent()?.setOptions({
         tabBarStyle: { display: 'flex' }
       });
     };
+    }
   }, [navigation]);
 
   return (
