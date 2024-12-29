@@ -392,31 +392,72 @@ export default function MessageScreen() {
     }
   };
 
+  // Yorum beğeni fonksiyonu
   const handleLikeComment = async (messageId, commentId) => {
-    if (!currentUser) {
-      Alert.alert('Uyarı', 'Beğenmek için giriş yapmalısınız.');
-      return;
-    }
+    if (!currentUser) return;
 
     try {
       const commentRef = doc(FIRESTORE_DB, `messages/${messageId}/comments`, commentId);
-      const commentDoc = await getDoc(commentRef);
       
-      if (commentDoc.exists()) {
-        const likedBy = commentDoc.data().likedBy || [];
-        const isLiked = likedBy.includes(currentUser.id);
-        
-        await updateDoc(commentRef, {
-          likes: isLiked ? increment(-1) : increment(1),
-          likedBy: isLiked ? arrayRemove(currentUser.id) : arrayUnion(currentUser.id)
+      // Optimistik güncelleme
+      setSelectedMessage(prevMessage => {
+        const updatedComments = prevMessage.commentList.map(comment => {
+          if (comment.id === commentId) {
+            const isCurrentlyLiked = comment.likedBy?.includes(currentUser.id);
+            return {
+              ...comment,
+              likes: isCurrentlyLiked ? comment.likes - 1 : comment.likes + 1,
+              likedBy: isCurrentlyLiked 
+                ? comment.likedBy.filter(id => id !== currentUser.id)
+                : [...(comment.likedBy || []), currentUser.id]
+            };
+          }
+          return comment;
         });
         
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
+        return {
+          ...prevMessage,
+          commentList: updatedComments
+        };
+      });
+
+      // Firebase güncelleme
+      const commentDoc = await getDoc(commentRef);
+      const currentLikedBy = commentDoc.data().likedBy || [];
+      const isLiked = currentLikedBy.includes(currentUser.id);
+
+      await updateDoc(commentRef, {
+        likes: isLiked ? increment(-1) : increment(1),
+        likedBy: isLiked 
+          ? arrayRemove(currentUser.id)
+          : arrayUnion(currentUser.id)
+      });
+
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch (error) {
-      console.error('Yorum beğeni işlemi sırasında hata:', error);
-      Alert.alert('Hata', 'Beğeni işlemi gerçekleştirilemedi.');
+      console.error('Beğeni işlemi sırasında hata:', error);
     }
+  };
+
+  // Yorumları dinleme fonksiyonu
+  const listenToComments = (messageId) => {
+    if (!messageId) return null;
+
+    const commentsRef = collection(FIRESTORE_DB, `messages/${messageId}/comments`);
+    const q = query(commentsRef, orderBy('createdAt', 'desc'));
+
+    return onSnapshot(q, (snapshot) => {
+      const comments = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+      }));
+
+      setSelectedMessage(prev => ({
+        ...prev,
+        commentList: comments
+      }));
+    });
   };
 
   // Mesaj silme optimizasyonu
@@ -1098,6 +1139,16 @@ export default function MessageScreen() {
       </SafeAreaView>
     </LinearGradient>
   );
+
+  // useEffect içinde yorumları dinle
+  useEffect(() => {
+    if (selectedMessage?.id) {
+      const unsubscribe = listenToComments(selectedMessage.id);
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
+    }
+  }, [selectedMessage?.id]);
 
   return (
   <>
