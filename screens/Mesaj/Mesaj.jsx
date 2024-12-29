@@ -15,33 +15,165 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 export default function MessageScreen() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [newMessage, setNewMessage] = useState('');
-  const [selectedMessage, setSelectedMessage] = useState(null);
-  const [newComment, setNewComment] = useState('');
-  const [showComments, setShowComments] = useState(false);
-  const [showCommentModal, setShowCommentModal] = useState(false);
-  const [showOptions, setShowOptions] = useState(false);
-  const [currentMessage, setCurrentMessage] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [currentComment, setCurrentComment] = useState(null);
-  const [showCommentOptions, setShowCommentOptions] = useState(false);
-  const [refreshingComments, setRefreshingComments] = useState(false);
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
-  const [agendaTopics, setAgendaTopics] = useState([]);
-  const [selectedTopic, setSelectedTopic] = useState(null);
-  const navigation = useNavigation();
-
-  const scrollViewRef = useRef(null);
-
-  // Pagination için state'ler
-  const [lastDoc, setLastDoc] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [allLoaded, setAllLoaded] = useState(false);
-  const MESSAGES_PER_PAGE = 15;
-
-  // iOS için mesaj modal state'i
+  const [lastDoc, setLastDoc] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [showOptions, setShowOptions] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState(null);
+  const [currentMessage, setCurrentMessage] = useState(null);
+  const [showComments, setShowComments] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [newMessage, setNewMessage] = useState('');
+  const [newComment, setNewComment] = useState('');
+  const [refreshingComments, setRefreshingComments] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [showCommentOptions, setShowCommentOptions] = useState(false);
+  const [currentComment, setCurrentComment] = useState(null);
+  const [agendaTopics, setAgendaTopics] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  
+  const navigation = useNavigation();
+  const MESSAGES_PER_PAGE = 15;
+  const scrollViewRef = useRef(null);
+
+  // İlk yükleme için useEffect
+  useEffect(() => {
+    const loadInitialMessages = async () => {
+      try {
+        setLoading(true);
+        // Mesajları gerçek zamanlı dinle
+        const messagesRef = collection(FIRESTORE_DB, 'messages');
+        const q = query(messagesRef, orderBy('createdAt', 'desc'), limit(MESSAGES_PER_PAGE));
+        
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const messagesData = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id, // Benzersiz ID'yi garanti et
+              ...data,
+              scale: new Animated.Value(1),
+              isLiked: currentUser ? data.likedBy?.includes(currentUser.id) : false,
+              comments: data.commentCount || 0,
+              commentList: [],
+              createdAt: data.createdAt?.toDate() || new Date(),
+            };
+          });
+
+          // Duplicate kontrolü yaparak set et
+          setMessages(prev => {
+            const uniqueMessages = messagesData.filter((newMsg, index, self) =>
+              index === self.findIndex((msg) => msg.id === newMsg.id)
+            );
+            return uniqueMessages;
+          });
+          
+          setLoading(false);
+          
+          const lastVisible = snapshot.docs[snapshot.docs.length - 1];
+          setLastDoc(lastVisible);
+          setAllLoaded(snapshot.docs.length < MESSAGES_PER_PAGE);
+        }, (error) => {
+          console.error('Mesajları dinlerken hata:', error);
+          setLoading(false);
+          Alert.alert('Hata', 'Mesajlar yüklenirken bir hata oluştu.');
+        });
+
+        return () => unsubscribe();
+      } catch (error) {
+        console.error('Initial messages loading error:', error);
+        setLoading(false);
+        Alert.alert('Hata', 'Mesajlar yüklenirken bir hata oluştu.');
+      }
+    };
+
+    loadInitialMessages();
+  }, [currentUser]);
+
+  // Yenileme işlemi için fonksiyon
+  const onRefresh = React.useCallback(async () => {
+    try {
+      setRefreshing(true);
+        const messagesRef = collection(FIRESTORE_DB, 'messages');
+      const q = query(messagesRef, orderBy('createdAt', 'desc'), limit(MESSAGES_PER_PAGE));
+        
+      const querySnapshot = await getDocs(q);
+      const messagesData = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              scale: new Animated.Value(1),
+              isLiked: currentUser ? data.likedBy?.includes(currentUser.id) : false,
+              comments: data.commentCount || 0,
+              commentList: [],
+              createdAt: data.createdAt?.toDate() || new Date(),
+            };
+      });
+
+      setMessages(messagesData);
+      
+      // Son dokümanı kaydet
+      const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+      setLastDoc(lastVisible);
+      setAllLoaded(querySnapshot.docs.length < MESSAGES_PER_PAGE);
+      } catch (error) {
+      console.error('Refresh error:', error);
+      Alert.alert('Hata', 'Mesajlar yüklenirken bir hata oluştu.');
+    } finally {
+      setRefreshing(false);
+    }
+  }, [currentUser]);
+
+  // Mesajları getir - Pagination ile
+  const fetchMessages = async (loadMore = false) => {
+    if (!loadMore) return; // Sadece loadMore true olduğunda çalışsın
+
+    try {
+      setLoadingMore(true);
+
+      const messagesRef = collection(FIRESTORE_DB, 'messages');
+      const q = query(
+          messagesRef, 
+          orderBy('createdAt', 'desc'), 
+          startAfter(lastDoc), 
+          limit(MESSAGES_PER_PAGE)
+        );
+
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        setAllLoaded(true);
+        return;
+      }
+      
+      const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+      setLastDoc(lastVisible);
+      setAllLoaded(querySnapshot.docs.length < MESSAGES_PER_PAGE);
+
+      const fetchedMessages = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          scale: new Animated.Value(1),
+          createdAt: data.createdAt?.toDate() || new Date(),
+          isLiked: currentUser ? data.likedBy?.includes(currentUser.id) : false,
+          likedBy: data.likedBy || [],
+          likes: data.likes || 0,
+          comments: data.commentCount || 0
+        };
+      });
+
+        setMessages(prev => [...prev, ...fetchedMessages]);
+    } catch (error) {
+      console.error('Mesajlar yüklenirken hata:', error);
+      Alert.alert('Hata', 'Mesajlar yüklenemedi.');
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   // iOS için mesaj modalını aç/kapa
   const toggleMessageModal = () => {
@@ -93,12 +225,6 @@ export default function MessageScreen() {
     </Modal>
   );
 
-  // Yenileme işlemi için fonksiyon
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    fetchMessages().then(() => setRefreshing(false));
-  }, []);
-
   // Kullanıcı bilgisini al
   useEffect(() => {
     getCurrentUser();
@@ -140,106 +266,6 @@ export default function MessageScreen() {
     }
   };
 
-  // Mesajları getir - Pagination ile
-  const fetchMessages = async (loadMore = false) => {
-    try {
-      if (!loadMore) setLoading(true);
-      const messagesRef = collection(FIRESTORE_DB, 'messages');
-      let q = query(
-        messagesRef, 
-        orderBy('createdAt', 'desc'), 
-        limit(MESSAGES_PER_PAGE)
-      );
-      
-      if (loadMore && lastDoc) {
-        q = query(
-          messagesRef, 
-          orderBy('createdAt', 'desc'), 
-          startAfter(lastDoc), 
-          limit(MESSAGES_PER_PAGE)
-        );
-      }
-
-      const querySnapshot = await getDocs(q);
-      
-      if (querySnapshot.empty) {
-        setMessages([]);
-        setLoading(false);
-        setLoadingMore(false);
-        return;
-      }
-      
-      const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
-      setLastDoc(lastVisible);
-      setAllLoaded(querySnapshot.docs.length < MESSAGES_PER_PAGE);
-
-      const messagesData = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          text: data.text,
-          userId: data.userId,
-          userName: data.userName,
-          likes: data.likes || 0,
-          likedBy: data.likedBy || [],
-          commentCount: data.commentCount || 0,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          scale: new Animated.Value(1),
-          isLiked: currentUser ? data.likedBy?.includes(currentUser.id) : false,
-        };
-      });
-      
-      if (loadMore) {
-        setMessages(prev => [...prev, ...messagesData]);
-      } else {
-        setMessages(messagesData);
-      }
-    } catch (error) {
-      console.error('Mesajlar alınırken hata:', error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  };
-
-  // İlk yükleme ve yenileme için useEffect
-  useEffect(() => {
-    fetchMessages();
-    
-    // Mesajları gerçek zamanlı dinle
-    const messagesRef = collection(FIRESTORE_DB, 'messages');
-    const q = query(messagesRef, orderBy('createdAt', 'desc'), limit(MESSAGES_PER_PAGE));
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messagesData = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          scale: new Animated.Value(1),
-          isLiked: currentUser ? data.likedBy?.includes(currentUser.id) : false,
-          comments: data.commentCount || 0,
-          commentList: [],
-          createdAt: data.createdAt?.toDate() || new Date(),
-        };
-      });
-      setMessages(messagesData);
-      setLoading(false);
-    }, (error) => {
-      console.error('Mesajları dinlerken hata:', error);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [currentUser]);
-
-  // Daha fazla mesaj yükle
-  const loadMoreMessages = async () => {
-    if (loadingMore || allLoaded || loading) return;
-    setLoadingMore(true);
-    await fetchMessages(true);
-  };
-
   // Mesaj gönderme optimizasyonu
   const handleSend = async () => {
     if (!currentUser || !newMessage.trim()) return;
@@ -255,25 +281,29 @@ export default function MessageScreen() {
       };
 
     try {
-      // Optimistik güncelleme
-      const tempId = Date.now().toString();
-      const tempMessage = {
-        id: tempId,
+      setNewMessage(''); // Önce input'u temizle
+      
+      // Firebase'e kaydet
+      const docRef = await addDoc(collection(FIRESTORE_DB, 'messages'), messageData);
+      
+      // Optimistik güncelleme - yeni mesajı eklerken duplicate kontrolü yap
+      const newMessageObj = {
+        id: docRef.id,
         ...messageData,
         scale: new Animated.Value(1),
         isLiked: false,
       };
 
-      setMessages(prev => [tempMessage, ...prev]);
-      setNewMessage('');
-
-      // Firebase'e kaydet
-      await addDoc(collection(FIRESTORE_DB, 'messages'), messageData);
+      setMessages(prev => {
+        // Duplicate kontrolü
+        const isDuplicate = prev.some(msg => msg.id === newMessageObj.id);
+        if (isDuplicate) return prev;
+        return [newMessageObj, ...prev];
+      });
       
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
       console.error('Mesaj gönderilirken hata:', error);
-      setMessages(prev => prev.filter(msg => msg.id !== tempId));
       Alert.alert('Hata', 'Mesaj gönderilemedi. Lütfen tekrar deneyin.');
     }
   };
@@ -282,7 +312,6 @@ export default function MessageScreen() {
   const handleAddComment = async () => {
     if (!currentUser || !newComment.trim() || !selectedMessage) return;
 
-      try {
       const commentData = {
             userId: currentUser.id,
             userName: currentUser.fullName,
@@ -292,38 +321,19 @@ export default function MessageScreen() {
             createdAt: new Date(),
       };
 
-      // Önce yorum sayısını güncelle
-        await updateDoc(doc(FIRESTORE_DB, 'messages', selectedMessage.id), {
-          commentCount: increment(1)
-        });
-
-      // Sonra yorumu ekle
-      await addDoc(
+    try {
+      // Firebase'e kaydet
+      const commentRef = await addDoc(
         collection(FIRESTORE_DB, `messages/${selectedMessage.id}/comments`),
         commentData
       );
 
-        setNewComment('');
-        
-      // Sadece son 10 yorumu getir
-        const commentsRef = collection(FIRESTORE_DB, `messages/${selectedMessage.id}/comments`);
-      const commentsQuery = query(commentsRef, orderBy('createdAt', 'desc'), limit(10));
-        const commentsSnapshot = await getDocs(commentsQuery);
-        
-        const updatedComments = commentsSnapshot.docs.map(commentDoc => {
-        const data = commentDoc.data();
-        return {
-          id: commentDoc.id,
-          ...data,
-          isLiked: currentUser ? data.likedBy?.includes(currentUser.id) : false,
-        };
+      await updateDoc(doc(FIRESTORE_DB, 'messages', selectedMessage.id), {
+        commentCount: increment(1)
       });
-      
-        setSelectedMessage(prev => ({
-          ...prev,
-          commentList: updatedComments,
-        comments: prev.comments + 1
-        }));
+
+      setNewComment('');
+      setShowCommentModal(false);
         
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch (error) {
@@ -444,12 +454,6 @@ export default function MessageScreen() {
     }
   };
 
-  const openComments = (message) => {
-    setSelectedMessage(message);
-    setShowComments(true);
-    Haptics.selectionAsync();
-  };
-
   const handleMoreOptions = (message) => {
     console.log('Options menu opened for:', message.text); // Hangi mesaj için açıldığını kontrol edin
     setCurrentMessage(message);
@@ -556,15 +560,19 @@ export default function MessageScreen() {
   }, []);
 
   useEffect(() => {
-    if (messages.length === 0) return;
+    if (!messages || messages.length === 0) return;
 
     // Tüm mesajlar için beğeni dinleyicisi
     const unsubscribers = messages.map(message => {
+      if (!message?.id) return () => {}; // Geçersiz mesaj kontrolü
+
       const messageRef = doc(FIRESTORE_DB, 'messages', message.id);
       return onSnapshot(messageRef, (doc) => {
         if (doc.exists()) {
           const messageData = doc.data();
-          setMessages(prevMessages => prevMessages.map(msg => {
+          setMessages(prevMessages => {
+            if (!prevMessages) return []; // Null kontrolü
+            return prevMessages.map(msg => {
             if (msg.id === message.id) {
               return {
                 ...msg,
@@ -574,14 +582,15 @@ export default function MessageScreen() {
               };
             }
             return msg;
-          }));
+            });
+          });
         }
       });
     });
 
     // Cleanup
     return () => {
-      unsubscribers.forEach(unsubscribe => unsubscribe());
+      unsubscribers.forEach(unsubscribe => unsubscribe && unsubscribe());
     };
   }, [messages, currentUser]);
 
@@ -621,16 +630,106 @@ export default function MessageScreen() {
     };
   }, [selectedMessage, currentUser]);
 
+  // Yorumlar için gerçek zamanlı dinleyici
+  useEffect(() => {
+    if (!selectedMessage?.id) return;
+
+    const commentsRef = collection(FIRESTORE_DB, `messages/${selectedMessage.id}/comments`);
+    const commentsQuery = query(commentsRef, orderBy('createdAt', 'desc'));
+    
+    const unsubscribe = onSnapshot(commentsQuery, {
+      next: (snapshot) => {
+      const comments = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        isLiked: currentUser ? doc.data().likedBy?.includes(currentUser.id) : false,
+        createdAt: doc.data().createdAt?.toDate() || new Date()
+      }));
+
+      setSelectedMessage(prev => ({
+        ...prev,
+          commentList: comments,
+          comments: comments.length
+      }));
+      },
+      error: (error) => {
+      console.error('Yorumları dinlerken hata:', error);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [selectedMessage?.id, currentUser]);
+
+  // Mesaja tıklama işleyicisi
+  const handleMessagePress = async (message) => {
+    if (!message) return;
+    
+    try {
+      setLoading(true);
+      setSelectedMessage(message);
+      setShowComments(true);
+      
+      // Yorumları getir
+      const commentsRef = collection(FIRESTORE_DB, `messages/${message.id}/comments`);
+      const commentsQuery = query(commentsRef, orderBy('createdAt', 'desc'));
+      const commentsSnapshot = await getDocs(commentsQuery);
+      
+      const comments = commentsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          isLiked: currentUser ? data.likedBy?.includes(currentUser.id) : false,
+          createdAt: data.createdAt?.toDate() || new Date()
+        };
+      });
+
+      // Yorumları state'e kaydet
+      setSelectedMessage(prev => ({
+        ...prev,
+        commentList: comments
+      }));
+
+      // Yorumlar için gerçek zamanlı dinleyici ekle
+      const unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
+        const updatedComments = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          isLiked: currentUser ? doc.data().likedBy?.includes(currentUser.id) : false,
+          createdAt: doc.data().createdAt?.toDate() || new Date()
+        }));
+
+        setSelectedMessage(prev => ({
+          ...prev,
+          commentList: updatedComments
+        }));
+      });
+
+      // Cleanup fonksiyonunu döndür
+      return () => unsubscribe();
+
+    } catch (error) {
+      console.error('Yorumlar yüklenirken hata:', error);
+      Alert.alert('Hata', 'Yorumlar yüklenemedi.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // FlatList optimizasyonları
-  const memoizedRenderItem = React.useCallback(({ item }) => (
+  const memoizedRenderItem = React.useCallback(({ item }) => {
+    if (!item) return null; // Null kontrolü
+
+    return (
     <MessageItem
       item={item}
       currentUser={currentUser}
       onLike={handleLikeMessage}
-      onComment={openComments}
+        onComment={handleMessagePress}
       onOptions={handleMoreOptions}
     />
-  ), [currentUser]);
+    );
+  }, [currentUser]);
 
   const keyExtractor = React.useCallback((item) => item.id, []);
 
@@ -693,11 +792,17 @@ export default function MessageScreen() {
           <View style={styles.selectedMessageContent}>
             <Text style={styles.selectedMessageUsername}>{selectedMessage?.userName}</Text>
             <Text style={styles.selectedMessageText}>{selectedMessage?.text}</Text>
+                  </View>
+          </BlurView>
+        
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#4ECDC4" />
+            <Text style={styles.loadingText}>Yorumlar yükleniyor...</Text>
           </View>
-        </BlurView>
-
+        ) : selectedMessage?.commentList?.length > 0 ? (
         <FlatList
-          data={selectedMessage?.commentList}
+            data={selectedMessage.commentList}
           renderItem={renderCommentItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.commentsList}
@@ -705,14 +810,19 @@ export default function MessageScreen() {
           refreshing={refreshingComments}
           onRefresh={onRefreshComments}
         />
+        ) : (
+          <View style={styles.noCommentsContainer}>
+            <Text style={styles.noCommentsText}>Henüz yorum yapılmamış</Text>
+          </View>
+        )}
 
         {Platform.OS === 'ios' ? (
-        <TouchableOpacity 
-          style={styles.addCommentButton}
-          onPress={() => setShowCommentModal(true)}
-        >
-          <Ionicons name="add" size={24} color="#fff" />
-        </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.addCommentButton}
+            onPress={() => setShowCommentModal(true)}
+          >
+            <Ionicons name="add" size={24} color="#fff" />
+          </TouchableOpacity>
         ) : (
           <View style={styles.commentInputWrapper}>
             <BlurView intensity={100} tint="dark" style={styles.commentInputContainer}>
@@ -728,8 +838,8 @@ export default function MessageScreen() {
                 <Ionicons name="send" size={24} color="#fff" />
               </TouchableOpacity>
             </BlurView>
-          </View>
-        )}
+            </View>
+          )}
 
         <Modal
           transparent={true}
@@ -750,16 +860,16 @@ export default function MessageScreen() {
                     <Ionicons name="close" size={24} color="#4ECDC4" />
                   </TouchableOpacity>
                 </View>
-            <TextInput
+                <TextInput
                   style={styles.commentModalInput}
                   placeholder="Yorumunuzu yazın..."
-              placeholderTextColor="#aaa"
-              value={newComment}
-              onChangeText={setNewComment}
+                  placeholderTextColor="#aaa"
+                  value={newComment}
+                  onChangeText={setNewComment}
                   multiline
                   autoFocus
                 />
-                <TouchableOpacity 
+        <TouchableOpacity 
                   style={styles.commentModalSend} 
                   onPress={() => {
                     handleAddComment();
@@ -767,114 +877,12 @@ export default function MessageScreen() {
                   }}
                 >
                   <Text style={styles.commentModalSendText}>Gönder</Text>
-            </TouchableOpacity>
-          </BlurView>
-        </View>
+              </TouchableOpacity>
+              </BlurView>
+            </View>
           </KeyboardAvoidingView>
         </Modal>
-      </SafeAreaView>
-    </LinearGradient>
-  );
-
-  const renderMainScreen = () => (
-    <LinearGradient
-      colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']}
-      style={styles.container}
-    >
-      <SafeAreaView style={styles.safeArea}>
-        <BlurView intensity={80} tint="dark" style={styles.agendaContainer}>
-          <View style={styles.agendaHeader}>
-            <Text style={styles.agendaTitle}>🎯 Gündem Konuları</Text>
-            </View>
-          
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            style={styles.topicsScrollView}
-            contentContainerStyle={{ paddingRight: 20 }}
-          >
-            {agendaTopics.length > 0 ? (
-              agendaTopics.map((topic) => (
-                <View
-                key={topic.id}
-                  style={styles.topicCard}
-              >
-                  <View style={styles.topicRow}>
-                <Text style={styles.topicEmoji}>{topic.emoji}</Text>
-                <Text style={styles.topicTitle}>{topic.title}</Text>
-                  </View>
-                </View>
-              ))
-            ) : (
-              <View style={styles.noTopicsContainer}>
-                <Text style={styles.noTopicsText}>Gündem konuları yükleniyor...</Text>
-              </View>
-            )}
-          </ScrollView>
-        </BlurView>
-        
-        <FlatList
-          ref={scrollViewRef}
-          data={messages}
-          renderItem={memoizedRenderItem}
-          keyExtractor={keyExtractor}
-          getItemLayout={getItemLayout}
-          maxToRenderPerBatch={10}
-          windowSize={10}
-          removeClippedSubviews={true}
-          initialNumToRender={10}
-          contentContainerStyle={styles.messageList}
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          onEndReached={loadMoreMessages}
-          onEndReachedThreshold={0.5}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={() => (
-            <View style={styles.loadingContainer}>
-              {loading ? (
-                <>
-                  <ActivityIndicator size="large" color="#4ECDC4" />
-                  <Text style={styles.loadingText}>Mesajlar yükleniyor...</Text>
-                </>
-              ) : (
-                <Text style={styles.noMessagesText}>Henüz hiç mesaj yok.</Text>
-              )}
-            </View>
-          )}
-          ListFooterComponent={() => (
-            loadingMore ? (
-              <View style={styles.loadingMore}>
-                <ActivityIndicator size="small" color="#4ECDC4" />
-              </View>
-            ) : null
-          )}
-        />
-      </SafeAreaView>
-
-      {Platform.OS === 'ios' ? (
-        <TouchableOpacity 
-          style={styles.addMessageButton}
-          onPress={toggleMessageModal}
-        >
-          <Ionicons name="add" size={24} color="#fff" />
-              </TouchableOpacity>
-      ) : (
-      <View style={styles.inputWrapper}>
-        <BlurView intensity={100} tint="dark" style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Mesajınız yazın..."
-            placeholderTextColor="#aaa"
-            value={newMessage}
-            onChangeText={setNewMessage}
-          />
-          <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
-            <Ionicons name="send" size={24} color="#fff" />
-          </TouchableOpacity>
-        </BlurView>
-      </View>
-      )}
-      {Platform.OS === 'ios' && renderMessageModal()}
+    </SafeAreaView>
     </LinearGradient>
   );
 
@@ -932,14 +940,19 @@ export default function MessageScreen() {
     </Modal>
   );
   
-  const renderCommentItem = ({ item }) => (
+  const renderCommentItem = ({ item }) => {
+    if (!item) return null; // Null kontrolü ekle
+
+    return (
     <BlurView intensity={80} tint="dark" style={styles.commentContainer}>
       <View style={styles.commentContent}>
         <View style={styles.commentHeader}>
-          <Text style={styles.commentUsername}>{item.userName}</Text>
+            <Text style={styles.commentUsername}>{item.userName || 'Anonim'}</Text>
           <View style={styles.commentHeaderRight}>
             <Text style={styles.commentTimestamp}>
-              {item.createdAt instanceof Date ? item.createdAt.toLocaleString('tr-TR') : new Date(item.createdAt).toLocaleString('tr-TR')}
+                {item.createdAt instanceof Date ? 
+                  item.createdAt.toLocaleString('tr-TR') : 
+                  new Date(item.createdAt).toLocaleString('tr-TR')}
             </Text>
             {currentUser && currentUser.id === item.userId && (
               <TouchableOpacity 
@@ -957,12 +970,13 @@ export default function MessageScreen() {
           onPress={() => handleLikeComment(selectedMessage.id, item.id)}
         >
           <Text style={[styles.commentLikeText, item.isLiked ? styles.commentLiked : null]}>
-            {item.isLiked ? '❤️' : '🤍'} {item.likes}
+              {item.isLiked ? '❤️' : '🤍'} {item.likes || 0}
           </Text>
         </TouchableOpacity>
       </View>
     </BlurView>
   );
+  };
 
   const renderCommentOptionsModal = () => (
     <Modal
@@ -984,6 +998,107 @@ export default function MessageScreen() {
     </Modal>
   );
 
+  // Daha fazla mesaj yükle
+  const loadMoreMessages = async () => {
+    if (loadingMore || allLoaded || loading) return;
+    setLoadingMore(true);
+    await fetchMessages(true);
+  };
+
+  const renderMainScreen = () => (
+    <LinearGradient
+      colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']}
+      style={styles.container}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <BlurView intensity={80} tint="dark" style={styles.agendaContainer}>
+          <View style={styles.agendaHeader}>
+            <Text style={styles.agendaTitle}>🎯 Gündem Konuları</Text>
+          </View>
+          
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.topicsScrollView}
+            contentContainerStyle={{ paddingRight: 20 }}
+          >
+            {agendaTopics.length > 0 ? (
+              agendaTopics.map((topic) => (
+                <View
+                  key={topic.id}
+                  style={styles.topicCard}
+                >
+                  <View style={styles.topicRow}>
+                    <Text style={styles.topicEmoji}>{topic.emoji}</Text>
+                    <Text style={styles.topicTitle}>{topic.title}</Text>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <View style={styles.noTopicsContainer}>
+                <Text style={styles.noTopicsText}>Gündem konuları yükleniyor...</Text>
+              </View>
+            )}
+          </ScrollView>
+        </BlurView>
+        
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#4ECDC4" />
+            <Text style={styles.loadingText}>Mesajlar yükleniyor...</Text>
+          </View>
+        ) : messages && messages.length > 0 ? (
+          <FlatList
+            data={messages}
+            renderItem={memoizedRenderItem}
+            keyExtractor={keyExtractor}
+            getItemLayout={getItemLayout}
+            contentContainerStyle={styles.messageList}
+            showsVerticalScrollIndicator={false}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={10}
+            removeClippedSubviews={true}
+            onEndReached={loadMoreMessages}
+            onEndReachedThreshold={0.5}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            ListFooterComponent={loadingMore ? <ActivityIndicator color="#4ECDC4" /> : null}
+          />
+        ) : (
+          <View style={styles.noTopicsContainer}>
+            <Text style={styles.noTopicsText}>Henüz mesaj yok</Text>
+          </View>
+        )}
+
+        {Platform.OS === 'ios' ? (
+          <TouchableOpacity 
+            style={styles.addMessageButton}
+            onPress={() => setShowMessageModal(true)}
+          >
+            <Ionicons name="add" size={30} color="#000" />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.inputWrapper}>
+            <BlurView intensity={100} tint="dark" style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Mesajınızı yazın..."
+                placeholderTextColor="#aaa"
+                value={newMessage}
+                onChangeText={setNewMessage}
+              />
+              <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+                <Ionicons name="send" size={24} color="#fff" />
+              </TouchableOpacity>
+            </BlurView>
+          </View>
+        )}
+        {Platform.OS === 'ios' && renderMessageModal()}
+      </SafeAreaView>
+    </LinearGradient>
+  );
+
   return (
   <>
     {showComments ? renderComments() : renderMainScreen()}
@@ -999,7 +1114,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    marginBottom: Platform.OS === 'ios' ? 90 : 60,
+    backgroundColor: 'rgba(0,0,0,0.9)',
   },
   agendaContainer: {
     padding: 8,
@@ -1171,40 +1286,32 @@ const styles = StyleSheet.create({
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(0,0,0,0.8)',
   },
   backButton: {
-    padding: 5,
-    marginRight: 10,
+    marginRight: 15,
   },
   commentsTitle: {
-    fontSize: screenWidth * 0.045,
+    fontSize: screenWidth * 0.05,
     fontWeight: 'bold',
     color: '#4ECDC4',
   },
   selectedMessageContainer: {
-    flexDirection: 'row',
     padding: 15,
+    marginBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.1)',
   },
-  selectedMessageProfileImage: {
-    width: screenWidth * 0.1,
-    height: screenWidth * 0.1,
-    borderRadius: screenWidth * 0.05,
-    marginRight: 10,
-  },
   selectedMessageContent: {
-    flex: 1,
+    padding: 10,
   },
   selectedMessageUsername: {
-    fontWeight: 'bold',
     fontSize: screenWidth * 0.04,
+    fontWeight: 'bold',
     color: '#4ECDC4',
     marginBottom: 5,
   },
   selectedMessageText: {
-    fontSize: screenWidth * 0.035,
+    fontSize: screenWidth * 0.04,
     color: '#fff',
   },
   commentsList: {
@@ -1255,7 +1362,7 @@ const styles = StyleSheet.create({
   },
   commentInputWrapper: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 110 : 0,
+    bottom: Platform.OS === 'ios' ? 110 : 60, // Android için 60 olarak ayarlandı
     left: 0,
     right: 0,
     backgroundColor: 'rgba(0,0,0,0.95)',
@@ -1269,6 +1376,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 10,
     height: 60,
+    zIndex: 999,
+    elevation: 999,
   },
   commentInput: {
     flex: 1,
@@ -1292,10 +1401,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 20,
+    backgroundColor: 'rgba(0,0,0,0.9)',
   },
   loadingText: {
-    color: '#4ECDC4',
+    color: '#fff',
     fontSize: screenWidth * 0.04,
     marginTop: 10,
   },
@@ -1523,5 +1632,16 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: screenWidth * 0.045,
     fontWeight: '600',
+  },
+  noCommentsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  noCommentsText: {
+    color: '#aaa',
+    fontSize: screenWidth * 0.04,
+    textAlign: 'center',
   },
 });
