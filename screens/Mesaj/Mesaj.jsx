@@ -91,8 +91,44 @@ export default function MessageScreen() {
     loadInitialMessages();
   }, [currentUser]);
 
+  // Mesajları dinleme fonksiyonu
+  const listenToMessages = () => {
+    const messagesRef = collection(FIRESTORE_DB, 'messages');
+    const q = query(messagesRef, orderBy('createdAt', 'desc'), limit(MESSAGES_PER_PAGE));
+    
+    return onSnapshot(q, (snapshot) => {
+      const messagesData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          scale: new Animated.Value(1),
+          isLiked: currentUser ? data.likedBy?.includes(currentUser.id) : false,
+          comments: data.commentCount || 0,
+          commentList: [],
+          createdAt: data.createdAt?.toDate() || new Date(),
+        };
+      });
+      
+      setMessages(messagesData);
+      setLoading(false);
+      
+      const lastVisible = snapshot.docs[snapshot.docs.length - 1];
+      setLastDoc(lastVisible);
+      setAllLoaded(snapshot.docs.length < MESSAGES_PER_PAGE);
+    });
+  };
+
+  // useEffect içinde mesajları dinle
+  useEffect(() => {
+    const unsubscribe = listenToMessages();
+    return () => unsubscribe();
+  }, [currentUser]);
+
   // Yenileme işlemi için fonksiyon
   const onRefresh = React.useCallback(async () => {
+    if (refreshing) return;
+    
     try {
       setRefreshing(true);
         const messagesRef = collection(FIRESTORE_DB, 'messages');
@@ -113,18 +149,15 @@ export default function MessageScreen() {
       });
 
       setMessages(messagesData);
-      
-      // Son dokümanı kaydet
       const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
       setLastDoc(lastVisible);
       setAllLoaded(querySnapshot.docs.length < MESSAGES_PER_PAGE);
       } catch (error) {
       console.error('Refresh error:', error);
-      Alert.alert('Hata', 'Mesajlar yüklenirken bir hata oluştu.');
     } finally {
       setRefreshing(false);
     }
-  }, [currentUser]);
+  }, [refreshing, currentUser]);
 
   // Mesajları getir - Pagination ile
   const fetchMessages = async (loadMore = false) => {
@@ -453,12 +486,27 @@ export default function MessageScreen() {
         createdAt: doc.data().createdAt?.toDate() || new Date(),
       }));
 
-      setSelectedMessage(prev => ({
+      setSelectedMessage(prev => {
+        if (prev?.id === messageId) {
+          return {
         ...prev,
         commentList: comments
-      }));
+          };
+        }
+        return prev;
+      });
     });
   };
+
+  // useEffect içinde yorumları dinle
+  useEffect(() => {
+    if (selectedMessage?.id) {
+      const unsubscribe = listenToComments(selectedMessage.id);
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
+    }
+  }, [selectedMessage?.id]);
 
   // Mesaj silme optimizasyonu
   const handleDeleteMessage = async () => {
@@ -1139,16 +1187,6 @@ export default function MessageScreen() {
       </SafeAreaView>
     </LinearGradient>
   );
-
-  // useEffect içinde yorumları dinle
-  useEffect(() => {
-    if (selectedMessage?.id) {
-      const unsubscribe = listenToComments(selectedMessage.id);
-      return () => {
-        if (unsubscribe) unsubscribe();
-      };
-    }
-  }, [selectedMessage?.id]);
 
   return (
   <>
