@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, TextInput, KeyboardAvoidingView, Dimensions, ActivityIndicator, Platform, StatusBar, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -10,7 +10,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
-const PAGE_SIZE = 10; // Her sayfada gösterilecek kulüp sayısı
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 saat
+const PAGE_SIZE = 8; // Sayfa başına gösterilecek kulüp sayısını azalttım
 
 const Kulüp = ({ navigation }) => {
   const [clubs, setClubs] = useState([]);
@@ -22,74 +23,36 @@ const Kulüp = ({ navigation }) => {
   const [selectedClub, setSelectedClub] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
+  // Debounced search için
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
   useEffect(() => {
-    fetchClubs();
+    loadInitialData();
   }, []);
 
-  useEffect(() => {
-    if (clubs.length > 0) {
-      loadMoreClubs();
-    }
-  }, [clubs]);
-
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      () => {
-        if (navigation) {
-          navigation.getParent()?.setOptions({
-            tabBarStyle: {
-              display: 'none'
-            }
-          });
+  const loadInitialData = async () => {
+    try {
+      // Önce önbellekten veriyi yükle
+      const cachedData = await AsyncStorage.getItem('clubs_data');
+      if (cachedData) {
+        const { timestamp, data } = JSON.parse(cachedData);
+        // Son 24 saat içinde kaydedilmiş veriler varsa kullan
+        if (Date.now() - timestamp < CACHE_DURATION) {
+          console.log('Using cached clubs data');
+          setClubs(data);
+          setDisplayedClubs(data.slice(0, PAGE_SIZE));
+          setLoading(false);
+          return;
         }
       }
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => {
-        if (navigation) {
-          navigation.getParent()?.setOptions({
-            tabBarStyle: {
-              display: 'flex',
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              elevation: 0,
-              backgroundColor: 'rgba(0,0,0,0.8)',
-              borderTopWidth: 0,
-              height: 60,
-              paddingBottom: 10
-            }
-          });
-        }
-      }
-    );
-
-    return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
-    };
-  }, [navigation]);
-
-  const loadMoreClubs = () => {
-    if (loadingMore || searchQuery) return;
-
-    setLoadingMore(true);
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    const endIndex = startIndex + PAGE_SIZE;
-    const newClubs = clubs.slice(0, endIndex);
-    
-    setDisplayedClubs(newClubs);
-    setCurrentPage(prev => prev + 1);
-    setLoadingMore(false);
-  };
-
-  const handleEndReached = () => {
-    if (!searchQuery) {
-      loadMoreClubs();
+      
+      // Önbellekte veri yoksa veya eski ise yeni veri çek
+      await fetchClubs();
+    } catch (error) {
+      console.error('Initial data loading error:', error);
+      setLoading(false);
     }
   };
 
@@ -97,27 +60,13 @@ const Kulüp = ({ navigation }) => {
     try {
       setLoading(true);
       setError(null);
-      console.log('Fetching clubs...');
-
-      // Önce önbellekteki verileri kontrol et
-      const cachedData = await AsyncStorage.getItem('clubs_data');
-      if (cachedData) {
-        const { timestamp, data } = JSON.parse(cachedData);
-        // Son 1 saat içinde kaydedilmiş veriler varsa kullan
-        if (Date.now() - timestamp < 3600000) {
-          console.log('Using cached data');
-          setClubs(data);
-          setLoading(false);
-          return;
-        }
-      }
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 saniyeye düşürdüm
 
       const response = await axios.get('https://ogrkulup.klu.edu.tr/', {
         signal: controller.signal,
-        timeout: 30000,
+        timeout: 20000,
         headers: {
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
           'Accept-Language': 'tr-TR,tr;q=0.8,en-US;q=0.5,en;q=0.3',
@@ -127,11 +76,6 @@ const Kulüp = ({ navigation }) => {
       });
 
       clearTimeout(timeoutId);
-      console.log('Response received:', response.status);
-
-      if (!response.data) {
-        throw new Error('Veri alınamadı');
-      }
 
       const $ = cheerio.load(response.data);
       const clubsData = [];
@@ -139,75 +83,145 @@ const Kulüp = ({ navigation }) => {
       $('.col-lg-4').each((index, element) => {
         try {
           const name = $(element).find('h3 a').text().trim();
+          if (!name) return;
+
           const image = $(element).find('img').attr('src');
           const details = $(element).find('.card-text').text().trim().split('\n');
-          const president = details[0]?.replace('Kulüp Başkanı:', '').trim() || 'Belirtilmemiş';
-          const advisor = details[1]?.replace('Kulüp Danışmanı:', '').trim() || 'Belirtilmemiş';
-          const instagramLink = $(element).find('a.btn-instagram').attr('href');
-
-          if (!name) {
-            console.warn(`Kulüp #${index + 1} için isim bulunamadı, atlanıyor`);
-            return;
-          }
-
+          
           clubsData.push({
             id: index.toString(),
             name,
-            image: image ? (image.startsWith('http') ? image : `https://ogrkulup.klu.edu.tr${image}`) : 'https://via.placeholder.com/150',
-            president,
-            advisor,
-            instagram: instagramLink || null
+            image: image ? (image.startsWith('http') ? image : `https://ogrkulup.klu.edu.tr${image}`) : null,
+            president: details[0]?.replace('Kulüp Başkanı:', '').trim() || 'Belirtilmemiş',
+            advisor: details[1]?.replace('Kulüp Danışmanı:', '').trim() || 'Belirtilmemiş',
+            instagram: $(element).find('a.btn-instagram').attr('href') || null
           });
         } catch (parseError) {
-          console.warn(`Kulüp #${index + 1} parse edilirken hata oluştu:`, parseError);
+          console.warn(`Parsing error for club #${index}:`, parseError);
         }
       });
 
-      if (clubsData.length === 0) {
-        throw new Error('Hiç kulüp verisi bulunamadı');
-      }
+      if (clubsData.length === 0) throw new Error('Kulüp verisi bulunamadı');
 
-      console.log('Clubs found:', clubsData.length);
-      setClubs(clubsData);
-      
-      // Verileri önbelleğe al
+      // Önbelleğe kaydet
       await AsyncStorage.setItem('clubs_data', JSON.stringify({
         timestamp: Date.now(),
         data: clubsData
       }));
 
-    } catch (err) {
-      console.error('Error fetching clubs:', err);
-      let errorMessage = 'Kulüp verileri yüklenirken bir hata oluştu';
-      
-      if (err.name === 'AbortError') {
-        errorMessage = 'Bağlantı zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edin.';
-      } else if (err.response) {
-        errorMessage = 'Sunucu hatası: ' + (err.response.status === 404 ? 'Sayfa bulunamadı' : 'Sunucu yanıt vermiyor');
-      } else if (err.request) {
-        errorMessage = 'İnternet bağlantınızı kontrol edin';
-      }
+      setClubs(clubsData);
+      setDisplayedClubs(clubsData.slice(0, PAGE_SIZE));
+      setHasMore(clubsData.length > PAGE_SIZE);
 
-      setError(errorMessage);
-      
-      // Önbellekteki verileri kullan
-      try {
-        const cachedData = await AsyncStorage.getItem('clubs_data');
-        if (cachedData) {
-          const { timestamp, data } = JSON.parse(cachedData);
-          if (Date.now() - timestamp < 3600000) {
-            console.log('Using cached data');
-            setClubs(data);
-            setError(errorMessage + ' (Önbellek verileri gösteriliyor)');
-          }
-        }
-      } catch (cacheError) {
-        console.warn('Önbellek verileri okunamadı:', cacheError);
-      }
+    } catch (err) {
+      handleFetchError(err);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleFetchError = async (err) => {
+    console.error('Club fetch error:', err);
+    let errorMessage = 'Kulüp verileri yüklenirken bir hata oluştu';
+    
+    if (err.name === 'AbortError') {
+      errorMessage = 'Bağlantı zaman aşımına uğradı';
+    }
+    
+    setError(errorMessage);
+    
+    // Önbellekteki verileri kullan
+    try {
+      const cachedData = await AsyncStorage.getItem('clubs_data');
+      if (cachedData) {
+        const { data } = JSON.parse(cachedData);
+        setClubs(data);
+        setDisplayedClubs(data.slice(0, PAGE_SIZE));
+        setError(errorMessage + ' (Önbellek verileri gösteriliyor)');
+      }
+    } catch (cacheError) {
+      console.warn('Cache read error:', cacheError);
+    }
+  };
+
+  // Debounced search
+  const handleSearch = useCallback((text) => {
+    setSearchQuery(text);
+    
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    setSearchTimeout(setTimeout(() => {
+      if (text) {
+        const filtered = clubs.filter(club => 
+          club.name.toLowerCase().includes(text.toLowerCase())
+        );
+        setDisplayedClubs(filtered);
+        setCurrentPage(1);
+        setHasMore(false);
+      } else {
+        setDisplayedClubs(clubs.slice(0, PAGE_SIZE));
+        setCurrentPage(1);
+        setHasMore(clubs.length > PAGE_SIZE);
+      }
+    }, 300));
+  }, [clubs, searchTimeout]);
+
+  const loadMoreClubs = useCallback(() => {
+    if (loadingMore || !hasMore || searchQuery) return;
+
+    setLoadingMore(true);
+    const startIndex = currentPage * PAGE_SIZE;
+    const endIndex = startIndex + PAGE_SIZE;
+    const newClubs = clubs.slice(0, endIndex);
+    
+    setDisplayedClubs(newClubs);
+    setCurrentPage(prev => prev + 1);
+    setHasMore(endIndex < clubs.length);
+    setLoadingMore(false);
+  }, [currentPage, clubs, loadingMore, hasMore, searchQuery]);
+
+  const handleEndReached = useCallback(() => {
+    if (!searchQuery && hasMore) {
+      loadMoreClubs();
+    }
+  }, [searchQuery, hasMore, loadMoreClubs]);
+
+  // Memoize renderItem for better performance
+  const renderItem = useCallback(({ item }) => (
+    <TouchableOpacity onPress={() => handleClubPress(item)}>
+      <BlurView intensity={80} tint="dark" style={styles.card}>
+        {!item.image || item.image.includes('defaultLogo.jpg') ? (
+          <View style={[styles.image, styles.letterContainer]}>
+            <Text style={styles.letterText}>
+              {item.name.charAt(0).toUpperCase()}
+            </Text>
+          </View>
+        ) : (
+          <Image 
+            source={{ uri: item.image }} 
+            style={styles.image}
+            onError={(e) => {
+              console.warn('Image loading error:', e.nativeEvent.error);
+              // Hata durumunda otomatik olarak harf gösterecek
+            }}
+          />
+        )}
+        <Text style={styles.name}>{item.name}</Text>
+      </BlurView>
+    </TouchableOpacity>
+  ), []);
+
+  // Memoize footer component
+  const ListFooterComponent = useMemo(() => {
+    if (!loadingMore || searchQuery || !hasMore) return null;
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" color="#4ECDC4" />
+      </View>
+    );
+  }, [loadingMore, searchQuery, hasMore]);
 
   const handleClubPress = (club) => {
     setSelectedClub(club);
@@ -230,33 +244,6 @@ const Kulüp = ({ navigation }) => {
       loadMoreClubs();
     }
   }, [searchQuery]);
-
-  const renderFooter = () => {
-    if (!loadingMore || searchQuery) return null;
-
-    return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#4ECDC4" />
-      </View>
-    );
-  };
-
-  const renderItem = ({ item }) => (
-    <TouchableOpacity onPress={() => handleClubPress(item)}>
-      <BlurView intensity={80} tint="dark" style={styles.card}>
-        {item.image.includes('defaultLogo.jpg') ? (
-          <View style={[styles.image, styles.letterContainer]}>
-            <Text style={styles.letterText}>
-              {item.name.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-        ) : (
-          <Image source={{ uri: item.image }} style={styles.image} />
-        )}
-        <Text style={styles.name}>{item.name}</Text>
-      </BlurView>
-    </TouchableOpacity>
-  );
 
   if (loading) {
     return (
@@ -334,7 +321,7 @@ const Kulüp = ({ navigation }) => {
               onScrollBeginDrag={Keyboard.dismiss}
               onEndReached={handleEndReached}
               onEndReachedThreshold={0.5}
-              ListFooterComponent={renderFooter}
+              ListFooterComponent={ListFooterComponent}
             />
             <ClubDetailsModal visible={modalVisible} club={selectedClub} onClose={closeModal} />
           </View>

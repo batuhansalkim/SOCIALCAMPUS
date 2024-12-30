@@ -36,18 +36,179 @@ export default function MealSchedule() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    fetchMealData();
+    loadInitialData();
   }, []);
+
+  const loadInitialData = async () => {
+    try {
+      // Önce önbellekten veriyi yükle
+      const cachedData = await AsyncStorage.getItem('mealListCache');
+      const lastUpdate = await AsyncStorage.getItem('mealListLastUpdate');
+      const cachedReactions = await AsyncStorage.getItem('mealReactionsCache');
+      
+      let shouldFetchNew = true;
+      
+      if (cachedData && lastUpdate) {
+        const parsedData = JSON.parse(cachedData);
+        const lastUpdateTime = parseInt(lastUpdate);
+        const now = Date.now();
+        
+        // Önbellek 1 saatten yeni ise kullan
+        if (now - lastUpdateTime < 60 * 60 * 1000) {
+        setMealList(parsedData);
+          shouldFetchNew = false;
+        setLoading(false);
+        
+          if (cachedReactions) {
+            const { reactions: cachedReactionData, userReactions: cachedUserReactionData } = JSON.parse(cachedReactions);
+            setReactions(cachedReactionData);
+            setUserReactions(cachedUserReactionData);
+          }
+        }
+      }
+      
+      if (shouldFetchNew) {
+        await fetchMealData();
+      }
+      
+      // Kullanıcı bilgilerini yükle
+      await getCurrentUser();
+      
+    } catch (error) {
+      console.error('Initial data loading error:', error);
+      setLoading(false);
+      setError('Veri yüklenirken bir hata oluştu');
+    }
+  };
+
+  const fetchMealData = async () => {
+    try {
+        setLoading(true);
+        setError(null);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+      const response = await axios.get('https://sks.klu.edu.tr/Takvimler/73-yemek-takvimi.klu', {
+        signal: controller.signal,
+        timeout: 20000,
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'tr-TR,tr;q=0.8,en-US;q=0.5,en;q=0.3',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        }
+      });
+      
+      clearTimeout(timeoutId);
+
+      const htmlContent = response.data;
+      const jsonDataMatch = htmlContent.match(/<textarea[^>]*>(.*?)<\/textarea>/s);
+      
+      if (!jsonDataMatch?.[1]) throw new Error('Veri formatı geçersiz');
+
+      const jsonData = JSON.parse(jsonDataMatch[1]);
+      if (!Array.isArray(jsonData)) throw new Error('Geçersiz veri formatı');
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const processedData = jsonData
+        .filter(item => {
+        try {
+          const date = new Date(item.start);
+            return !isNaN(date.getTime()) && item.aciklama && date >= today;
+        } catch {
+          return false;
+        }
+        })
+        .sort((a, b) => new Date(a.start) - new Date(b.start))
+        .slice(0, 10); // Sadece ilk 10 günü al
+
+      const selectedData = processedData
+        .filter(item => {
+          const date = new Date(item.start);
+          return date.getDay() !== 0 && date.getDay() !== 6;
+        })
+        .slice(0, 5);
+
+      if (selectedData.length === 0) throw new Error('Gösterilecek yemek listesi bulunamadı');
+
+      // Önbelleğe kaydet
+      await AsyncStorage.setItem('mealListCache', JSON.stringify(selectedData));
+      await AsyncStorage.setItem('mealListLastUpdate', Date.now().toString());
+
+      setMealList(selectedData);
+        setLoading(false);
+    } catch (err) {
+      console.error('Meal data fetch error:', err);
+        setError(err.message || 'Yemek listesi yüklenirken bir hata oluştu');
+        setLoading(false);
+      
+      // Önbellekteki eski veriyi kullan
+      const cachedData = await AsyncStorage.getItem('mealListCache');
+      if (cachedData) {
+        setMealList(JSON.parse(cachedData));
+        Alert.alert(
+          'Uyarı',
+          'Güncel veri alınamadı. Önbellekteki veri gösteriliyor.',
+          [{ text: 'Tamam' }]
+        );
+      }
+    }
+  };
+
+  // Reaksiyon verilerini önbellekten yükle
+  const loadReactionsFromCache = async () => {
+    try {
+      const cachedReactions = await AsyncStorage.getItem('mealReactionsCache');
+      if (cachedReactions) {
+        const { reactions: cachedReactionData, userReactions: cachedUserReactionData } = JSON.parse(cachedReactions);
+        setReactions(cachedReactionData);
+        setUserReactions(cachedUserReactionData);
+      }
+    } catch (error) {
+      console.error('Error loading reactions from cache:', error);
+    }
+  };
 
   useEffect(() => {
     if (mealList.length > 0) {
-      fetchReactions();
-    }
-  }, [mealList]);
+      loadReactionsFromCache();
+      const reactionQuery = query(collection(FIRESTORE_DB, 'mealReactions'));
+      const unsubscribe = onSnapshot(reactionQuery, async (snapshot) => {
+        const reactionData = {};
+        const userReactionData = {};
 
-  useEffect(() => {
-    getCurrentUser();
-  }, []);
+        snapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          if (!reactionData[data.mealId]) {
+            reactionData[data.mealId] = { likes: 0, dislikes: 0 };
+          }
+          if (data.type === 'like') {
+            reactionData[data.mealId].likes++;
+          } else {
+            reactionData[data.mealId].dislikes++;
+          }
+          if (currentUser && data.userId === currentUser.id) {
+            userReactionData[data.mealId] = data.type;
+          }
+        });
+
+        setReactions(reactionData);
+        setUserReactions(userReactionData);
+
+        // Reaksiyon verilerini önbelleğe kaydet
+        await AsyncStorage.setItem('mealReactionsCache', JSON.stringify({
+          reactions: reactionData,
+          userReactions: userReactionData,
+          timestamp: Date.now()
+        }));
+      });
+
+      return () => unsubscribe();
+    }
+  }, [mealList, currentUser]);
 
   const getCurrentUser = async () => {
     try {
@@ -62,65 +223,8 @@ export default function MealSchedule() {
   };
 
   useEffect(() => {
-    if (mealList.length === 0) return;
-
-    const reactionQuery = query(collection(FIRESTORE_DB, 'mealReactions'));
-    const unsubscribe = onSnapshot(reactionQuery, (snapshot) => {
-      const reactionData = {};
-      const userReactionData = {};
-
-      snapshot.docs.forEach((doc) => {
-        const data = doc.data();
-        if (!reactionData[data.mealId]) {
-          reactionData[data.mealId] = { likes: 0, dislikes: 0 };
-        }
-        if (data.type === 'like') {
-          reactionData[data.mealId].likes++;
-        } else {
-          reactionData[data.mealId].dislikes++;
-        }
-        if (currentUser && data.userId === currentUser.id) {
-          userReactionData[data.mealId] = data.type;
-        }
-      });
-
-      setReactions(reactionData);
-      setUserReactions(userReactionData);
-    }, (error) => {
-      console.error('Error in reaction listener:', error);
-    });
-
-    return () => unsubscribe();
-  }, [mealList, currentUser]);
-
-  const fetchReactions = async () => {
-    try {
-      const reactionQuery = query(collection(FIRESTORE_DB, 'mealReactions'));
-      const querySnapshot = await getDocs(reactionQuery);
-      const reactionData = {};
-      const userReactionData = {};
-
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        if (!reactionData[data.mealId]) {
-          reactionData[data.mealId] = { likes: 0, dislikes: 0 };
-        }
-        if (data.type === 'like') {
-          reactionData[data.mealId].likes++;
-        } else {
-          reactionData[data.mealId].dislikes++;
-        }
-        if (data.userId === 'user123') {
-          userReactionData[data.mealId] = data.type;
-        }
-      });
-
-      setReactions(reactionData);
-      setUserReactions(userReactionData);
-    } catch (error) {
-      console.error('Error fetching reactions:', error);
-    }
-  };
+    getCurrentUser();
+  }, []);
 
   const handleReaction = async (mealId, type) => {
     try {
@@ -168,140 +272,6 @@ export default function MealSchedule() {
     } catch (error) {
       console.error('Error handling reaction:', error);
       Alert.alert('Hata', 'İşlem gerçekleştirilemedi. Lütfen tekrar deneyin.');
-    }
-  };
-
-  const fetchMealData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      console.log('Fetching meal data...');
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 saniye timeout
-
-      const response = await axios.get('https://sks.klu.edu.tr/Takvimler/73-yemek-takvimi.klu', {
-        signal: controller.signal,
-        timeout: 30000,
-        headers: {
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-          'Accept-Language': 'tr-TR,tr;q=0.8,en-US;q=0.5,en;q=0.3',
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-        }
-      });
-      
-      clearTimeout(timeoutId);
-      console.log('Response received:', response.status);
-
-      if (!response.data) {
-        throw new Error('Veri alınamadı');
-      }
-
-      const htmlContent = response.data;
-      const jsonDataMatch = htmlContent.match(/<textarea[^>]*>(.*?)<\/textarea>/s);
-      
-      if (!jsonDataMatch || !jsonDataMatch[1]) {
-        throw new Error('Veri formatı beklendiği gibi değil');
-      }
-
-      let jsonData;
-      try {
-        jsonData = JSON.parse(jsonDataMatch[1]);
-      } catch (parseError) {
-        console.error('JSON parse error:', parseError);
-        throw new Error('Yemek listesi verisi geçerli bir format değil');
-      }
-
-      if (!Array.isArray(jsonData)) {
-        throw new Error('Yemek listesi verisi dizi formatında değil');
-      }
-
-      console.log('Parsed JSON data length:', jsonData.length);
-      
-      // Geçerli tarihleri filtrele
-      const validData = jsonData.filter(item => {
-        try {
-          const date = new Date(item.start);
-          return !isNaN(date.getTime()) && item.aciklama;
-        } catch {
-          return false;
-        }
-      });
-      
-      if (validData.length === 0) {
-        throw new Error('Gösterilecek yemek listesi bulunamadı');
-      }
-
-      // Sort the data by date
-      const sortedData = validData.sort((a, b) => new Date(a.start) - new Date(b.start));
-      
-      // Get the current date
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      // Find the index of today's date
-      const todayIndex = sortedData.findIndex(item => {
-        const itemDate = new Date(item.start);
-        return itemDate.getTime() === today.getTime();
-      });
-
-      // If today's date is found, start from there. Otherwise, start from the first weekday
-      let startIndex = todayIndex !== -1 ? todayIndex : sortedData.findIndex(item => {
-        const itemDate = new Date(item.start);
-        return itemDate >= today && itemDate.getDay() !== 0 && itemDate.getDay() !== 6;
-      });
-
-      if (startIndex === -1) {
-        startIndex = 0; // Eğer uygun tarih bulunamazsa en baştan başla
-      }
-
-      // Get 5 weekdays starting from the found index
-      let selectedData = [];
-      let currentIndex = startIndex;
-      let attempts = 0;
-      const maxAttempts = sortedData.length;
-
-      while (selectedData.length < 5 && currentIndex < sortedData.length && attempts < maxAttempts) {
-        const itemDate = new Date(sortedData[currentIndex].start);
-        if (itemDate.getDay() !== 0 && itemDate.getDay() !== 6) {
-          selectedData.push(sortedData[currentIndex]);
-        }
-        currentIndex++;
-        attempts++;
-      }
-
-      // If we don't have 5 days, add days from the beginning
-      currentIndex = 0;
-      attempts = 0;
-      while (selectedData.length < 5 && attempts < maxAttempts) {
-        const itemDate = new Date(sortedData[currentIndex].start);
-        if (itemDate.getDay() !== 0 && 
-            itemDate.getDay() !== 6 && 
-            !selectedData.some(item => item.start === sortedData[currentIndex].start)) {
-          selectedData.push(sortedData[currentIndex]);
-        }
-        currentIndex = (currentIndex + 1) % sortedData.length;
-        attempts++;
-      }
-
-      console.log('Selected data length:', selectedData.length);
-      setMealList(selectedData);
-      setLoading(false);
-    } catch (err) {
-      console.error('Error fetching meal data:', err);
-      setError(err.message || 'Yemek listesi yüklenirken bir hata oluştu');
-      setLoading(false);
-      Alert.alert(
-        'Hata',
-        'Yemek listesi yüklenirken bir hata oluştu. Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.',
-        [
-          {
-            text: 'Tekrar Dene',
-            onPress: () => fetchMealData()
-          }
-        ]
-      );
     }
   };
 
