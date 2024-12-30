@@ -159,26 +159,76 @@ export default function Profil() {
     const [aboutAppModalVisible, setAboutAppModalVisible] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showChatbotModal, setShowChatbotModal] = useState(false);
+    const [userData, setUserData] = useState(null);
+    const [lastUpdate, setLastUpdate] = useState(null);
 
     useEffect(() => {
-        fetchUserData();
+        loadUserData();
     }, []);
 
-    const fetchUserData = async () => {
+    const loadUserData = async () => {
         try {
-            const userDataStr = await AsyncStorage.getItem('userData');
-            if (!userDataStr) {
-                console.error('Kullanıcı verisi bulunamadı');
-                return;
-            }
+            // Önce AsyncStorage'dan veriyi yükle
+            const cachedDataStr = await AsyncStorage.getItem('userData');
+            const lastUpdateTime = await AsyncStorage.getItem('lastProfileUpdate');
+            
+            if (cachedDataStr) {
+                const cachedData = JSON.parse(cachedDataStr);
+                setUserData(cachedData);
+                
+                // Önbellekteki verileri hemen göster
+                const facultyName = facultiesData[cachedData.faculty]?.name || cachedData.faculty;
+                setUserInfo({
+                    isimSoyisim: cachedData.fullName || "Belirtilmemiş",
+                    fakulte: facultyName || "Belirtilmemiş",
+                    bolum: cachedData.department || "Belirtilmemiş"
+                });
 
-            const userData = JSON.parse(userDataStr);
-            const userDoc = await getDoc(doc(FIRESTORE_DB, 'users', userData.id));
+                setEditedInfo({
+                    fullName: cachedData.fullName || "",
+                    faculty: cachedData.faculty || "",
+                    department: cachedData.department || ""
+                });
+
+                // Loading state'ini hemen kaldır
+                setLoading(false);
+
+                // Son güncelleme 5 dakikadan eskiyse veya hiç güncelleme yapılmamışsa Firebase'den güncelle
+                const shouldUpdate = !lastUpdateTime || 
+                    (Date.now() - parseInt(lastUpdateTime)) > 5 * 60 * 1000;
+
+                if (shouldUpdate) {
+                    await updateFromFirebase(cachedData.id);
+                }
+            } else {
+                setLoading(false);
+                Alert.alert('Hata', 'Kullanıcı bilgileri bulunamadı.');
+            }
+        } catch (error) {
+            console.error('Veri yükleme hatası:', error);
+            setLoading(false);
+        }
+    };
+
+    const updateFromFirebase = async (userId) => {
+        try {
+            const userDoc = await getDoc(doc(FIRESTORE_DB, 'users', userId));
             
             if (userDoc.exists()) {
                 const data = userDoc.data();
                 const facultyName = facultiesData[data.faculty]?.name || data.faculty;
                 
+                const updatedUserData = {
+                    ...userData,
+                    ...data
+                };
+
+                // AsyncStorage'ı güncelle
+                await AsyncStorage.setItem('userData', JSON.stringify(updatedUserData));
+                await AsyncStorage.setItem('lastProfileUpdate', Date.now().toString());
+
+                // State'leri güncelle
+                setUserData(updatedUserData);
                 setUserInfo({
                     isimSoyisim: data.fullName || "Belirtilmemiş",
                     fakulte: facultyName || "Belirtilmemiş",
@@ -192,10 +242,7 @@ export default function Profil() {
                 });
             }
         } catch (error) {
-            console.error('Kullanıcı bilgileri alınırken hata:', error);
-            Alert.alert('Hata', 'Kullanıcı bilgileri alınamadı.');
-        } finally {
-            setLoading(false);
+            console.error('Firebase güncelleme hatası:', error);
         }
     };
 
@@ -222,85 +269,81 @@ export default function Profil() {
                 return;
             }
 
-            const userData = JSON.parse(userDataStr);
-            const userRef = doc(FIRESTORE_DB, 'users', userData.id);
+            const currentUserData = JSON.parse(userDataStr);
+            const userRef = doc(FIRESTORE_DB, 'users', currentUserData.id);
 
-            // Firebase'i güncelle
-            await updateDoc(userRef, {
+            const updatedData = {
                 fullName: editedInfo.fullName.trim(),
                 faculty: editedInfo.faculty.trim(),
                 department: editedInfo.department.trim(),
                 updatedAt: Timestamp.now()
-            });
+            };
 
-            const batch = writeBatch(FIRESTORE_DB);
-
-            // Kullanıcının tüm mesajlarını güncelle
-            const messagesRef = collection(FIRESTORE_DB, 'messages');
-            const messagesQuery = query(messagesRef, where('userId', '==', userData.id));
-            const messagesSnapshot = await getDocs(messagesQuery);
-
-            // Mesajları güncelle
-            messagesSnapshot.docs.forEach((messageDoc) => {
-                batch.update(doc(FIRESTORE_DB, 'messages', messageDoc.id), {
-                    userName: editedInfo.fullName.trim()
-                });
-
-                // Her mesajın yorumlarını da güncelle
-                getDocs(collection(FIRESTORE_DB, `messages/${messageDoc.id}/comments`))
-                    .then((commentsSnapshot) => {
-                        commentsSnapshot.docs.forEach((commentDoc) => {
-                            if (commentDoc.data().userId === userData.id) {
-                                batch.update(doc(FIRESTORE_DB, `messages/${messageDoc.id}/comments`, commentDoc.id), {
-                                    userName: editedInfo.fullName.trim()
-                                });
-                            }
-                        });
-                    });
-            });
-
-            // Kullanıcının tüm kitaplarını güncelle
-            const booksRef = collection(FIRESTORE_DB, 'books');
-            const booksQuery = query(booksRef, where('sellerId', '==', userData.id));
-            const booksSnapshot = await getDocs(booksQuery);
-
-            // Kitapları güncelle
-            booksSnapshot.docs.forEach((bookDoc) => {
-                batch.update(doc(FIRESTORE_DB, 'books', bookDoc.id), {
-                    sellerName: editedInfo.fullName.trim(),
-                    sellerFaculty: editedInfo.faculty.trim(),
-                    sellerDepartment: editedInfo.department.trim()
-                    });
-            });
-
-            // Batch işlemini uygula
-            await batch.commit();
-
-            const facultyName = facultiesData[editedInfo.faculty]?.name || editedInfo.faculty;
+            // Firebase'i güncelle
+            await updateDoc(userRef, updatedData);
 
             // AsyncStorage'ı güncelle
             const updatedUserData = {
-                ...userData,
-                fullName: editedInfo.fullName.trim(),
-                faculty: editedInfo.faculty.trim(),
-                facultyName: facultyName,
-                department: editedInfo.department.trim()
+                ...currentUserData,
+                ...updatedData
             };
             await AsyncStorage.setItem('userData', JSON.stringify(updatedUserData));
+            await AsyncStorage.setItem('lastProfileUpdate', Date.now().toString());
 
+            // State'leri güncelle
+            setUserData(updatedUserData);
+            const facultyName = facultiesData[updatedData.faculty]?.name || updatedData.faculty;
             setUserInfo({
-                isimSoyisim: editedInfo.fullName.trim(),
+                isimSoyisim: updatedData.fullName,
                 fakulte: facultyName,
-                bolum: editedInfo.department.trim()
+                bolum: updatedData.department
             });
 
             setModalVisible(false);
             Alert.alert('Başarılı', 'Bilgileriniz güncellendi.');
+
+            // Batch işlemlerini arka planda yap
+            updateRelatedCollections(currentUserData.id, updatedData);
+
         } catch (error) {
-            console.error('Veri güncellenirken hata oluştu:', error);
+            console.error('Veri güncellenirken hata:', error);
             Alert.alert('Hata', 'Bilgiler güncellenemedi.');
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const updateRelatedCollections = async (userId, updatedData) => {
+        try {
+            const batch = writeBatch(FIRESTORE_DB);
+
+            // Mesajları güncelle
+            const messagesRef = collection(FIRESTORE_DB, 'messages');
+            const messagesQuery = query(messagesRef, where('userId', '==', userId));
+            const messagesSnapshot = await getDocs(messagesQuery);
+
+            messagesSnapshot.docs.forEach((messageDoc) => {
+                batch.update(doc(FIRESTORE_DB, 'messages', messageDoc.id), {
+                    userName: updatedData.fullName
+                    });
+            });
+
+            // Kitapları güncelle
+            const booksRef = collection(FIRESTORE_DB, 'books');
+            const booksQuery = query(booksRef, where('sellerId', '==', userId));
+            const booksSnapshot = await getDocs(booksQuery);
+
+            booksSnapshot.docs.forEach((bookDoc) => {
+                batch.update(doc(FIRESTORE_DB, 'books', bookDoc.id), {
+                    sellerName: updatedData.fullName,
+                    sellerFaculty: updatedData.faculty,
+                    sellerDepartment: updatedData.department
+                    });
+            });
+
+            await batch.commit();
+        } catch (error) {
+            console.error('İlgili koleksiyonlar güncellenirken hata:', error);
         }
     };
 
