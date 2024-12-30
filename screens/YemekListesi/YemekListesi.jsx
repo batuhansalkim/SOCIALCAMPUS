@@ -494,7 +494,7 @@ export default function MealSchedule() {
           })}
         />
 
-        <View style={styles.pagination}>
+        <View style={styles.paginationContainer}>
           {mealList.map((_, i) => {
             const scale = scrollX.interpolate({
               inputRange: [
@@ -517,7 +517,7 @@ export default function MealSchedule() {
             return (
               <Animated.View
                 key={i}
-                style={[styles.dot, { transform: [{ scale }], opacity }]}
+                style={[styles.paginationDot, { transform: [{ scale }], opacity }]}
               />
             );
           })}
@@ -661,26 +661,36 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     fontWeight: 'bold',
   },
-  pagination: {
+  paginationContainer: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 180 : 100,
+    alignSelf: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    position: 'absolute',
-    bottom: Platform.OS === 'ios' ? screenHeight * 0.15 : screenHeight * 0.13,
-    left: 0,
-    right: 0,
-    height: screenHeight * 0.02,
-    zIndex: 99999,
-    elevation: 99999,
+    alignItems: 'center',
+    width: '100%',
+    height: 20,
+    zIndex: 999,
   },
-  dot: {
-    height: screenWidth * 0.02,
-    width: screenWidth * 0.02,
-    borderRadius: screenWidth * 0.01,
+  paginationDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
     backgroundColor: '#4ECDC4',
-    marginHorizontal: screenWidth * 0.015,
-    opacity: 0.9,
-    zIndex: 99999,
-    elevation: 99999,
+    opacity: 0.3,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  paginationDotActive: {
+    opacity: 1,
+    transform: [{ scale: 1.2 }],
   },
   loadingContainer: {
     flex: 1,

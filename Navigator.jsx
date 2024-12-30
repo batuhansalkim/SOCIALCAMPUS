@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Kulüp from "../kluCampus/screens/Kulüp/Kulüp";
 import Mesaj from "../kluCampus/screens/Mesaj/Mesaj";
 import Profil from "../kluCampus/screens/Profil/Profil";
-import Satis from "../kluCampus/screens/Satış/Satis";
+import Satis from "../kluCampus/screens/Satis/Satis";
 import YemekListesi from "../kluCampus/screens/YemekListesi/YemekListesi";
 
 const Tab = createBottomTabNavigator();

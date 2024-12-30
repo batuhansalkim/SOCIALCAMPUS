@@ -40,64 +40,65 @@ export default function MessageScreen() {
 
   // İlk yükleme için useEffect
   useEffect(() => {
+    let isSubscribed = true;
+
     const loadInitialMessages = async () => {
+      if (!currentUser) return;
+      
       try {
         setLoading(true);
-        // Mesajları gerçek zamanlı dinle
         const messagesRef = collection(FIRESTORE_DB, 'messages');
         const q = query(messagesRef, orderBy('createdAt', 'desc'), limit(MESSAGES_PER_PAGE));
         
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-          const messagesData = snapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-              id: doc.id, // Benzersiz ID'yi garanti et
-              ...data,
-              scale: new Animated.Value(1),
-              isLiked: currentUser ? data.likedBy?.includes(currentUser.id) : false,
-              comments: data.commentCount || 0,
-              commentList: [],
-              createdAt: data.createdAt?.toDate() || new Date(),
-            };
-          });
+        const querySnapshot = await getDocs(q);
+        if (!isSubscribed) return;
 
-          // Duplicate kontrolü yaparak set et
-          setMessages(prev => {
-            const uniqueMessages = messagesData.filter((newMsg, index, self) =>
-              index === self.findIndex((msg) => msg.id === newMsg.id)
-            );
-            return uniqueMessages;
-          });
-          
-          setLoading(false);
-          
-          const lastVisible = snapshot.docs[snapshot.docs.length - 1];
-          setLastDoc(lastVisible);
-          setAllLoaded(snapshot.docs.length < MESSAGES_PER_PAGE);
-        }, (error) => {
-          console.error('Mesajları dinlerken hata:', error);
-          setLoading(false);
-          Alert.alert('Hata', 'Mesajlar yüklenirken bir hata oluştu.');
+        const messagesData = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            scale: new Animated.Value(1),
+            isLiked: currentUser ? data.likedBy?.includes(currentUser.id) : false,
+            comments: data.commentCount || 0,
+            commentList: [],
+            createdAt: data.createdAt?.toDate() || new Date(),
+          };
         });
 
-        return () => unsubscribe();
+        if (isSubscribed) {
+          setMessages(messagesData);
+          const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+          setLastDoc(lastVisible);
+          setAllLoaded(querySnapshot.docs.length < MESSAGES_PER_PAGE);
+          setLoading(false);
+        }
       } catch (error) {
         console.error('Initial messages loading error:', error);
-        setLoading(false);
-        Alert.alert('Hata', 'Mesajlar yüklenirken bir hata oluştu.');
+        if (isSubscribed) {
+          setLoading(false);
+        }
       }
     };
 
     loadInitialMessages();
+
+    return () => {
+      isSubscribed = false;
+    };
   }, [currentUser]);
 
-  // Mesajları dinleme fonksiyonu
-  const listenToMessages = () => {
-    const messagesRef = collection(FIRESTORE_DB, 'messages');
-    const q = query(messagesRef, orderBy('createdAt', 'desc'), limit(MESSAGES_PER_PAGE));
+  // Yenileme işlemi için fonksiyon
+  const onRefresh = React.useCallback(async () => {
+    if (refreshing || !currentUser) return;
     
-    return onSnapshot(q, (snapshot) => {
-      const messagesData = snapshot.docs.map(doc => {
+    try {
+      setRefreshing(true);
+      const messagesRef = collection(FIRESTORE_DB, 'messages');
+      const q = query(messagesRef, orderBy('createdAt', 'desc'), limit(MESSAGES_PER_PAGE));
+      
+      const querySnapshot = await getDocs(q);
+      const messagesData = querySnapshot.docs.map(doc => {
         const data = doc.data();
         return {
           id: doc.id,
@@ -109,50 +110,12 @@ export default function MessageScreen() {
           createdAt: data.createdAt?.toDate() || new Date(),
         };
       });
-      
-      setMessages(messagesData);
-      setLoading(false);
-      
-      const lastVisible = snapshot.docs[snapshot.docs.length - 1];
-      setLastDoc(lastVisible);
-      setAllLoaded(snapshot.docs.length < MESSAGES_PER_PAGE);
-    });
-  };
-
-  // useEffect içinde mesajları dinle
-  useEffect(() => {
-    const unsubscribe = listenToMessages();
-    return () => unsubscribe();
-  }, [currentUser]);
-
-  // Yenileme işlemi için fonksiyon
-  const onRefresh = React.useCallback(async () => {
-    if (refreshing) return;
-    
-    try {
-      setRefreshing(true);
-        const messagesRef = collection(FIRESTORE_DB, 'messages');
-      const q = query(messagesRef, orderBy('createdAt', 'desc'), limit(MESSAGES_PER_PAGE));
-        
-      const querySnapshot = await getDocs(q);
-      const messagesData = querySnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-              id: doc.id,
-              ...data,
-              scale: new Animated.Value(1),
-              isLiked: currentUser ? data.likedBy?.includes(currentUser.id) : false,
-              comments: data.commentCount || 0,
-              commentList: [],
-              createdAt: data.createdAt?.toDate() || new Date(),
-            };
-      });
 
       setMessages(messagesData);
       const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
       setLastDoc(lastVisible);
       setAllLoaded(querySnapshot.docs.length < MESSAGES_PER_PAGE);
-      } catch (error) {
+    } catch (error) {
       console.error('Refresh error:', error);
     } finally {
       setRefreshing(false);
@@ -261,6 +224,8 @@ export default function MessageScreen() {
   // Kullanıcı bilgisini al
   useEffect(() => {
     getCurrentUser();
+    // Remove or comment out this useEffect
+    /*
     const checkUserDataInterval = setInterval(async () => {
       try {
         const userDataStr = await AsyncStorage.getItem('userData');
@@ -279,6 +244,7 @@ export default function MessageScreen() {
     }, 2000); // Her 2 saniyede bir kontrol et
 
     return () => clearInterval(checkUserDataInterval);
+    */
   }, []); // currentUser dependency'sini kaldırdık
 
   // Kullanıcı bilgisini al
@@ -289,7 +255,12 @@ export default function MessageScreen() {
       
       if (userLoggedIn === 'true' && userDataStr) {
         const userData = JSON.parse(userDataStr);
-        setCurrentUser(userData);
+        setCurrentUser(prevUser => {
+          if (JSON.stringify(prevUser) !== JSON.stringify(userData)) {
+            return userData;
+          }
+          return prevUser;
+        });
       } else {
         setCurrentUser(null);
       }
@@ -749,60 +720,40 @@ export default function MessageScreen() {
     return () => unsubscribe();
   }, [selectedMessage?.id, currentUser]);
 
-  // Mesaja tıklama işleyicisi
-  const handleMessagePress = async (message) => {
-    if (!message) return;
-    
-    try {
-      setLoading(true);
-      setSelectedMessage(message);
-      setShowComments(true);
-      
-      // Yorumları getir
-      const commentsRef = collection(FIRESTORE_DB, `messages/${message.id}/comments`);
-      const commentsQuery = query(commentsRef, orderBy('createdAt', 'desc'));
-      const commentsSnapshot = await getDocs(commentsQuery);
-      
-      const comments = commentsSnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          isLiked: currentUser ? data.likedBy?.includes(currentUser.id) : false,
-          createdAt: data.createdAt?.toDate() || new Date()
-        };
-      });
+  // Yorumları yükleme fonksiyonu
+  const loadComments = async (messageId) => {
+    if (!messageId) return;
 
-      // Yorumları state'e kaydet
-      setSelectedMessage(prev => ({
-        ...prev,
-        commentList: comments
+    try {
+      const commentsRef = collection(FIRESTORE_DB, `messages/${messageId}/comments`);
+      const q = query(commentsRef, orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+
+      const comments = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
       }));
 
-      // Yorumlar için gerçek zamanlı dinleyici ekle
-      const unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
-        const updatedComments = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          isLiked: currentUser ? doc.data().likedBy?.includes(currentUser.id) : false,
-          createdAt: doc.data().createdAt?.toDate() || new Date()
-        }));
-
-        setSelectedMessage(prev => ({
-          ...prev,
-          commentList: updatedComments
-        }));
+      setSelectedMessage(prev => {
+        if (prev?.id === messageId) {
+          return {
+            ...prev,
+            commentList: comments
+          };
+        }
+        return prev;
       });
-
-      // Cleanup fonksiyonunu döndür
-      return () => unsubscribe();
-
     } catch (error) {
-      console.error('Yorumlar yüklenirken hata:', error);
-      Alert.alert('Hata', 'Yorumlar yüklenemedi.');
-    } finally {
-      setLoading(false);
+      console.error('Comments loading error:', error);
     }
+  };
+
+  // Mesaj seçme işlemi
+  const handleMessagePress = async (message) => {
+    setSelectedMessage(message);
+    setShowComments(true);
+    await loadComments(message.id);
   };
 
   // FlatList optimizasyonları
@@ -1734,3 +1685,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
