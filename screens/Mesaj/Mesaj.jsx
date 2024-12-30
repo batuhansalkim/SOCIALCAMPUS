@@ -458,13 +458,11 @@ export default function MessageScreen() {
       }));
 
       setSelectedMessage(prev => {
-        if (prev?.id === messageId) {
-          return {
-        ...prev,
-        commentList: comments
-          };
-        }
-        return prev;
+        if (!prev || prev.id !== messageId) return prev;
+        return {
+          ...prev,
+          commentList: comments || []
+        };
       });
     });
   };
@@ -751,7 +749,10 @@ export default function MessageScreen() {
 
   // Mesaj seçme işlemi
   const handleMessagePress = async (message) => {
-    setSelectedMessage(message);
+    setSelectedMessage({
+      ...message,
+      commentList: [] // Initialize empty commentList
+    });
     setShowComments(true);
     await loadComments(message.id);
   };
@@ -840,16 +841,16 @@ export default function MessageScreen() {
             <ActivityIndicator size="large" color="#4ECDC4" />
             <Text style={styles.loadingText}>Yorumlar yükleniyor...</Text>
           </View>
-        ) : selectedMessage?.commentList?.length > 0 ? (
-        <FlatList
+        ) : selectedMessage?.commentList ? (
+          <FlatList
             data={selectedMessage.commentList}
-          renderItem={renderCommentItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.commentsList}
-          showsVerticalScrollIndicator={false}
-          refreshing={refreshingComments}
-          onRefresh={onRefreshComments}
-        />
+            renderItem={renderCommentItem}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.commentsList}
+            showsVerticalScrollIndicator={false}
+            refreshing={refreshingComments}
+            onRefresh={onRefreshComments}
+          />
         ) : (
           <View style={styles.noCommentsContainer}>
             <Text style={styles.noCommentsText}>Henüz yorum yapılmamış</Text>
