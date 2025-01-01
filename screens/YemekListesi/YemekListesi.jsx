@@ -175,28 +175,28 @@ export default function MealSchedule() {
   useEffect(() => {
     if (mealList.length > 0) {
       loadReactionsFromCache();
-      const reactionQuery = query(collection(FIRESTORE_DB, 'mealReactions'));
+    const reactionQuery = query(collection(FIRESTORE_DB, 'mealReactions'));
       const unsubscribe = onSnapshot(reactionQuery, async (snapshot) => {
-        const reactionData = {};
-        const userReactionData = {};
+      const reactionData = {};
+      const userReactionData = {};
 
-        snapshot.docs.forEach((doc) => {
-          const data = doc.data();
-          if (!reactionData[data.mealId]) {
-            reactionData[data.mealId] = { likes: 0, dislikes: 0 };
-          }
-          if (data.type === 'like') {
-            reactionData[data.mealId].likes++;
-          } else {
-            reactionData[data.mealId].dislikes++;
-          }
-          if (currentUser && data.userId === currentUser.id) {
-            userReactionData[data.mealId] = data.type;
-          }
-        });
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        if (!reactionData[data.mealId]) {
+          reactionData[data.mealId] = { likes: 0, dislikes: 0 };
+        }
+        if (data.type === 'like') {
+          reactionData[data.mealId].likes++;
+        } else {
+          reactionData[data.mealId].dislikes++;
+        }
+        if (currentUser && data.userId === currentUser.id) {
+          userReactionData[data.mealId] = data.type;
+        }
+      });
 
-        setReactions(reactionData);
-        setUserReactions(userReactionData);
+      setReactions(reactionData);
+      setUserReactions(userReactionData);
 
         // Reaksiyon verilerini önbelleğe kaydet
         await AsyncStorage.setItem('mealReactionsCache', JSON.stringify({
@@ -204,9 +204,9 @@ export default function MealSchedule() {
           userReactions: userReactionData,
           timestamp: Date.now()
         }));
-      });
+    });
 
-      return () => unsubscribe();
+    return () => unsubscribe();
     }
   }, [mealList, currentUser]);
 

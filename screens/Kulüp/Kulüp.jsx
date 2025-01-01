@@ -87,7 +87,7 @@ const Kulüp = ({ navigation }) => {
 
           const image = $(element).find('img').attr('src');
           const details = $(element).find('.card-text').text().trim().split('\n');
-          
+
           clubsData.push({
             id: index.toString(),
             name,
@@ -122,22 +122,22 @@ const Kulüp = ({ navigation }) => {
 
   const handleFetchError = async (err) => {
     console.error('Club fetch error:', err);
-    let errorMessage = 'Kulüp verileri yüklenirken bir hata oluştu';
-    
-    if (err.name === 'AbortError') {
+      let errorMessage = 'Kulüp verileri yüklenirken bir hata oluştu';
+      
+      if (err.name === 'AbortError') {
       errorMessage = 'Bağlantı zaman aşımına uğradı';
-    }
-    
-    setError(errorMessage);
-    
-    // Önbellekteki verileri kullan
-    try {
-      const cachedData = await AsyncStorage.getItem('clubs_data');
-      if (cachedData) {
+      }
+
+      setError(errorMessage);
+      
+      // Önbellekteki verileri kullan
+      try {
+        const cachedData = await AsyncStorage.getItem('clubs_data');
+        if (cachedData) {
         const { data } = JSON.parse(cachedData);
-        setClubs(data);
+            setClubs(data);
         setDisplayedClubs(data.slice(0, PAGE_SIZE));
-        setError(errorMessage + ' (Önbellek verileri gösteriliyor)');
+            setError(errorMessage + ' (Önbellek verileri gösteriliyor)');
       }
     } catch (cacheError) {
       console.warn('Cache read error:', cacheError);
