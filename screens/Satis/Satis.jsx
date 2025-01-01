@@ -234,7 +234,7 @@ export default function BookSellingPage() {
               </TouchableOpacity>
             )}
           </View>
-          <Text style={styles.bookSection}>Bölüm: {item.section}</Text>
+          <Text style={styles.bookSection}>Kategori: {item.section}</Text>
           <Text style={styles.bookPrice}>Fiyat: {item.price} TL</Text>
           <Text style={styles.sellerName}>Satıcı: {item.sellerName}</Text>
           <TouchableOpacity 
