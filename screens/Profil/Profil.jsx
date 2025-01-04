@@ -166,6 +166,36 @@ export default function Profil() {
 
     const fetchUserData = async () => {
         try {
+            // Önce cache'den kontrol et
+            const cachedData = await AsyncStorage.getItem('userProfileCache');
+            const cacheTimestamp = await AsyncStorage.getItem('profile_cache_timestamp');
+            
+            if (cachedData && cacheTimestamp) {
+                const parsedData = JSON.parse(cachedData);
+                const cacheAge = Date.now() - parseInt(cacheTimestamp);
+                
+                // Cache 1 saatten yeni ise kullan
+                if (cacheAge < 60 * 60 * 1000) {
+                    const facultyName = facultiesData[parsedData.faculty]?.name || parsedData.faculty;
+                    
+                    setUserInfo({
+                        isimSoyisim: parsedData.fullName || "Belirtilmemiş",
+                        fakulte: facultyName || "Belirtilmemiş",
+                        bolum: parsedData.department || "Belirtilmemiş"
+                    });
+
+                    setEditedInfo({
+                        fullName: parsedData.fullName || "",
+                        faculty: parsedData.faculty || "",
+                        department: parsedData.department || ""
+                    });
+                    
+                    setLoading(false);
+                    return;
+                }
+            }
+
+            // Cache yok veya eski ise Firestore'dan al
             const userDataStr = await AsyncStorage.getItem('userData');
             if (!userDataStr) {
                 console.error('Kullanıcı verisi bulunamadı');
@@ -178,6 +208,10 @@ export default function Profil() {
             if (userDoc.exists()) {
                 const data = userDoc.data();
                 const facultyName = facultiesData[data.faculty]?.name || data.faculty;
+                
+                // Profil verilerini cache'e kaydet
+                await AsyncStorage.setItem('userProfileCache', JSON.stringify(data));
+                await AsyncStorage.setItem('profile_cache_timestamp', Date.now().toString());
                 
                 setUserInfo({
                     isimSoyisim: data.fullName || "Belirtilmemiş",
@@ -437,6 +471,28 @@ export default function Profil() {
         </View>
       </Modal>
     );
+
+    const loadUserData = async () => {
+        try {
+            // Önce cache'den yükle
+            const cachedData = await AsyncStorage.getItem('userData');
+            if (cachedData) {
+                const parsedData = JSON.parse(cachedData);
+                setUserData(parsedData);
+            }
+
+            // Firestore'dan güncel veriyi al
+            const userDoc = await getDoc(doc(FIRESTORE_DB, 'users', userId));
+            if (userDoc.exists()) {
+                const data = userDoc.data();
+                setUserData(data);
+                // Cache'i güncelle
+                await AsyncStorage.setItem('userData', JSON.stringify(data));
+            }
+        } catch (error) {
+            console.error('Error loading user data:', error);
+        }
+    };
 
     if (loading) {
         return (

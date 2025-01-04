@@ -38,6 +38,69 @@ export default function MessageScreen() {
   const MESSAGES_PER_PAGE = 15;
   const scrollViewRef = useRef(null);
 
+  // Mesajları yükle - optimize edilmiş versiyon
+  const loadMessages = async () => {
+    try {
+      setLoading(true);
+      
+      // Önce cache'den yükle
+      const cachedMessages = await AsyncStorage.getItem('cached_messages');
+      const cacheTimestamp = await AsyncStorage.getItem('messages_cache_timestamp');
+      
+      if (cachedMessages && cacheTimestamp) {
+        const parsedMessages = JSON.parse(cachedMessages);
+        const cacheAge = Date.now() - parseInt(cacheTimestamp);
+        
+        // Cache 5 dakikadan yeni ise kullan
+        if (cacheAge < 5 * 60 * 1000) {
+          setMessages(parsedMessages);
+          setLoading(false);
+        }
+      }
+
+      // Firestore'dan sadece son mesajları al
+      const messagesRef = collection(FIRESTORE_DB, 'messages');
+      const q = query(messagesRef, 
+        orderBy('createdAt', 'desc'), 
+        limit(20)
+      );
+      
+      const snapshot = await getDocs(q);
+      const messagesData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      // Cache'i güncelle
+      await AsyncStorage.setItem('cached_messages', JSON.stringify(messagesData));
+      await AsyncStorage.setItem('messages_cache_timestamp', Date.now().toString());
+      
+      setMessages(messagesData);
+      setLoading(false);
+
+      // Sadece yeni mesajları dinle
+      const unsubscribe = onSnapshot(
+        query(messagesRef, 
+          orderBy('createdAt', 'desc'),
+          limit(1)
+        ), 
+        (snapshot) => {
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === "added") {
+              const newMessage = { id: change.doc.id, ...change.doc.data() };
+              setMessages(prev => [newMessage, ...prev]);
+            }
+          });
+        }
+      );
+
+      return unsubscribe;
+    } catch (error) {
+      console.error('Error loading messages:', error);
+      setLoading(false);
+    }
+  };
+
   // İlk yükleme için useEffect
   useEffect(() => {
     let isSubscribed = true;

@@ -60,10 +60,10 @@ export default function BookSellingPage() {
       setBooks(booksData);
       setFilteredBooks(booksData);
     } catch (error) {
-      console.error('Kitaplar yüklenirken hata:', error);
+      console.error('Ürünler yüklenirken hata:', error);
       Alert.alert(
         'Hata',
-        'Kitaplar yüklenirken bir hata oluştu. Lütfen internet bağlantınızı kontrol edin.'
+        'Ürünler yüklenirken bir hata oluştu. Lütfen internet bağlantınızı kontrol edin.'
       );
     } finally {
       setLoading(false);
@@ -135,7 +135,7 @@ export default function BookSellingPage() {
 
       // Resmi Imgur'a yükle
       if (!newBook.photoUri) {
-        Alert.alert('Hata', 'Lütfen bir kitap resmi seçin.');
+        Alert.alert('Hata', 'Lütfen bir Ürün resmi seçin.');
         return;
       }
 
@@ -167,14 +167,14 @@ export default function BookSellingPage() {
       await addDoc(collection(FIRESTORE_DB, 'books'), bookData);
 
       // Başarılı mesajı göster ve formu temizle
-      Alert.alert('Başarılı', 'Kitap başarıyla eklendi!');
+      Alert.alert('Başarılı', 'Ürün başarıyla eklendi!');
       setNewBook({ name: '', section: '', price: '', instagram: '', photoUri: '' });
       closeModal();
       await fetchBooks();
 
     } catch (error) {
-      console.error('Kitap kaydedilirken hata:', error);
-      Alert.alert('Hata', 'Kitap kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
+      console.error('Ürün kaydedilirken hata:', error);
+      Alert.alert('Hata', 'Ürün kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
       setLoading(false);
     }
@@ -183,8 +183,8 @@ export default function BookSellingPage() {
   const handleDeleteBook = async (bookId) => {
     try {
       Alert.alert(
-        'Kitabı Sil',
-        'Bu kitabı silmek istediğinize emin misiniz?',
+        'Ürünü Sil',
+        'Bu Ürünü silmek istediğinize emin misiniz?',
         [
           {
             text: 'İptal',
@@ -195,7 +195,7 @@ export default function BookSellingPage() {
             onPress: async () => {
               const bookRef = doc(FIRESTORE_DB, 'books', bookId);
               await deleteDoc(bookRef);
-              Alert.alert('Başarılı', 'Kitap başarıyla silindi.');
+              Alert.alert('Başarılı', 'Ürün başarıyla silindi.');
               fetchBooks(); // Listeyi yenile
             },
             style: 'destructive'
@@ -203,8 +203,8 @@ export default function BookSellingPage() {
         ]
       );
     } catch (error) {
-      console.error('Kitap silinirken hata:', error);
-      Alert.alert('Hata', 'Kitap silinirken bir hata oluştu.');
+      console.error('Ürün silinirken hata:', error);
+      Alert.alert('Hata', 'Ürün silinirken bir hata oluştu.');
     }
   };
 
@@ -366,7 +366,7 @@ export default function BookSellingPage() {
           onRefresh={onRefresh}
           ListEmptyComponent={() => (
             <Text style={styles.emptyListText}>
-              {loading ? 'Yükleniyor...' : 'Hiçbir kitap bulunamadı.'}
+              {loading ? 'Yükleniyor...' : 'Hiçbir Ürün bulunamadı.'}
             </Text>
           )}
         />

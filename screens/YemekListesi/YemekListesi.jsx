@@ -46,38 +46,31 @@ export default function MealSchedule() {
       const lastUpdate = await AsyncStorage.getItem('mealListLastUpdate');
       const cachedReactions = await AsyncStorage.getItem('mealReactionsCache');
       
-      let shouldFetchNew = true;
-      
       if (cachedData && lastUpdate) {
         const parsedData = JSON.parse(cachedData);
         const lastUpdateTime = parseInt(lastUpdate);
         const now = Date.now();
         
-        // Önbellek 1 saatten yeni ise kullan
-        if (now - lastUpdateTime < 60 * 60 * 1000) {
-        setMealList(parsedData);
-          shouldFetchNew = false;
-        setLoading(false);
-        
+        // Cache 24 saatten yeni ise kullan
+        if (now - lastUpdateTime < 24 * 60 * 60 * 1000) {
+          setMealList(parsedData);
+          setLoading(false);
+          
           if (cachedReactions) {
-            const { reactions: cachedReactionData, userReactions: cachedUserReactionData } = JSON.parse(cachedReactions);
-            setReactions(cachedReactionData);
-            setUserReactions(cachedUserReactionData);
+            const { reactions, userReactions } = JSON.parse(cachedReactions);
+            setReactions(reactions);
+            setUserReactions(userReactions);
           }
+          return;
         }
       }
       
-      if (shouldFetchNew) {
-        await fetchMealData();
-      }
-      
-      // Kullanıcı bilgilerini yükle
-      await getCurrentUser();
+      // Cache yoksa veya eskiyse yeni veri çek
+      await fetchMealData();
       
     } catch (error) {
       console.error('Initial data loading error:', error);
       setLoading(false);
-      setError('Veri yüklenirken bir hata oluştu');
     }
   };
 
@@ -175,28 +168,31 @@ export default function MealSchedule() {
   useEffect(() => {
     if (mealList.length > 0) {
       loadReactionsFromCache();
-    const reactionQuery = query(collection(FIRESTORE_DB, 'mealReactions'));
+      const reactionQuery = query(collection(FIRESTORE_DB, 'mealReactions'));
       const unsubscribe = onSnapshot(reactionQuery, async (snapshot) => {
-      const reactionData = {};
-      const userReactionData = {};
+        const reactionData = {};
+        const userReactionData = {};
 
-      snapshot.docs.forEach((doc) => {
-        const data = doc.data();
-        if (!reactionData[data.mealId]) {
-          reactionData[data.mealId] = { likes: 0, dislikes: 0 };
-        }
-        if (data.type === 'like') {
-          reactionData[data.mealId].likes++;
-        } else {
-          reactionData[data.mealId].dislikes++;
-        }
-        if (currentUser && data.userId === currentUser.id) {
-          userReactionData[data.mealId] = data.type;
-        }
-      });
+        // Sadece değişen dokümanları işle
+        snapshot.docChanges().forEach((change) => {
+          const data = change.doc.data();
+          if (!reactionData[data.mealId]) {
+            reactionData[data.mealId] = { likes: 0, dislikes: 0 };
+          }
+          if (change.type === "added" || change.type === "modified") {
+            if (data.type === 'like') {
+              reactionData[data.mealId].likes++;
+            } else {
+              reactionData[data.mealId].dislikes++;
+            }
+            if (currentUser && data.userId === currentUser.id) {
+              userReactionData[data.mealId] = data.type;
+            }
+          }
+        });
 
-      setReactions(reactionData);
-      setUserReactions(userReactionData);
+        setReactions(reactionData);
+        setUserReactions(userReactionData);
 
         // Reaksiyon verilerini önbelleğe kaydet
         await AsyncStorage.setItem('mealReactionsCache', JSON.stringify({
@@ -204,9 +200,11 @@ export default function MealSchedule() {
           userReactions: userReactionData,
           timestamp: Date.now()
         }));
-    });
+      }, (error) => {
+        console.error('Reaction listener error:', error);
+      });
 
-    return () => unsubscribe();
+      return () => unsubscribe();
     }
   }, [mealList, currentUser]);
 
