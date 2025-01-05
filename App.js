@@ -53,6 +53,34 @@ export default function App() {
     }
   };
 
+  const clearOldCache = async () => {
+    try {
+      const lastCleanup = await AsyncStorage.getItem('last_cache_cleanup');
+      const now = Date.now();
+
+      // Cache temizliğini 3 günde bir yap (24 saatten 72 saate çıkarıldı)
+      if (!lastCleanup || now - parseInt(lastCleanup) > 72 * 60 * 60 * 1000) {
+        await AsyncStorage.setItem('last_cache_cleanup', now.toString());
+        // Eski cache'leri temizle
+        const keys = ['cached_meals', 'cached_messages', 'cached_books'];
+        for (const key of keys) {
+          const lastUpdate = await AsyncStorage.getItem(`${key}_last_update`);
+          // 3 günden eski cache'leri temizle
+          if (lastUpdate && now - parseInt(lastUpdate) > 72 * 60 * 60 * 1000) {
+            await AsyncStorage.removeItem(key);
+            await AsyncStorage.removeItem(`${key}_last_update`);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error cleaning cache:', error);
+    }
+  };
+
+  useEffect(() => {
+    clearOldCache();
+  }, []);
+
   if (isLoading) {
     return null;
   }

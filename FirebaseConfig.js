@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -14,6 +15,19 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-export const FIREBASE_APP = initializeApp(firebaseConfig);
-export const FIRESTORE_DB = getFirestore(FIREBASE_APP);
-export const FIREBASE_AUTH = getAuth(FIREBASE_APP);    
+const app = initializeApp(firebaseConfig);
+export const FIREBASE_AUTH = getAuth(app);
+export const FIRESTORE_DB = getFirestore(app);
+export const FIREBASE_STORAGE = getStorage(app);
+
+// Offline persistence'ı aktifleştir
+enableIndexedDbPersistence(FIRESTORE_DB)
+    .catch((err) => {
+        if (err.code == 'failed-precondition') {
+            console.warn('Offline persistence çoklu sekmede çalışamaz');
+        } else if (err.code == 'unimplemented') {
+            console.warn('Tarayıcı offline persistence desteklemiyor');
+        }
+    });
+
+export default app;    
