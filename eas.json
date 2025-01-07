@@ -11,9 +11,13 @@
       "distribution": "internal"
     },
     "production": {
+      
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "apk"
       }
     }
+  },
+  "submit": {
+    "production": {}
   }
 } 

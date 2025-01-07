@@ -13,9 +13,9 @@ import { useNavigation } from '@react-navigation/native';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 // Cache süresi ve pagination sabitleri
-const CACHE_DURATION = 12 * 60 * 60 * 1000; // 12 saat
-const MESSAGES_PER_PAGE = 5; // Sayfa başına 5 mesaj
-const COMMENTS_PER_PAGE = 3; // Sayfa başına 3 yorum
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 saat
+const MESSAGES_PER_PAGE = 3; // Sayfa başına 3 mesaj
+const COMMENTS_PER_PAGE = 2; // Sayfa başına 2 yorum
 
 export default function MessageScreen() {
   const [messages, setMessages] = useState([]);
@@ -132,6 +132,19 @@ export default function MessageScreen() {
       if (!currentUser) return;
       
       try {
+        // Önce cache'den kontrol et
+        const cachedMessages = await AsyncStorage.getItem('cached_messages');
+        const cacheUpdate = await AsyncStorage.getItem('messages_last_update');
+        
+        if (cachedMessages && cacheUpdate) {
+          const timeDiff = Date.now() - parseInt(cacheUpdate);
+          if (timeDiff < CACHE_DURATION) {
+            setMessages(JSON.parse(cachedMessages));
+            setLoading(false);
+            return;
+          }
+        }
+
         setLoading(true);
         const messagesRef = collection(FIRESTORE_DB, 'messages');
         const q = query(messagesRef, orderBy('createdAt', 'desc'), limit(MESSAGES_PER_PAGE));
@@ -152,6 +165,10 @@ export default function MessageScreen() {
           };
         });
 
+        // Cache'e kaydet
+        await AsyncStorage.setItem('cached_messages', JSON.stringify(messagesData));
+        await AsyncStorage.setItem('messages_last_update', Date.now().toString());
+
         if (isSubscribed) {
           setMessages(messagesData);
           const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
@@ -169,8 +186,22 @@ export default function MessageScreen() {
 
     loadInitialMessages();
 
+    // Sadece en son mesajı dinle ve 30 dakikada bir güncelle
+    let lastUpdate = Date.now();
+    const unsubscribe = onSnapshot(
+      query(collection(FIRESTORE_DB, 'messages'), orderBy('createdAt', 'desc'), limit(1)),
+      (snapshot) => {
+        if (Date.now() - lastUpdate > 30 * 60 * 1000) { // 30 dakika
+          lastUpdate = Date.now();
+          loadInitialMessages();
+        }
+      },
+      { includeMetadataChanges: false }
+    );
+
     return () => {
       isSubscribed = false;
+      unsubscribe();
     };
   }, [currentUser]);
 
@@ -727,36 +758,42 @@ export default function MessageScreen() {
     if (!messages || messages.length === 0) return;
 
     // Sadece görünür mesajlar için beğeni dinleyicisi
-    const visibleMessages = messages.slice(0, 10); // İlk 10 mesaj
+    const visibleMessages = messages.slice(0, MESSAGES_PER_PAGE); // İlk 3 mesaj
+    let lastUpdate = Date.now();
+
     const unsubscribers = visibleMessages.map(message => {
       if (!message?.id) return () => {};
 
       const messageRef = doc(FIRESTORE_DB, 'messages', message.id);
       return onSnapshot(messageRef, (doc) => {
-        if (doc.exists()) {
-          const messageData = doc.data();
-          setMessages(prevMessages => {
-            if (!prevMessages) return [];
-            return prevMessages.map(msg => {
-              if (msg.id === message.id) {
-                return {
-                  ...msg,
-                  likes: messageData.likes || 0,
-                  likedBy: messageData.likedBy || [],
-                  isLiked: currentUser ? messageData.likedBy?.includes(currentUser.id) : false
-                };
-              }
-              return msg;
+        // 15 dakikada bir güncelle
+        if (Date.now() - lastUpdate > 15 * 60 * 1000) {
+          lastUpdate = Date.now();
+          if (doc.exists()) {
+            const messageData = doc.data();
+            setMessages(prevMessages => {
+              if (!prevMessages) return [];
+              return prevMessages.map(msg => {
+                if (msg.id === message.id) {
+                  return {
+                    ...msg,
+                    likes: messageData.likes || 0,
+                    likedBy: messageData.likedBy || [],
+                    isLiked: currentUser ? messageData.likedBy?.includes(currentUser.id) : false
+                  };
+                }
+                return msg;
+              });
             });
-          });
+          }
         }
-      });
+      }, { includeMetadataChanges: false });
     });
 
     return () => {
       unsubscribers.forEach(unsubscribe => unsubscribe && unsubscribe());
     };
-  }, [messages.slice(0, 10).map(m => m?.id).join(','), currentUser?.id]); // Sadece ilk 10 mesaj değiştiğinde güncelle
+  }, [messages.slice(0, MESSAGES_PER_PAGE).map(m => m?.id).join(','), currentUser?.id]);
 
   useEffect(() => {
     if (!selectedMessage) return;
@@ -1241,8 +1278,8 @@ export default function MessageScreen() {
       
       if (cachedComments && commentUpdate) {
         const timeDiff = Date.now() - parseInt(commentUpdate);
-        // 2 saatten eski değilse cache'den kullan
-        if (timeDiff < 2 * 60 * 60 * 1000) {
+        // 6 saatten eski değilse cache'den kullan
+        if (timeDiff < 6 * 60 * 60 * 1000) {
           const comments = JSON.parse(cachedComments);
           setSelectedMessage(prev => ({
             ...prev,
@@ -1272,28 +1309,17 @@ export default function MessageScreen() {
         commentList: comments
       }));
 
-      // Sadece yeni yorumları dinle
+      // Sadece yeni yorumları dinle ve 15 dakikada bir güncelle
+      let lastUpdate = Date.now();
       const unsubscribe = onSnapshot(
         query(commentsRef, orderBy('createdAt', 'desc'), limit(1)),
         (snapshot) => {
-          snapshot.docChanges().forEach((change) => {
-            if (change.type === "added") {
-              const newComment = { id: change.doc.id, ...change.doc.data() };
-              setSelectedMessage(prev => {
-                if (!prev) return prev;
-                const exists = prev.commentList.some(c => c.id === newComment.id);
-                if (!exists) {
-                  return {
-                    ...prev,
-                    commentList: [newComment, ...prev.commentList.slice(0, COMMENTS_PER_PAGE - 1)],
-                    comments: prev.comments + 1
-                  };
-                }
-                return prev;
-              });
-            }
-          });
-        }
+          if (Date.now() - lastUpdate > 15 * 60 * 1000) { // 15 dakika
+            lastUpdate = Date.now();
+            loadComments(messageId);
+          }
+        },
+        { includeMetadataChanges: false }
       );
 
       return unsubscribe;

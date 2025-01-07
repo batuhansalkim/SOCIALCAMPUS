@@ -22,7 +22,7 @@ const Kulüp = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClub, setSelectedClub] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
   // Debounced search için
@@ -43,6 +43,7 @@ const Kulüp = ({ navigation }) => {
           console.log('Using cached clubs data');
           setClubs(data);
           setDisplayedClubs(data.slice(0, PAGE_SIZE));
+          setHasMore(data.length > PAGE_SIZE);
           setLoading(false);
           return;
         }
@@ -62,7 +63,7 @@ const Kulüp = ({ navigation }) => {
       setError(null);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 saniyeye düşürdüm
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
 
       const response = await axios.get('https://ogrkulup.klu.edu.tr/', {
         signal: controller.signal,
@@ -88,8 +89,11 @@ const Kulüp = ({ navigation }) => {
           const image = $(element).find('img').attr('src');
           const details = $(element).find('.card-text').text().trim().split('\n');
 
+          // Benzersiz ID oluştur
+          const uniqueId = `club_${name.toLowerCase().replace(/\s+/g, '_')}_${index}`;
+
           clubsData.push({
-            id: index.toString(),
+            id: uniqueId,
             name,
             image: image ? (image.startsWith('http') ? image : `https://ogrkulup.klu.edu.tr${image}`) : null,
             president: details[0]?.replace('Kulüp Başkanı:', '').trim() || 'Belirtilmemiş',
@@ -109,8 +113,11 @@ const Kulüp = ({ navigation }) => {
         data: clubsData
       }));
 
+      console.log('Total clubs loaded:', clubsData.length);
+      
       setClubs(clubsData);
       setDisplayedClubs(clubsData.slice(0, PAGE_SIZE));
+      setCurrentPage(1);
       setHasMore(clubsData.length > PAGE_SIZE);
 
     } catch (err) {
@@ -158,11 +165,11 @@ const Kulüp = ({ navigation }) => {
           club.name.toLowerCase().includes(text.toLowerCase())
         );
         setDisplayedClubs(filtered);
-        setCurrentPage(1);
+        setCurrentPage(0);
         setHasMore(false);
       } else {
         setDisplayedClubs(clubs.slice(0, PAGE_SIZE));
-        setCurrentPage(1);
+        setCurrentPage(0);
         setHasMore(clubs.length > PAGE_SIZE);
       }
     }, 300));
@@ -174,19 +181,24 @@ const Kulüp = ({ navigation }) => {
     setLoadingMore(true);
     const startIndex = currentPage * PAGE_SIZE;
     const endIndex = startIndex + PAGE_SIZE;
-    const newClubs = clubs.slice(0, endIndex);
     
-    setDisplayedClubs(newClubs);
+    console.log('LoadMoreClubs:', { startIndex, endIndex, currentLength: displayedClubs.length, totalLength: clubs.length });
+    
+    const newClubs = clubs.slice(startIndex, endIndex);
+    setDisplayedClubs(prevClubs => [...prevClubs, ...newClubs]);
+    
     setCurrentPage(prev => prev + 1);
     setHasMore(endIndex < clubs.length);
     setLoadingMore(false);
-  }, [currentPage, clubs, loadingMore, hasMore, searchQuery]);
+  }, [currentPage, clubs, loadingMore, hasMore, searchQuery, displayedClubs.length]);
 
   const handleEndReached = useCallback(() => {
-    if (!searchQuery && hasMore) {
+    console.log('handleEndReached called', { searchQuery, hasMore });
+    if (!loadingMore && !searchQuery && hasMore) {
+      console.log('Triggering loadMoreClubs');
       loadMoreClubs();
     }
-  }, [searchQuery, hasMore, loadMoreClubs]);
+  }, [searchQuery, hasMore, loadMoreClubs, loadingMore]);
 
   // Memoize renderItem for better performance
   const renderItem = useCallback(({ item }) => (
@@ -280,7 +292,7 @@ const Kulüp = ({ navigation }) => {
                 placeholder="Kulüp Ara..."
                 placeholderTextColor="#aaa"
                 value={searchQuery}
-                onChangeText={setSearchQuery}
+                onChangeText={handleSearch}
                 onFocus={() => {
                   if (navigation) {
                     navigation.getParent()?.setOptions({
@@ -313,15 +325,16 @@ const Kulüp = ({ navigation }) => {
             <FlatList
               data={displayedClubs}
               renderItem={renderItem}
-              keyExtractor={(item, index) => index.toString()}
+              keyExtractor={(item, index) => item.id || index.toString()}
               style={styles.list}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.listContent}
-              keyboardShouldPersistTaps="handled"
-              onScrollBeginDrag={Keyboard.dismiss}
               onEndReached={handleEndReached}
               onEndReachedThreshold={0.5}
               ListFooterComponent={ListFooterComponent}
+              initialNumToRender={PAGE_SIZE}
+              maxToRenderPerBatch={PAGE_SIZE}
+              windowSize={5}
             />
             <ClubDetailsModal visible={modalVisible} club={selectedClub} onClose={closeModal} />
           </View>
