@@ -13,6 +13,9 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const IMGUR_CLIENT_ID = '0250b8b91223111'; // Imgur Client ID eklendi
 
+// Cache süresi tanımlayalım
+const CACHE_DURATION = 15 * 60 * 1000; // 15 dakika
+
 export default function BookSellingPage() {
   const [books, setBooks] = useState([]);
   const [filteredBooks, setFilteredBooks] = useState([]);
@@ -49,6 +52,25 @@ export default function BookSellingPage() {
   const fetchBooks = async () => {
     try {
       setLoading(true);
+
+      // Önce cache'den kontrol et
+      const cachedData = await AsyncStorage.getItem('booksCache');
+      const cacheTimestamp = await AsyncStorage.getItem('books_cache_timestamp');
+      
+      if (cachedData && cacheTimestamp) {
+        const parsedData = JSON.parse(cachedData);
+        const cacheAge = Date.now() - parseInt(cacheTimestamp);
+        
+        // Cache 15 dakikadan yeni ise kullan
+        if (cacheAge < CACHE_DURATION) {
+          setBooks(parsedData);
+          setFilteredBooks(parsedData);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Cache yok veya eski ise Firestore'dan al
       const booksRef = collection(FIRESTORE_DB, 'books');
       const querySnapshot = await getDocs(query(booksRef, orderBy('createdAt', 'desc')));
       
@@ -57,14 +79,24 @@ export default function BookSellingPage() {
         ...doc.data()
       }));
       
+      // Verileri cache'e kaydet
+      await AsyncStorage.setItem('booksCache', JSON.stringify(booksData));
+      await AsyncStorage.setItem('books_cache_timestamp', Date.now().toString());
+      
       setBooks(booksData);
       setFilteredBooks(booksData);
     } catch (error) {
       console.error('Ürünler yüklenirken hata:', error);
-      Alert.alert(
-        'Hata',
-        'Ürünler yüklenirken bir hata oluştu. Lütfen internet bağlantınızı kontrol edin.'
-      );
+      
+      // Hata durumunda cache'deki verileri kullan
+      const cachedData = await AsyncStorage.getItem('booksCache');
+      if (cachedData) {
+        const booksData = JSON.parse(cachedData);
+        setBooks(booksData);
+        setFilteredBooks(booksData);
+      }
+      
+      Alert.alert('Hata', 'Güncel veriler alınamadı. Önbellekteki veriler gösteriliyor.');
     } finally {
       setLoading(false);
     }
@@ -125,27 +157,16 @@ export default function BookSellingPage() {
     try {
       setLoading(true);
       
-      // Kullanıcı bilgilerini al
       const userData = await getCurrentUser();
-      
-      if (!userData) {
-        Alert.alert('Hata', 'Kullanıcı bilgileri bulunamadı. Lütfen tekrar giriş yapın.');
-        return;
-      }
+      if (!userData) return;
 
-      // Resmi Imgur'a yükle
       if (!newBook.photoUri) {
         Alert.alert('Hata', 'Lütfen bir Ürün resmi seçin.');
         return;
       }
 
+      // Resmi Imgur'a yükle
       const imageUrl = await uploadToImgur(newBook.photoUri);
-
-      // Kitap bilgilerini kontrol et
-      if (!newBook.name || !newBook.section || !newBook.price || !newBook.instagram) {
-        Alert.alert('Hata', 'Lütfen tüm alanları doldurun.');
-        return;
-      }
 
       // Kitap bilgilerini kaydet
       const timestamp = Timestamp.now();
@@ -164,17 +185,26 @@ export default function BookSellingPage() {
         status: "available"
       };
 
-      await addDoc(collection(FIRESTORE_DB, 'books'), bookData);
+      const docRef = await addDoc(collection(FIRESTORE_DB, 'books'), bookData);
 
-      // Başarılı mesajı göster ve formu temizle
+      // Cache'i güncelle
+      const cachedData = await AsyncStorage.getItem('booksCache');
+      if (cachedData) {
+        const booksData = JSON.parse(cachedData);
+        booksData.unshift({ id: docRef.id, ...bookData });
+        await AsyncStorage.setItem('booksCache', JSON.stringify(booksData));
+        await AsyncStorage.setItem('books_cache_timestamp', Date.now().toString());
+        
+        setBooks(booksData);
+        setFilteredBooks(booksData);
+      }
+
       Alert.alert('Başarılı', 'Ürün başarıyla eklendi!');
       setNewBook({ name: '', section: '', price: '', instagram: '', photoUri: '' });
       closeModal();
-      await fetchBooks();
-
     } catch (error) {
       console.error('Ürün kaydedilirken hata:', error);
-      Alert.alert('Hata', 'Ürün kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
+      Alert.alert('Hata', 'Ürün kaydedilirken bir hata oluştu.');
     } finally {
       setLoading(false);
     }
@@ -186,17 +216,24 @@ export default function BookSellingPage() {
         'Ürünü Sil',
         'Bu Ürünü silmek istediğinize emin misiniz?',
         [
-          {
-            text: 'İptal',
-            style: 'cancel'
-          },
+          { text: 'İptal', style: 'cancel' },
           {
             text: 'Sil',
             onPress: async () => {
-              const bookRef = doc(FIRESTORE_DB, 'books', bookId);
-              await deleteDoc(bookRef);
+              await deleteDoc(doc(FIRESTORE_DB, 'books', bookId));
+              
+              // Cache'i güncelle
+              const cachedData = await AsyncStorage.getItem('booksCache');
+              if (cachedData) {
+                const booksData = JSON.parse(cachedData);
+                const updatedBooks = booksData.filter(book => book.id !== bookId);
+                await AsyncStorage.setItem('booksCache', JSON.stringify(updatedBooks));
+                
+                setBooks(updatedBooks);
+                setFilteredBooks(updatedBooks);
+              }
+              
               Alert.alert('Başarılı', 'Ürün başarıyla silindi.');
-              fetchBooks(); // Listeyi yenile
             },
             style: 'destructive'
           }

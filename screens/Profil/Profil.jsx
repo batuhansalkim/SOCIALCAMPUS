@@ -28,6 +28,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
+const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 saat
+
 const AboutAppModal = ({ visible, onClose }) => (
   <Modal visible={visible} animationType="slide" transparent>
     <BlurView intensity={100} tint="dark" style={styles.aboutModalContainer}>
@@ -174,33 +176,27 @@ export default function Profil() {
                 const parsedData = JSON.parse(cachedData);
                 const cacheAge = Date.now() - parseInt(cacheTimestamp);
                 
-                // Cache 1 saatten yeni ise kullan
-                if (cacheAge < 60 * 60 * 1000) {
+                // Cache 6 saatten yeni ise kullan
+                if (cacheAge < CACHE_DURATION) {
                     const facultyName = facultiesData[parsedData.faculty]?.name || parsedData.faculty;
-                    
                     setUserInfo({
                         isimSoyisim: parsedData.fullName || "Belirtilmemiş",
                         fakulte: facultyName || "Belirtilmemiş",
                         bolum: parsedData.department || "Belirtilmemiş"
                     });
-
                     setEditedInfo({
                         fullName: parsedData.fullName || "",
                         faculty: parsedData.faculty || "",
                         department: parsedData.department || ""
                     });
-                    
                     setLoading(false);
                     return;
                 }
             }
 
-            // Cache yok veya eski ise Firestore'dan al
+            // Cache yok veya eski ise sadece bir kez Firestore'dan al
             const userDataStr = await AsyncStorage.getItem('userData');
-            if (!userDataStr) {
-                console.error('Kullanıcı verisi bulunamadı');
-                return;
-            }
+            if (!userDataStr) return;
 
             const userData = JSON.parse(userDataStr);
             const userDoc = await getDoc(doc(FIRESTORE_DB, 'users', userData.id));
@@ -209,7 +205,7 @@ export default function Profil() {
                 const data = userDoc.data();
                 const facultyName = facultiesData[data.faculty]?.name || data.faculty;
                 
-                // Profil verilerini cache'e kaydet
+                // Cache'e kaydet
                 await AsyncStorage.setItem('userProfileCache', JSON.stringify(data));
                 await AsyncStorage.setItem('profile_cache_timestamp', Date.now().toString());
                 
@@ -218,7 +214,6 @@ export default function Profil() {
                     fakulte: facultyName || "Belirtilmemiş",
                     bolum: data.department || "Belirtilmemiş"
                 });
-
                 setEditedInfo({
                     fullName: data.fullName || "",
                     faculty: data.faculty || "",
@@ -227,7 +222,6 @@ export default function Profil() {
             }
         } catch (error) {
             console.error('Kullanıcı bilgileri alınırken hata:', error);
-            Alert.alert('Hata', 'Kullanıcı bilgileri alınamadı.');
         } finally {
             setLoading(false);
         }
@@ -257,62 +251,44 @@ export default function Profil() {
             }
 
             const userData = JSON.parse(userDataStr);
+            const batch = writeBatch(FIRESTORE_DB);
             const userRef = doc(FIRESTORE_DB, 'users', userData.id);
 
-            // Firebase'i güncelle
-            await updateDoc(userRef, {
+            // Ana kullanıcı dokümanını güncelle
+            batch.update(userRef, {
                 fullName: editedInfo.fullName.trim(),
                 faculty: editedInfo.faculty.trim(),
                 department: editedInfo.department.trim(),
                 updatedAt: Timestamp.now()
             });
 
-            const batch = writeBatch(FIRESTORE_DB);
-
-            // Kullanıcının tüm mesajlarını güncelle
-            const messagesRef = collection(FIRESTORE_DB, 'messages');
-            const messagesQuery = query(messagesRef, where('userId', '==', userData.id));
-            const messagesSnapshot = await getDocs(messagesQuery);
+            // Mesajları ve kitapları tek seferde güncelle
+            const [messagesSnapshot, booksSnapshot] = await Promise.all([
+                getDocs(query(collection(FIRESTORE_DB, 'messages'), where('userId', '==', userData.id))),
+                getDocs(query(collection(FIRESTORE_DB, 'books'), where('sellerId', '==', userData.id)))
+            ]);
 
             // Mesajları güncelle
-            messagesSnapshot.docs.forEach((messageDoc) => {
-                batch.update(doc(FIRESTORE_DB, 'messages', messageDoc.id), {
+            messagesSnapshot.docs.forEach(doc => {
+                batch.update(doc.ref, {
                     userName: editedInfo.fullName.trim()
                 });
-
-                // Her mesajın yorumlarını da güncelle
-                getDocs(collection(FIRESTORE_DB, `messages/${messageDoc.id}/comments`))
-                    .then((commentsSnapshot) => {
-                        commentsSnapshot.docs.forEach((commentDoc) => {
-                            if (commentDoc.data().userId === userData.id) {
-                                batch.update(doc(FIRESTORE_DB, `messages/${messageDoc.id}/comments`, commentDoc.id), {
-                                    userName: editedInfo.fullName.trim()
-                                });
-                            }
-                        });
-                    });
             });
 
-            // Kullanıcının tüm kitaplarını güncelle
-            const booksRef = collection(FIRESTORE_DB, 'books');
-            const booksQuery = query(booksRef, where('sellerId', '==', userData.id));
-            const booksSnapshot = await getDocs(booksQuery);
-
             // Kitapları güncelle
-            booksSnapshot.docs.forEach((bookDoc) => {
-                batch.update(doc(FIRESTORE_DB, 'books', bookDoc.id), {
+            booksSnapshot.docs.forEach(doc => {
+                batch.update(doc.ref, {
                     sellerName: editedInfo.fullName.trim(),
                     sellerFaculty: editedInfo.faculty.trim(),
                     sellerDepartment: editedInfo.department.trim()
-                    });
+                });
             });
 
-            // Batch işlemini uygula
+            // Tüm güncellemeleri tek seferde yap
             await batch.commit();
 
+            // Cache'i güncelle
             const facultyName = facultiesData[editedInfo.faculty]?.name || editedInfo.faculty;
-
-            // AsyncStorage'ı güncelle
             const updatedUserData = {
                 ...userData,
                 fullName: editedInfo.fullName.trim(),
@@ -320,7 +296,12 @@ export default function Profil() {
                 facultyName: facultyName,
                 department: editedInfo.department.trim()
             };
-            await AsyncStorage.setItem('userData', JSON.stringify(updatedUserData));
+
+            await Promise.all([
+                AsyncStorage.setItem('userData', JSON.stringify(updatedUserData)),
+                AsyncStorage.setItem('userProfileCache', JSON.stringify(updatedUserData)),
+                AsyncStorage.setItem('profile_cache_timestamp', Date.now().toString())
+            ]);
 
             setUserInfo({
                 isimSoyisim: editedInfo.fullName.trim(),
@@ -331,7 +312,7 @@ export default function Profil() {
             setModalVisible(false);
             Alert.alert('Başarılı', 'Bilgileriniz güncellendi.');
         } catch (error) {
-            console.error('Veri güncellenirken hata oluştu:', error);
+            console.error('Veri güncellenirken hata:', error);
             Alert.alert('Hata', 'Bilgiler güncellenemedi.');
         } finally {
             setIsSubmitting(false);

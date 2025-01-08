@@ -35,9 +35,32 @@ export default function MealSchedule() {
   const flatListRef = useRef(null);
   const [currentUser, setCurrentUser] = useState(null);
 
+  // Bugünün tarihini al
+  const today = new Date().getDate();
+  const [initialIndex, setInitialIndex] = useState(0);
+
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  useEffect(() => {
+    // Yemek listesi yüklendiğinde bugünün yemeğine scroll yap
+    if (mealList.length > 0) {
+      const todayIndex = mealList.findIndex(item => {
+        const itemDate = new Date(item.start);
+        return itemDate.getDate() === today;
+      });
+      
+      if (todayIndex !== -1) {
+        setInitialIndex(todayIndex);
+        // FlatList'i bugünün pozisyonuna kaydır
+        flatListRef.current?.scrollToIndex({
+          index: todayIndex,
+          animated: true
+        });
+      }
+    }
+  }, [mealList]);
 
   const loadInitialData = async () => {
     try {
@@ -510,12 +533,18 @@ export default function MealSchedule() {
           )}
           contentContainerStyle={styles.flatListContent}
           style={styles.flatList}
-          initialScrollIndex={0}
+          initialScrollIndex={initialIndex}
           getItemLayout={(data, index) => ({
             length: screenWidth,
             offset: screenWidth * index,
             index,
           })}
+          onScrollToIndexFailed={info => {
+            const wait = new Promise(resolve => setTimeout(resolve, 500));
+            wait.then(() => {
+              flatListRef.current?.scrollToIndex({ index: initialIndex, animated: true });
+            });
+          }}
         />
 
         <View style={styles.paginationContainer}>
