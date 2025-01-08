@@ -21,7 +21,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   }
 }
 
-rootProject.name = 'kluCampus'
+rootProject.name = 'KLU Campus'
 
 dependencyResolutionManagement {
   versionCatalogs {

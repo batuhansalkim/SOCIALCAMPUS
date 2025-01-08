@@ -1,56 +1,31 @@
 {
   "expo": {
-    "name": "kluCampus",
+    "name": "KLU Campus",
     "slug": "kluCampus",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "cli":{
-      "appVersionSource":"remote"
-    },
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
-      "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/1b8eec63-61fb-4282-952d-66f4d4bfaf08"
+      "enabled": false
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.klucampus.app",
-      "buildNumber": "1.0.0"
-    },
+    "assetBundlePatterns": ["**/*"],
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.klucampus.app",
-      "versionCode": 1,
-      "permissions": [
-        "INTERNET",
-        "ACCESS_NETWORK_STATE"
-      ]
+      "versionCode": 2,
+      "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"]
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      "expo-build-properties",
-      "expo-updates"
-    ],
     "extra": {
       "eas": {
         "projectId": "1b8eec63-61fb-4282-952d-66f4d4bfaf08"
       }
     },
     "owner": "batuslkm",
-    "runtimeVersion": "1.0.0"
+    "jsEngine": "hermes"
   }
 }

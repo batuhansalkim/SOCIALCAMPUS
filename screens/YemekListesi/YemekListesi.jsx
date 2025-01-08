@@ -17,7 +17,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
-import { collection, addDoc, query, where, getDocs, updateDoc, doc, deleteDoc, Timestamp, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, updateDoc, doc, deleteDoc, Timestamp, onSnapshot, setDoc } from 'firebase/firestore';
 import { FIRESTORE_DB } from "../../FirebaseConfig";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
@@ -35,9 +35,32 @@ export default function MealSchedule() {
   const flatListRef = useRef(null);
   const [currentUser, setCurrentUser] = useState(null);
 
+  // Bugünün tarihini al
+  const today = new Date().getDate();
+  const [initialIndex, setInitialIndex] = useState(0);
+
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  useEffect(() => {
+    // Yemek listesi yüklendiğinde bugünün yemeğine scroll yap
+    if (mealList.length > 0) {
+      const todayIndex = mealList.findIndex(item => {
+        const itemDate = new Date(item.start);
+        return itemDate.getDate() === today;
+      });
+      
+      if (todayIndex !== -1) {
+        setInitialIndex(todayIndex);
+        // FlatList'i bugünün pozisyonuna kaydır
+        flatListRef.current?.scrollToIndex({
+          index: todayIndex,
+          animated: true
+        });
+      }
+    }
+  }, [mealList]);
 
   const loadInitialData = async () => {
     try {
@@ -151,61 +174,83 @@ export default function MealSchedule() {
     }
   };
 
-  // Reaksiyon verilerini önbellekten yükle
+  // Reaksiyon verilerini önbellekten yükle - cache süresini 15 dakikaya çıkaralım
   const loadReactionsFromCache = async () => {
     try {
       const cachedReactions = await AsyncStorage.getItem('mealReactionsCache');
       if (cachedReactions) {
-        const { reactions: cachedReactionData, userReactions: cachedUserReactionData } = JSON.parse(cachedReactions);
-        setReactions(cachedReactionData);
-        setUserReactions(cachedUserReactionData);
+        const { reactions, userReactions, timestamp } = JSON.parse(cachedReactions);
+        // Cache süresini 15 dakikaya çıkaralım
+        if (Date.now() - timestamp < 15 * 60 * 1000) {
+          setReactions(reactions);
+          setUserReactions(userReactions);
+          return true;
+        }
       }
+      return false;
     } catch (error) {
       console.error('Error loading reactions from cache:', error);
+      return false;
     }
   };
 
-  useEffect(() => {
-    if (mealList.length > 0) {
-      loadReactionsFromCache();
-      const reactionQuery = query(collection(FIRESTORE_DB, 'mealReactions'));
-      const unsubscribe = onSnapshot(reactionQuery, async (snapshot) => {
-        const reactionData = {};
-        const userReactionData = {};
+  // Reaksiyonları yükle - batch işlemi ekleyelim
+  const loadReactions = async () => {
+    if (!currentUser || mealList.length === 0) return;
+    
+    try {
+      const usedCache = await loadReactionsFromCache();
+      if (usedCache) return;
 
-        // Sadece değişen dokümanları işle
-        snapshot.docChanges().forEach((change) => {
-          const data = change.doc.data();
+      // Sadece bugün ve sonraki günlerin reaksiyonlarını çek
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const reactionQuery = query(
+        collection(FIRESTORE_DB, 'mealReactions'),
+        where('mealId', '>=', today.toISOString())
+      );
+
+      const querySnapshot = await getDocs(reactionQuery);
+      const reactionData = {};
+      const userReactionData = {};
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (mealList.some(meal => meal.start === data.mealId)) { // Sadece gösterilen günleri işle
           if (!reactionData[data.mealId]) {
             reactionData[data.mealId] = { likes: 0, dislikes: 0 };
           }
-          if (change.type === "added" || change.type === "modified") {
-            if (data.type === 'like') {
-              reactionData[data.mealId].likes++;
-            } else {
-              reactionData[data.mealId].dislikes++;
-            }
-            if (currentUser && data.userId === currentUser.id) {
-              userReactionData[data.mealId] = data.type;
-            }
+          
+          if (data.type === 'like') {
+            reactionData[data.mealId].likes++;
+          } else {
+            reactionData[data.mealId].dislikes++;
           }
-        });
 
-        setReactions(reactionData);
-        setUserReactions(userReactionData);
-
-        // Reaksiyon verilerini önbelleğe kaydet
-        await AsyncStorage.setItem('mealReactionsCache', JSON.stringify({
-          reactions: reactionData,
-          userReactions: userReactionData,
-          timestamp: Date.now()
-        }));
-      }, (error) => {
-        console.error('Reaction listener error:', error);
+          if (data.userId === currentUser.id) {
+            userReactionData[data.mealId] = data.type;
+          }
+        }
       });
 
-      return () => unsubscribe();
+      setReactions(reactionData);
+      setUserReactions(userReactionData);
+
+      await AsyncStorage.setItem('mealReactionsCache', JSON.stringify({
+        reactions: reactionData,
+        userReactions: userReactionData,
+        timestamp: Date.now()
+      }));
+
+    } catch (error) {
+      console.error('Error loading reactions:', error);
     }
+  };
+
+  // Real-time listener yerine manuel yükleme kullan
+  useEffect(() => {
+    loadReactions();
   }, [mealList, currentUser]);
 
   const getCurrentUser = async () => {
@@ -224,6 +269,7 @@ export default function MealSchedule() {
     getCurrentUser();
   }, []);
 
+  // handleReaction fonksiyonunu optimize edelim
   const handleReaction = async (mealId, type) => {
     try {
       if (!currentUser) {
@@ -232,44 +278,66 @@ export default function MealSchedule() {
       }
 
       const userId = currentUser.id;
-      
-      // Firebase'de reaksiyon kontrolü
-      const reactionQuery = query(
-        collection(FIRESTORE_DB, 'mealReactions'),
-        where('mealId', '==', mealId),
-        where('userId', '==', userId)
-      );
-      const querySnapshot = await getDocs(reactionQuery);
+      const oldReaction = userReactions[mealId];
 
-      if (!querySnapshot.empty) {
-        // Kullanıcının önceki reaksiyonu varsa
-        const docRef = doc(FIRESTORE_DB, 'mealReactions', querySnapshot.docs[0].id);
-        if (querySnapshot.docs[0].data().type === type) {
-          // Aynı reaksiyon tekrar tıklandığında kaldır
-          await deleteDoc(docRef);
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        } else {
-          // Farklı reaksiyon seçildiğinde güncelle
-          await updateDoc(docRef, { 
-            type,
-            updatedAt: Timestamp.now()
-          });
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        }
-      } else {
-        // Yeni reaksiyon ekle
-        await addDoc(collection(FIRESTORE_DB, 'mealReactions'), {
-          mealId,
-          userId,
-          type,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now()
-        });
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      // Aynı reaksiyona tıklandıysa işlemi iptal et
+      if (oldReaction === type) {
+        return;
       }
+
+      // Optimistik güncelleme
+      setReactions(prev => {
+        const newReactions = { ...prev };
+        if (!newReactions[mealId]) {
+          newReactions[mealId] = { likes: 0, dislikes: 0 };
+        }
+
+        if (oldReaction) {
+          newReactions[mealId][oldReaction === 'like' ? 'likes' : 'dislikes']--;
+        }
+        newReactions[mealId][type === 'like' ? 'likes' : 'dislikes']++;
+
+        return newReactions;
+      });
+
+      setUserReactions(prev => ({
+        ...prev,
+        [mealId]: type
+      }));
+
+      // Firebase işlemini yap
+      const reactionRef = doc(FIRESTORE_DB, 'mealReactions', `${userId}_${mealId}`);
+      await setDoc(reactionRef, {
+        mealId,
+        userId,
+        type,
+        updatedAt: Timestamp.now()
+      });
+
+      // Cache'i güncelle
+      const cachedData = await AsyncStorage.getItem('mealReactionsCache');
+      if (cachedData) {
+        const { reactions, userReactions, timestamp } = JSON.parse(cachedData);
+        reactions[mealId] = reactions[mealId] || { likes: 0, dislikes: 0 };
+        
+        if (oldReaction) {
+          reactions[mealId][oldReaction === 'like' ? 'likes' : 'dislikes']--;
+        }
+        reactions[mealId][type === 'like' ? 'likes' : 'dislikes']++;
+        userReactions[mealId] = type;
+
+        await AsyncStorage.setItem('mealReactionsCache', JSON.stringify({
+          reactions,
+          userReactions,
+          timestamp
+        }));
+      }
+
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch (error) {
       console.error('Error handling reaction:', error);
-      Alert.alert('Hata', 'İşlem gerçekleştirilemedi. Lütfen tekrar deneyin.');
+      Alert.alert('Hata', 'İşlem gerçekleştirilemedi.');
+      await loadReactions(); // Hata durumunda güncel verileri yükle
     }
   };
 
@@ -410,12 +478,23 @@ export default function MealSchedule() {
 
   if (mealList.length === 0) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Yemek listesi bulunamadı.</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchMealData}>
-          <Text style={styles.retryButtonText}>Tekrar Dene</Text>
-        </TouchableOpacity>
-      </View>
+      <ImageBackground
+        source={{ uri: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/food-pattern-background-8Wd9Hy0Ue5Ue9Ue9Ue9Ue9Ue9Ue9.png' }}
+        style={styles.container}
+      >
+        <LinearGradient 
+          colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']} 
+          style={styles.errorContainer}
+        >
+          <Ionicons name="restaurant-outline" size={60} color="#4ECDC4" />
+          <Text style={[styles.errorText, { color: '#fff', fontSize: screenWidth * 0.045 }]}>
+            Yemekler ilerleyen tarihlerde eklenecektir.
+          </Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchMealData}>
+            <Text style={styles.retryButtonText}>Yenile</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+      </ImageBackground>
     );
   }
 
@@ -454,12 +533,18 @@ export default function MealSchedule() {
           )}
           contentContainerStyle={styles.flatListContent}
           style={styles.flatList}
-          initialScrollIndex={0}
+          initialScrollIndex={initialIndex}
           getItemLayout={(data, index) => ({
             length: screenWidth,
             offset: screenWidth * index,
             index,
           })}
+          onScrollToIndexFailed={info => {
+            const wait = new Promise(resolve => setTimeout(resolve, 500));
+            wait.then(() => {
+              flatListRef.current?.scrollToIndex({ index: initialIndex, animated: true });
+            });
+          }}
         />
 
         <View style={styles.paginationContainer}>
@@ -675,20 +760,22 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.8)',
     padding: screenWidth * 0.04,
+    gap: screenHeight * 0.02,
   },
   errorText: {
-    color: '#ff0000',
-    fontSize: screenWidth * 0.04,
+    color: '#fff',
+    fontSize: screenWidth * 0.045,
     textAlign: 'center',
-    marginBottom: screenHeight * 0.02,
+    marginVertical: screenHeight * 0.02,
+    fontWeight: '500',
   },
   retryButton: {
     backgroundColor: '#4ECDC4',
     paddingHorizontal: screenWidth * 0.05,
     paddingVertical: screenHeight * 0.015,
     borderRadius: 10,
+    marginTop: screenHeight * 0.02,
   },
   retryButtonText: {
     color: '#fff',
