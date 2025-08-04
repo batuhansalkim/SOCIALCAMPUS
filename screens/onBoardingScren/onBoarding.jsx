@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,15 +9,8 @@ import {
   Platform,
   StatusBar,
   SafeAreaView,
+  Animated,
 } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  Easing,
-  withSpring,
-  runOnJS,
-} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,39 +20,43 @@ import data from '../../data/data';
 const OnboardingScreen = ({ onDone }) => {
   const { width } = useWindowDimensions();
   const [currentIndex, setCurrentIndex] = useState(0);
-
-  const translateX = useSharedValue(0);
-  const opacity = useSharedValue(1);
+  
+  const translateX = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
 
   const animateTransition = (direction) => {
     const duration = Platform.OS === 'ios' ? 500 : 400;
     
-    translateX.value = withTiming(direction * -width, {
-      duration,
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-    });
-    
-    opacity.value = withTiming(0, {
-      duration: duration * 0.75,
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-    });
-
-    setTimeout(() => {
+    Animated.parallel([
+      Animated.timing(translateX, {
+        toValue: direction * -width,
+        duration,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: duration * 0.75,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
       setCurrentIndex((prev) => prev + direction);
-      translateX.value = direction * width;
-      opacity.value = 0;
+      translateX.setValue(direction * width);
+      opacity.setValue(0);
       
-      translateX.value = withSpring(0, {
-        damping: Platform.OS === 'ios' ? 20 : 15,
-        stiffness: Platform.OS === 'ios' ? 90 : 80,
-        mass: 1,
-      });
-      
-      opacity.value = withTiming(1, {
-        duration: duration * 0.5,
-        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-      });
-    }, duration * 0.75);
+      Animated.parallel([
+        Animated.spring(translateX, {
+          toValue: 0,
+          useNativeDriver: true,
+          damping: Platform.OS === 'ios' ? 20 : 15,
+          stiffness: Platform.OS === 'ios' ? 90 : 80,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: duration * 0.5,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
   };
 
   const handleNext = () => {
@@ -76,13 +73,10 @@ const OnboardingScreen = ({ onDone }) => {
     }
   };
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-    ],
-    opacity: opacity.value,
-    backfaceVisibility: 'hidden',
-  }));
+  const animatedStyle = {
+    transform: [{ translateX }],
+    opacity,
+  };
 
   const currentItem = data[currentIndex] || {};
 

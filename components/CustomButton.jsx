@@ -1,56 +1,69 @@
 import { StyleSheet, TouchableWithoutFeedback, useWindowDimensions, Image } from 'react-native';
-import React from 'react';
-import Animated, { interpolateColor, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
+import React, { useRef, useEffect } from 'react';
+import { Animated } from 'react-native';
 
 const CustomButton = ({ handlePress, buttonVal, isLastScreen }) => {
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
+  const widthAnimation = useRef(new Animated.Value(90)).current;
+  const heightAnimation = useRef(new Animated.Value(90)).current;
+  const arrowOpacity = useRef(new Animated.Value(1)).current;
+  const arrowTranslateX = useRef(new Animated.Value(0)).current;
+  const textOpacity = useRef(new Animated.Value(0)).current;
+  const textTranslateX = useRef(new Animated.Value(-100)).current;
 
-  const animatedColor = useAnimatedStyle(() => {
-    const backgroundColor = interpolateColor(
-      buttonVal.value,
-      [0, SCREEN_HEIGHT, 2 * SCREEN_HEIGHT],
-      ['#bfe8f2', '#bfe8f2', '#bfe8f2', '#bfe8f2']
-    );
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(widthAnimation, {
+        toValue: isLastScreen ? 180 : 90,
+        useNativeDriver: false,
+      }),
+      Animated.spring(heightAnimation, {
+        toValue: isLastScreen ? 70 : 90,
+        useNativeDriver: false,
+      }),
+      Animated.timing(arrowOpacity, {
+        toValue: isLastScreen ? 0 : 1,
+        duration: 300,
+        useNativeDriver: false,
+      }),
+      Animated.timing(arrowTranslateX, {
+        toValue: isLastScreen ? 100 : 0,
+        duration: 300,
+        useNativeDriver: false,
+      }),
+      Animated.timing(textOpacity, {
+        toValue: isLastScreen ? 1 : 0,
+        duration: 300,
+        useNativeDriver: false,
+      }),
+      Animated.timing(textTranslateX, {
+        toValue: isLastScreen ? 0 : -100,
+        duration: 300,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }, [isLastScreen]);
 
-    return {
-      backgroundColor: backgroundColor,
-    };
-  });
+  const buttonAnimationStyle = {
+    width: widthAnimation,
+    height: heightAnimation,
+  };
 
-  const buttonAnimationStyle = useAnimatedStyle(() => {
-    return {
-      width: isLastScreen ? withSpring(180) : withSpring(90),
-      height: isLastScreen ? withSpring(70) : withSpring(90),
-    };
-  });
+  const arrowAnimationStyle = {
+    width: 40,
+    height: 40,
+    opacity: arrowOpacity,
+    transform: [{ translateX: arrowTranslateX }],
+  };
 
-  const arrowAnimationStyle = useAnimatedStyle(() => {
-    return {
-      width: 40,
-      height: 40,
-      opacity: isLastScreen ? withTiming(0) : withTiming(1),
-      transform: [
-        {
-          translateX: isLastScreen ? withTiming(100) : withTiming(0),
-        },
-      ],
-    };
-  });
-
-  const textAnimationStyle = useAnimatedStyle(() => {
-    return {
-      opacity: isLastScreen ? withTiming(1) : withTiming(0),
-      transform: [
-        {
-          translateX: isLastScreen ? withTiming(0) : withTiming(-100),
-        },
-      ],
-    };
-  });
+  const textAnimationStyle = {
+    opacity: textOpacity,
+    transform: [{ translateX: textTranslateX }],
+  };
 
   return (
     <TouchableWithoutFeedback onPress={handlePress}>
-      <Animated.View style={[styles.container, animatedColor, buttonAnimationStyle]}>
+      <Animated.View style={[styles.container, buttonAnimationStyle]}>
         {isLastScreen ? (
           <Animated.Text style={[styles.textButton, textAnimationStyle]}>
             Giriş Sayfası
@@ -77,6 +90,11 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#bfe8f2',
   },
-  textButton: { color: 'black', fontSize: 17, position: 'absolute' },
+  textButton: { 
+    color: 'black', 
+    fontSize: 17, 
+    position: 'absolute' 
+  },
 });

@@ -1,12 +1,7 @@
 import React from "react";
-import { View, StyleSheet, TouchableOpacity, Platform } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Platform, Animated } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import Animated, {
-  useAnimatedStyle,
-  withTiming,
-  interpolateColor,
-} from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
 import Kulup from "./screens/Kulup/Kulup";
@@ -18,19 +13,22 @@ import YemekListesi from "./screens/YemekListesi/YemekListesi";
 const Tab = createBottomTabNavigator();
 
 const CustomIcon = ({ name, color, size, isFocused }) => {
-  const animatedStyles = useAnimatedStyle(() => {
-    const scale = withTiming(isFocused ? 1.2 : 1, { duration: 200 });
-    const backgroundColor = interpolateColor(
-      scale,
-      [1, 1.2],
-      ["rgba(255, 255, 255, 0)", "rgba(78, 205, 196, 0.2)"]
-    );
+  const scale = React.useRef(new Animated.Value(1)).current;
 
-    return {
-      transform: [{ scale }],
-      backgroundColor,
-    };
-  });
+  React.useEffect(() => {
+    Animated.parallel([
+      Animated.timing(scale, {
+        toValue: isFocused ? 1.2 : 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [isFocused]);
+
+  const animatedStyles = {
+    transform: [{ scale }],
+    backgroundColor: isFocused ? "rgba(78, 205, 196, 0.2)" : "rgba(255, 255, 255, 0)",
+  };
 
   return (
     <Animated.View style={[styles.iconContainer, animatedStyles]}>
@@ -71,17 +69,19 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
             }
           };
 
-          const animatedStyles = useAnimatedStyle(() => {
-            return {
-              transform: [
-                {
-                  translateY: withTiming(isFocused ? -20 : 0, {
-                    duration: 200,
-                  }),
-                },
-              ],
-            };
-          });
+          const translateY = React.useRef(new Animated.Value(0)).current;
+
+          React.useEffect(() => {
+            Animated.timing(translateY, {
+              toValue: isFocused ? -20 : 0,
+              duration: 200,
+              useNativeDriver: true,
+            }).start();
+          }, [isFocused]);
+
+          const animatedStyles = {
+            transform: [{ translateY }],
+          };
 
           return (
             <TouchableOpacity
