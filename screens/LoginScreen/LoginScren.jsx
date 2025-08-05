@@ -2,29 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { 
     View, 
     Text, 
-    TextInput, 
-    TouchableOpacity, 
     StyleSheet, 
     ScrollView, 
     Switch, 
-    Modal, 
     SafeAreaView,
     Platform,
     StatusBar,
     Alert,
     KeyboardAvoidingView,
     Image,
-    ActivityIndicator,
     Dimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import TermsScreen from "../../components/TermsScreen";
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { FIRESTORE_DB } from "../../configs/FirebaseConfig";
 import facultiesData from '../../data/faculties.json';
+import CommonInput from '../../components/CommonInput';
+import CommonButton from '../../components/CommonButton';
+import CommonPicker from '../../components/CommonPicker';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 export default function LoginScreen({ onLogin }) {
     const [fullName, setFullName] = useState('');
@@ -35,8 +34,7 @@ export default function LoginScreen({ onLogin }) {
     const [showTerms, setShowTerms] = useState(false);
     const [loading, setLoading] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
-    const [showFacultyPicker, setShowFacultyPicker] = useState(false);
-    const [showDepartmentPicker, setShowDepartmentPicker] = useState(false);
+
 
     const isFormValid = termsAccepted && 
                        eulaAccepted && 
@@ -116,12 +114,7 @@ export default function LoginScreen({ onLogin }) {
     };
 
     if (loading) {
-        return (
-            <View style={[styles.container, styles.centerContent]}>
-                <ActivityIndicator size="large" color="#4c669f" />
-                <Text style={styles.loadingText}>Yükleniyor...</Text>
-            </View>
-        );
+        return <LoadingSpinner text="Yükleniyor..." />;
     }
 
     return (
@@ -153,82 +146,56 @@ export default function LoginScreen({ onLogin }) {
                         <View style={styles.formContainer}>
                             <View style={styles.inputGroup}>
                                 <Text style={styles.label}>İsim ve Soyisim</Text>
-                                <View style={styles.inputWrapper}>
-                                    <Ionicons name="person-outline" size={20} color="#4c669f" style={styles.inputIcon} />
-                                    <TextInput
-                                        style={[styles.input, isSubmitted && styles.disabledInput]}
-                                        placeholder="İsim ve soyisminizi giriniz"
-                                        value={fullName}
-                                        onChangeText={setFullName}
-                                        placeholderTextColor="#999"
-                                        editable={!isSubmitted}
-                                    />
-                                </View>
+                                <CommonInput
+                                    icon="person-outline"
+                                    placeholder="İsim ve soyisminizi giriniz"
+                                    value={fullName}
+                                    onChangeText={setFullName}
+                                    editable={!isSubmitted}
+                                />
                             </View>
 
                             <View style={styles.inputGroup}>
                                 <Text style={styles.label}>Fakülte</Text>
-                                {Platform.OS === 'ios' ? (
-                                    <TouchableOpacity 
-                                        style={[styles.inputWrapper, isSubmitted && styles.disabledInput]}
-                                        onPress={() => !isSubmitted && setShowFacultyPicker(true)}
-                                    >
-                                        <Ionicons name="school-outline" size={20} color="#4c669f" style={styles.inputIcon} />
-                                        <Text style={[styles.pickerText, !faculty && styles.placeholderText]}>
-                                            {faculty ? facultiesData[faculty]?.name : 'Fakülte Seçin'}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ) : (
-                                    <View style={[styles.pickerContainer, Platform.OS === 'ios' && styles.pickerContainerIOS]}>
-                                        <Ionicons name="school-outline" size={20} color="#4c669f" style={styles.inputIcon} />
-                                        <Picker
-                                            style={[styles.picker, Platform.OS === 'ios' && styles.pickerIOS, isSubmitted && styles.disabledPicker]}
-                                            selectedValue={faculty}
-                                            onValueChange={(itemValue) => {
-                                                if (!isSubmitted) {
-                                                    setFaculty(itemValue);
-                                                    setDepartment('');
-                                                }
-                                            }}
-                                            enabled={!isSubmitted}
-                                        >
-                                            <Picker.Item label="Fakülte Seçin" value="" />
-                                            {Object.entries(facultiesData).map(([key, value]) => (
-                                                <Picker.Item key={key} label={value.name} value={key} />
-                                            ))}
-                                        </Picker>
-                                    </View>
-                                )}
+                                <CommonPicker
+                                    icon="school-outline"
+                                    placeholder="Fakülte Seçin"
+                                    selectedValue={faculty}
+                                    onValueChange={(itemValue) => {
+                                        if (!isSubmitted) {
+                                            setFaculty(itemValue);
+                                            setDepartment('');
+                                        }
+                                    }}
+                                    items={[
+                                        { label: 'Fakülte Seçin', value: '' },
+                                        ...Object.entries(facultiesData).map(([key, value]) => ({
+                                            label: value.name,
+                                            value: key
+                                        }))
+                                    ]}
+                                    enabled={!isSubmitted}
+                                    editable={!isSubmitted}
+                                />
                             </View>
 
                             <View style={styles.inputGroup}>
                                 <Text style={styles.label}>Bölüm</Text>
-                                {Platform.OS === 'ios' ? (
-                                    <TouchableOpacity 
-                                        style={[styles.inputWrapper, isSubmitted && styles.disabledInput]}
-                                        onPress={() => !isSubmitted && faculty && setShowDepartmentPicker(true)}
-                                    >
-                                        <Ionicons name="book-outline" size={20} color="#4c669f" style={styles.inputIcon} />
-                                        <Text style={[styles.pickerText, !department && styles.placeholderText]}>
-                                            {department || 'Bölüm Seçin'}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ) : (
-                                    <View style={[styles.pickerContainer, Platform.OS === 'ios' && styles.pickerContainerIOS]}>
-                                        <Ionicons name="book-outline" size={20} color="#4c669f" style={styles.inputIcon} />
-                                        <Picker
-                                            style={[styles.picker, Platform.OS === 'ios' && styles.pickerIOS, isSubmitted && styles.disabledPicker]}
-                                            selectedValue={department}
-                                            onValueChange={(itemValue) => !isSubmitted && setDepartment(itemValue)}
-                                            enabled={!!faculty && !isSubmitted}
-                                        >
-                                            <Picker.Item label="Bölüm Seçin" value="" />
-                                            {facultiesData[faculty]?.departments.map((dept, index) => (
-                                                <Picker.Item key={index} label={dept} value={dept} />
-                                            ))}
-                                        </Picker>
-                                    </View>
-                                )}
+                                <CommonPicker
+                                    icon="book-outline"
+                                    placeholder="Bölüm Seçin"
+                                    selectedValue={department}
+                                    onValueChange={(itemValue) => !isSubmitted && setDepartment(itemValue)}
+                                    items={[
+                                        { label: 'Bölüm Seçin', value: '' },
+                                        ...(facultiesData[faculty]?.departments.map((dept, index) => ({
+                                            label: dept,
+                                            value: dept
+                                        })) || [])
+                                    ]}
+                                    enabled={!!faculty && !isSubmitted}
+                                    editable={!isSubmitted}
+                                />
                             </View>
 
                             <View style={styles.termsContainer}>
@@ -260,21 +227,13 @@ export default function LoginScreen({ onLogin }) {
                                 </View>
                             </View>
                             
-                            <TouchableOpacity 
-                                style={[
-                                    styles.button, 
-                                    { 
-                                        opacity: isFormValid && !isSubmitted ? 1 : 0.5,
-                                        backgroundColor: isSubmitted ? '#ccc' : '#4CAF50' 
-                                    }
-                                ]}
-                                disabled={!isFormValid || isSubmitted}
+                            <CommonButton
+                                title={isSubmitted ? 'Gönderildi' : 'Gönder'}
                                 onPress={handleLogin}
-                            >
-                                <Text style={styles.buttonText}>
-                                    {isSubmitted ? 'Gönderildi' : 'Gönder'}
-                                </Text>
-                            </TouchableOpacity>
+                                disabled={!isFormValid || isSubmitted}
+                                variant="success"
+                                style={{ marginTop: 15 }}
+                            />
                         </View>
                     </ScrollView>
                 </KeyboardAvoidingView>
@@ -286,85 +245,7 @@ export default function LoginScreen({ onLogin }) {
                     }} />
                 </Modal>
 
-                {Platform.OS === 'ios' && (
-                    <>
-                        <Modal
-                            visible={showFacultyPicker}
-                            animationType="slide"
-                            transparent={true}
-                        >
-                            <View style={styles.modalContainer}>
-                                <View style={styles.pickerModalContent}>
-                                    <View style={styles.pickerHeader}>
-                                        <TouchableOpacity 
-                                            onPress={() => setShowFacultyPicker(false)}
-                                            style={styles.pickerHeaderButton}
-                                        >
-                                            <Text style={styles.pickerHeaderButtonText}>Kapat</Text>
-                                        </TouchableOpacity>
-                                        <Text style={styles.pickerHeaderTitle}>Fakülte Seçin</Text>
-                                        <TouchableOpacity 
-                                            onPress={() => setShowFacultyPicker(false)}
-                                            style={styles.pickerHeaderButton}
-                                        >
-                                            <Text style={styles.pickerHeaderButtonText}>Tamam</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                    <Picker
-                                        selectedValue={faculty}
-                                        onValueChange={(itemValue) => {
-                                            if (!isSubmitted) {
-                                                setFaculty(itemValue);
-                                                setDepartment('');
-                                            }
-                                        }}
-                                    >
-                                        <Picker.Item label="Fakülte Seçin" value="" />
-                                        {Object.entries(facultiesData).map(([key, value]) => (
-                                            <Picker.Item key={key} label={value.name} value={key} />
-                                        ))}
-                                    </Picker>
-                                </View>
-                            </View>
-                        </Modal>
 
-                        <Modal
-                            visible={showDepartmentPicker}
-                            animationType="slide"
-                            transparent={true}
-                        >
-                            <View style={styles.modalContainer}>
-                                <View style={styles.pickerModalContent}>
-                                    <View style={styles.pickerHeader}>
-                                        <TouchableOpacity 
-                                            onPress={() => setShowDepartmentPicker(false)}
-                                            style={styles.pickerHeaderButton}
-                                        >
-                                            <Text style={styles.pickerHeaderButtonText}>Kapat</Text>
-                                        </TouchableOpacity>
-                                        <Text style={styles.pickerHeaderTitle}>Bölüm Seçin</Text>
-                                        <TouchableOpacity 
-                                            onPress={() => setShowDepartmentPicker(false)}
-                                            style={styles.pickerHeaderButton}
-                                        >
-                                            <Text style={styles.pickerHeaderButtonText}>Tamam</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                    <Picker
-                                        selectedValue={department}
-                                        onValueChange={(itemValue) => !isSubmitted && setDepartment(itemValue)}
-                                        enabled={!!faculty && !isSubmitted}
-                                    >
-                                        <Picker.Item label="Bölüm Seçin" value="" />
-                                        {facultiesData[faculty]?.departments.map((dept, index) => (
-                                            <Picker.Item key={index} label={dept} value={dept} />
-                                        ))}
-                                    </Picker>
-                                </View>
-                            </View>
-                        </Modal>
-                    </>
-                )}
             </LinearGradient>
         </SafeAreaView>
     );
@@ -428,55 +309,7 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         color: '#333'
     },
-    inputWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderColor: '#4c669f',
-        borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 8,
-        backgroundColor: '#FFF',
-        paddingVertical: Platform.OS === 'ios' ? 8 : 4,
-        minHeight: Platform.OS === 'ios' ? 50 : 47,
-    },
-    inputIcon: {
-        marginRight: 8,
-    },
-    input: {
-        flex: 1,
-        height: Platform.OS === 'ios' ? 50 : 47,
-        color: '#333',
-        fontSize: 14,
-        paddingVertical: Platform.OS === 'ios' ? 12 : 8,
-    },
-    pickerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderColor: '#4c669f',
-        borderWidth: 1,
-        borderRadius: 8,
-        backgroundColor: '#FFF',
-        paddingVertical: Platform.OS === 'ios' ? 8 : 4,
-        paddingHorizontal: 8,
-        minHeight: Platform.OS === 'ios' ? 50 : 47,
-    },
-    pickerContainerIOS: {
-        paddingRight: 0,
-    },
-    picker: {
-        flex: 1,
-        height: Platform.OS === 'ios' ? 180 : 50,
-        color: '#333',
-        fontSize: 14,
-    },
-    pickerIOS: {
-        marginRight: -8,
-        marginLeft: -8,
-    },
-    pickerItemIOS: {
-        fontSize: 14,
-        height: 120,
-    },
+
     termsContainer: {
         marginVertical: 10
     },
@@ -495,73 +328,5 @@ const styles = StyleSheet.create({
         textDecorationLine: 'underline',
         fontSize: 14
     },
-    button: {
-        marginTop: 15,
-        paddingVertical: Platform.OS === 'ios' ? 14 : 12,
-        borderRadius: 8,
-        alignItems: 'center',
-        backgroundColor: '#4CAF50',
-    },
-    buttonText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#FFFFFF'
-    },
-    centerContent: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    loadingText: {
-        marginTop: 10,
-        color: '#4c669f',
-        fontSize: 16,
-    },
-    disabledInput: {
-        opacity: 0.7,
-        backgroundColor: 'rgba(0,0,0,0.05)',
-    },
-    disabledPicker: {
-        opacity: 0.7,
-        backgroundColor: 'rgba(0,0,0,0.05)',
-    },
-    pickerText: {
-        flex: 1,
-        fontSize: 14,
-        color: '#333',
-    },
-    placeholderText: {
-        color: '#999',
-    },
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'flex-end',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-    },
-    pickerModalContent: {
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        paddingBottom: 20,
-    },
-    pickerHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
-    },
-    pickerHeaderButton: {
-        paddingHorizontal: 15,
-    },
-    pickerHeaderButtonText: {
-        color: '#4c669f',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    pickerHeaderTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
-    },
+
 }); 

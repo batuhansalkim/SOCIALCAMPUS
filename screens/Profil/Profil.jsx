@@ -6,118 +6,89 @@ import {
     StyleSheet, 
     Linking, 
     Image, 
-    TextInput, 
-    TouchableOpacity, 
     ScrollView, 
     Alert,
-    ActivityIndicator,
-    Modal,
-    Platform
+    Platform,
+    TouchableOpacity
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
-import { collection, query, getDocs, doc, updateDoc, Timestamp, getDoc, writeBatch, where } from 'firebase/firestore';
+
+import { doc, updateDoc, Timestamp, getDoc, writeBatch } from 'firebase/firestore';
 import { FIRESTORE_DB } from '../../configs/FirebaseConfig';
 import AboutScreen from '../About/About';
 import AppAdd from "../AppAdd/AppAdd";
 import facultiesData from '../../data/faculties.json';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CommonInput from '../../components/CommonInput';
+import CommonButton from '../../components/CommonButton';
+import CommonModal from '../../components/CommonModal';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
 
 const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 saat
 
 const AboutAppModal = ({ visible, onClose }) => (
-  <Modal visible={visible} animationType="slide" transparent>
-    <BlurView intensity={100} tint="dark" style={styles.aboutModalContainer}>
-      <LinearGradient
-        colors={['rgba(0,0,0,0.95)', 'rgba(0,0,0,0.85)']}
-        style={styles.aboutModalContent}
-      >
-        <View style={styles.modalHeader}>
-          <View style={styles.modalTitleContainer}>
-            <Ionicons name="information-circle" size={32} color="#4ECDC4" style={styles.modalTitleIcon} />
-            <Text style={styles.aboutModalTitle}>Uygulama Hakkında Genel Bilgiler</Text>
-          </View>
-          <TouchableOpacity style={styles.modalCloseButton} onPress={onClose}>
-            <Ionicons name="close-circle" size={35} color="#4ECDC4" />
-          </TouchableOpacity>
-        </View>
-        
-        <ScrollView 
-          style={styles.modalScrollView}
-          showsVerticalScrollIndicator={false}
-        >
-          <LinearGradient
-            colors={['rgba(78,205,196,0.15)', 'rgba(78,205,196,0.05)']}
-            style={styles.welcomeSection}
-          >
-            <Text style={styles.aboutModalSubtitle}>SocialCampus'e Hoş Geldiniz</Text>
-            
-            <Text style={styles.aboutModalText}>
-              SocialCampus, Kırklareli Üniversitesi öğrencilerinin kampüs deneyimini zenginleştirmek ve günlük yaşamlarını 
-              kolaylaştırmak amacıyla özel olarak tasarlanmış yenilikçi bir mobil platformdur. Modern arayüzü ve kullanıcı 
-              dostu özellikleriyle, öğrencilerin akademik ve sosyal hayatlarını daha verimli bir şekilde yönetmelerine 
-              olanak sağlar.
-            </Text>
-          </LinearGradient>
-          
-          <View style={styles.developerSection}>
-            <Text style={styles.aboutModalText}>
-              Bu platform, Kırklareli Üniversitesi Yazılım Mühendisliği bölümü öğrencisi tarafından, öğrenci topluluğunun 
-              ihtiyaçları göz önünde bulundurularak geliştirilmiştir. Amacımız, teknoloji ile öğrenci deneyimini 
-              iyileştirerek, kampüs yaşamını daha etkileşimli ve erişilebilir hale getirmektir.
-            </Text>
-          </View>
+  <CommonModal
+    visible={visible}
+    onClose={onClose}
+    title="Uygulama Hakkında Genel Bilgiler"
+    closeButtonText="Kapat"
+    containerStyle={styles.aboutModalContent}
+  >
+    <LinearGradient
+      colors={['rgba(78,205,196,0.15)', 'rgba(78,205,196,0.05)']}
+      style={styles.welcomeSection}
+    >
+      <Text style={styles.aboutModalSubtitle}>SocialCampus'e Hoş Geldiniz</Text>
+      
+      <Text style={styles.aboutModalText}>
+        SocialCampus, Kırklareli Üniversitesi öğrencilerinin kampüs deneyimini zenginleştirmek ve günlük yaşamlarını 
+        kolaylaştırmak amacıyla özel olarak tasarlanmış yenilikçi bir mobil platformdur. Modern arayüzü ve kullanıcı 
+        dostu özellikleriyle, öğrencilerin akademik ve sosyal hayatlarını daha verimli bir şekilde yönetmelerine 
+        olanak sağlar.
+      </Text>
+    </LinearGradient>
+    
+    <View style={styles.developerSection}>
+      <Text style={styles.aboutModalText}>
+        Bu platform, Kırklareli Üniversitesi Yazılım Mühendisliği bölümü öğrencisi tarafından, öğrenci topluluğunun 
+        ihtiyaçları göz önünde bulundurularak geliştirilmiştir. Amacımız, teknoloji ile öğrenci deneyimini 
+        iyileştirerek, kampüs yaşamını daha etkileşimli ve erişilebilir hale getirmektir.
+      </Text>
+    </View>
 
-          <Text style={styles.featuresTitle}>
-            <Ionicons name="star" size={24} color="#4ECDC4" /> Temel Özellikler
-          </Text>
-          
-          <View style={styles.featuresContainer}>
-            <FeatureCard
-              title="Yemekhane Bilgi Sistemi"
-              icon="restaurant-outline"
-              description="Günlük yemek menülerini anlık olarak görüntüleyebilir, haftalık menüleri inceleyebilir ve 
-              beslenme planlamanızı buna göre yapabilirsiniz."
-            />
+    <Text style={styles.featuresTitle}>
+      <Ionicons name="star" size={24} color="#4ECDC4" /> Temel Özellikler
+    </Text>
+    
+    <View style={styles.featuresContainer}>
+      <FeatureCard
+        title="Yemekhane Bilgi Sistemi"
+        icon="restaurant-outline"
+        description="Günlük yemek menülerini anlık olarak görüntüleyebilir, haftalık menüleri inceleyebilir ve 
+        beslenme planlamanızı buna göre yapabilirsiniz."
+      />
 
-            <FeatureCard
-              title="Öğrenci Kulüpleri Portalı"
-              icon="people-outline"
-              description="Üniversitemizdeki tüm öğrenci kulüplerinin detaylı bilgilerine, 
-              yönetim kadrosuna ve iletişim bilgilerine tek bir platformdan erişebilirsiniz."
-            />
+      <FeatureCard
+        title="Öğrenci Kulüpleri Portalı"
+        icon="people-outline"
+        description="Üniversitemizdeki tüm öğrenci kulüplerinin detaylı bilgilerine, 
+        yönetim kadrosuna ve iletişim bilgilerine tek bir platformdan erişebilirsiniz."
+      />
 
-
-
-            <FeatureCard
-              title="Öğrenci Alışveriş Platformu"
-              icon="cart-outline"
-              description="Kampüs içi alışveriş deneyimini kolaylaştıran bu platformda, diğer öğrencilerin paylaştığı 
-              ders kitapları, kırtasiye malzemeleri ve çeşitli ürünlere göz atabilirsiniz. İlgilendiğiniz ürünün 
-              satıcısıyla Instagram üzerinden doğrudan iletişime geçebilir, detayları görüşebilirsiniz. Ayrıca kendi 
-              ürünlerinizi de platforma ekleyerek diğer öğrencilerle güvenli bir şekilde alışveriş yapabilirsiniz."
-            />
-          </View>
-        </ScrollView>
-
-        <TouchableOpacity style={styles.modalBottomButton} onPress={onClose}>
-          <LinearGradient
-            colors={['#4ECDC4', '#45B7AF']}
-            style={styles.bottomButtonGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <Text style={styles.modalBottomButtonText}>Kapat</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </LinearGradient>
-    </BlurView>
-  </Modal>
+      <FeatureCard
+        title="Öğrenci Alışveriş Platformu"
+        icon="cart-outline"
+        description="Kampüs içi alışveriş deneyimini kolaylaştıran bu platformda, diğer öğrencilerin paylaştığı 
+        ders kitapları, kırtasiye malzemeleri ve çeşitli ürünlere göz atabilirsiniz. İlgilendiğiniz ürünün 
+        satıcısıyla Instagram üzerinden doğrudan iletişime geçebilir, detayları görüşebilirsiniz. Ayrıca kendi 
+        ürünlerinizi de platforma ekleyerek diğer öğrencilerle güvenli bir şekilde alışveriş yapabilirsiniz."
+      />
+    </View>
+  </CommonModal>
 );
 
 const FeatureCard = ({ title, icon, description }) => (
@@ -300,159 +271,108 @@ export default function Profil() {
         }));
     };
 
-    const handlePress = () => {
-        Linking.openURL('https://www.linkedin.com/in/batuhanslkmm/');
-    };
+
 
     const renderChatbotModal = () => (
-      <Modal
+      <CommonModal
         visible={showChatbotModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowChatbotModal(false)}
+        onClose={() => setShowChatbotModal(false)}
+        title="AI Asistan"
+        closeButtonText="Kapat"
+        containerStyle={styles.chatbotModalContent}
       >
-        <View style={styles.modalContainer}>
-          <BlurView intensity={100} tint="dark" style={styles.chatbotModalContent}>
-            <LinearGradient
-              colors={['rgba(26,26,26,0.98)', 'rgba(13,13,13,0.95)']}
-              style={styles.chatbotGradient}
-            >
-              <View style={styles.chatbotModalHeader}>
-                <View style={styles.chatbotTitleContainer}>
-                  <LinearGradient
-                    colors={['#4ECDC4', '#45B7AF']}
-                    style={styles.chatbotIconBg}
-                  >
-                    <Ionicons name="logo-android" size={32} color="#1a1a1a" />
-                  </LinearGradient>
-                  <Text style={styles.chatbotModalTitle}>AI Asistan</Text>
-                  
-                </View>
-                <TouchableOpacity onPress={() => setShowChatbotModal(false)} style={styles.modalCloseButton}>
-                  <Ionicons name="close-circle" size={35} color="#4ECDC4" />
-              </TouchableOpacity>
+        <Text style={{color:"red",fontSize:18,fontWeight:"bold",fontFamily:"Arial",textAlign:"center",marginVertical:10}}>YAKINDA EKLENECEK...</Text>
+
+        <LinearGradient
+          colors={['rgba(78,205,196,0.15)', 'rgba(78,205,196,0.05)']}
+          style={styles.chatbotWelcomeSection}
+        >
+          <Text style={{color:"white"}}>Yapay Zeka Destekli Asistanınız</Text>
+          <Text style={{color:"white"}}>
+            SOCİALCAMPUS AI Asistan, üniversite yaşamınızı kolaylaştırmak için tasarlanmış akıllı bir yardımcıdır. 
+            Anlık sorularınıza hızlı ve doğru yanıtlar sunar, kampüs hayatınızı daha verimli hale getirir.
+          </Text>
+        </LinearGradient>
+
+        <View style={styles.chatbotFeatureGrid}>
+          <View style={styles.chatbotFeatureRow}>
+            <View style={styles.chatbotFeatureCard}>
+              <View style={styles.chatbotFeatureIconContainer}>
+                <Ionicons name="flash" size={24} color="#4ECDC4" />
+              </View>
+              <Text style={styles.chatbotFeatureTitle}>Anlık Yanıtlar</Text>
+              <Text style={styles.chatbotFeatureText}>
+                Saniyeler içinde bilgiye erişin
+              </Text>
             </View>
 
-              <ScrollView 
-                style={styles.chatbotScrollView}
-                showsVerticalScrollIndicator={false}
-              >
-                <Text style={{color:"red",fontSize:18,fontWeight:"bold",fontFamily:"Arial",textAlign:"center",marginVertical:10}}>YAKINDA EKLENECEK...</Text>
-
-                <LinearGradient
-                  colors={['rgba(78,205,196,0.15)', 'rgba(78,205,196,0.05)']}
-                  style={styles.chatbotWelcomeSection}
-                >
-                  <Text style={{color:"white"}}>Yapay Zeka Destekli Asistanınız</Text>
-                  <Text style={{color:"white"}}>
-                    SOCİALCAMPUS AI Asistan, üniversite yaşamınızı kolaylaştırmak için tasarlanmış akıllı bir yardımcıdır. 
-                    Anlık sorularınıza hızlı ve doğru yanıtlar sunar, kampüs hayatınızı daha verimli hale getirir.
+            <View style={styles.chatbotFeatureCard}>
+              <View style={styles.chatbotFeatureIconContainer}>
+                <Ionicons name="school" size={24} color="#4ECDC4" />
+              </View>
+              <Text style={styles.chatbotFeatureTitle}>Akademik Destek</Text>
+              <Text style={styles.chatbotFeatureText}>
+                Eğitim süreçlerinizde yanınızda
               </Text>
-                </LinearGradient>
+            </View>
+          </View>
 
-                <View style={styles.chatbotFeatureGrid}>
-                  <View style={styles.chatbotFeatureRow}>
-                    <View style={styles.chatbotFeatureCard}>
-                      <View style={styles.chatbotFeatureIconContainer}>
-                        <Ionicons name="flash" size={24} color="#4ECDC4" />
-                      </View>
-                      <Text style={styles.chatbotFeatureTitle}>Anlık Yanıtlar</Text>
-                      <Text style={styles.chatbotFeatureText}>
-                        Saniyeler içinde bilgiye erişin
+          <View style={styles.chatbotFeatureRow}>
+            <View style={styles.chatbotFeatureCard}>
+              <View style={styles.chatbotFeatureIconContainer}>
+                <Ionicons name="time" size={24} color="#4ECDC4" />
+              </View>
+              <Text style={styles.chatbotFeatureTitle}>7/24 Hizmet</Text>
+              <Text style={styles.chatbotFeatureText}>
+                Her an erişilebilir asistan
               </Text>
-                    </View>
+            </View>
 
-                    <View style={styles.chatbotFeatureCard}>
-                      <View style={styles.chatbotFeatureIconContainer}>
-                        <Ionicons name="school" size={24} color="#4ECDC4" />
-                      </View>
-                      <Text style={styles.chatbotFeatureTitle}>Akademik Destek</Text>
-                      <Text style={styles.chatbotFeatureText}>
-                        Eğitim süreçlerinizde yanınızda
+            <View style={styles.chatbotFeatureCard}>
+              <View style={styles.chatbotFeatureIconContainer}>
+                <Ionicons name="information" size={24} color="#4ECDC4" />
+              </View>
+              <Text style={styles.chatbotFeatureTitle}>Güncel Bilgi</Text>
+              <Text style={styles.chatbotFeatureText}>
+                Sürekli güncellenen veritabanı
               </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.chatbotFeatureRow}>
-                    <View style={styles.chatbotFeatureCard}>
-                      <View style={styles.chatbotFeatureIconContainer}>
-                        <Ionicons name="time" size={24} color="#4ECDC4" />
-                      </View>
-                      <Text style={styles.chatbotFeatureTitle}>7/24 Hizmet</Text>
-                      <Text style={styles.chatbotFeatureText}>
-                        Her an erişilebilir asistan
-              </Text>
-                    </View>
-
-                    <View style={styles.chatbotFeatureCard}>
-                      <View style={styles.chatbotFeatureIconContainer}>
-                        <Ionicons name="information" size={24} color="#4ECDC4" />
-                      </View>
-                      <Text style={styles.chatbotFeatureTitle}>Güncel Bilgi</Text>
-                      <Text style={styles.chatbotFeatureText}>
-                        Sürekli güncellenen veritabanı
-              </Text>
-                    </View>
-                  </View>
-                </View>
-
-                <LinearGradient
-                  colors={['rgba(78,205,196,0.1)', 'rgba(78,205,196,0.05)']}
-                  style={styles.chatbotCapabilitiesSection}
-                >
-                  <Text style={styles.chatbotSectionTitle}>Neler Yapabilir?</Text>
-                  <View style={styles.chatbotCapabilitiesList}>
-                    <View style={styles.chatbotCapabilityItem}>
-                      <Ionicons name="checkmark-circle" size={20} color="#4ECDC4" />
-                      <Text style={styles.chatbotCapabilityText}>Akademik süreçler hakkında bilgilendirme</Text>
-                    </View>
-                    <View style={styles.chatbotCapabilityItem}>
-                      <Ionicons name="checkmark-circle" size={20} color="#4ECDC4" />
-                      <Text style={styles.chatbotCapabilityText}>Kampüs yaşamı ve etkinlikler hakkında rehberlik</Text>
-                    </View>
-                    <View style={styles.chatbotCapabilityItem}>
-                      <Ionicons name="checkmark-circle" size={20} color="#4ECDC4" />
-                      <Text style={styles.chatbotCapabilityText}>Öğrenci kulüpleri ve sosyal aktiviteler</Text>
-                    </View>
-                    <View style={styles.chatbotCapabilityItem}>
-                      <Ionicons name="checkmark-circle" size={20} color="#4ECDC4" />
-                      <Text style={styles.chatbotCapabilityText}>Kırklareli şehir rehberi ve yaşam bilgileri</Text>
-                    </View>
-                  </View>
-                </LinearGradient>
-            </ScrollView>
-            </LinearGradient>
-          </BlurView>
+            </View>
+          </View>
         </View>
-      </Modal>
+
+        <LinearGradient
+          colors={['rgba(78,205,196,0.1)', 'rgba(78,205,196,0.05)']}
+          style={styles.chatbotCapabilitiesSection}
+        >
+          <Text style={styles.chatbotSectionTitle}>Neler Yapabilir?</Text>
+          <View style={styles.chatbotCapabilitiesList}>
+            <View style={styles.chatbotCapabilityItem}>
+              <Ionicons name="checkmark-circle" size={20} color="#4ECDC4" />
+              <Text style={styles.chatbotCapabilityText}>Akademik süreçler hakkında bilgilendirme</Text>
+            </View>
+            <View style={styles.chatbotCapabilityItem}>
+              <Ionicons name="checkmark-circle" size={20} color="#4ECDC4" />
+              <Text style={styles.chatbotCapabilityText}>Kampüs yaşamı ve etkinlikler hakkında rehberlik</Text>
+            </View>
+            <View style={styles.chatbotCapabilityItem}>
+              <Ionicons name="checkmark-circle" size={20} color="#4ECDC4" />
+              <Text style={styles.chatbotCapabilityText}>Öğrenci kulüpleri ve sosyal aktiviteler</Text>
+            </View>
+            <View style={styles.chatbotCapabilityItem}>
+              <Ionicons name="checkmark-circle" size={20} color="#4ECDC4" />
+              <Text style={styles.chatbotCapabilityText}>Kırklareli şehir rehberi ve yaşam bilgileri</Text>
+            </View>
+          </View>
+        </LinearGradient>
+      </CommonModal>
     );
 
-    const loadUserData = async () => {
-        try {
-            // Önce cache'den yükle
-            const cachedData = await AsyncStorage.getItem('userData');
-            if (cachedData) {
-                const parsedData = JSON.parse(cachedData);
-                setUserData(parsedData);
-            }
 
-            // Firestore'dan güncel veriyi al
-            const userDoc = await getDoc(doc(FIRESTORE_DB, 'users', userId));
-            if (userDoc.exists()) {
-                const data = userDoc.data();
-                setUserData(data);
-                // Cache'i güncelle
-                await AsyncStorage.setItem('userData', JSON.stringify(data));
-            }
-        } catch (error) {
-            console.error('Error loading user data:', error);
-        }
-    };
 
     if (loading) {
         return (
-            <View style={[styles.container, styles.centerContent]}>
-                <ActivityIndicator size="large" color="#4ECDC4" />
+            <View style={styles.container}>
+                <LoadingSpinner size="large" color="#4ECDC4" />
             </View>
         );
     }
@@ -530,81 +450,51 @@ export default function Profil() {
                 </ScrollView>
             </LinearGradient>
 
-            {modalVisible && (
-                <Modal
-                    visible={modalVisible}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => setModalVisible(false)}
-                >
-                    <BlurView intensity={100} tint="dark" style={styles.modalContainer}>
-                        <LinearGradient
-                            colors={['rgba(0,0,0,0.95)', 'rgba(0,0,0,0.9)']}
-                            style={styles.modalContent}
-                        >
-                            <View style={styles.modalHeader}>
-                                <Text style={styles.modalTitle}>Profili Düzenle</Text>
-                                <TouchableOpacity 
-                                    style={styles.modalCloseButton} 
-                                    onPress={() => setModalVisible(false)}
-                                >
-                                    <Ionicons name="close-circle" size={32} color="#4ECDC4" />
-                                </TouchableOpacity>
-                            </View>
+            <CommonModal
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                title="Profili Düzenle"
+                closeButtonText="Kapat"
+                containerStyle={styles.modalContent}
+            >
+                <View style={styles.inputContainer}>
+                    <CommonInput
+                        icon="person-outline"
+                        placeholder="İsim Soyisim"
+                        value={editedInfo.fullName}
+                        onChangeText={(text) => updateEditedInfo('fullName', text)}
+                        placeholderTextColor="#aaa"
+                        style={styles.modalInput}
+                    />
 
-                            <View style={styles.inputContainer}>
-                                <View style={styles.inputWrapper}>
-                                    <Ionicons name="person-outline" size={24} color="#4ECDC4" style={styles.inputIcon} />
-                                    <TextInput
-                                        style={styles.modalInput}
-                                        placeholder="İsim Soyisim"
-                                        value={editedInfo.fullName}
-                                        onChangeText={(text) => updateEditedInfo('fullName', text)}
-                                        placeholderTextColor="#aaa"
-                                    />
-                                </View>
+                    <CommonInput
+                        icon="school-outline"
+                        placeholder="Fakülte"
+                        value={editedInfo.faculty}
+                        onChangeText={(text) => updateEditedInfo('faculty', text)}
+                        placeholderTextColor="#aaa"
+                        style={styles.modalInput}
+                    />
 
-                                <View style={styles.inputWrapper}>
-                                    <Ionicons name="school-outline" size={24} color="#4ECDC4" style={styles.inputIcon} />
-                                    <TextInput
-                                        style={styles.modalInput}
-                                        placeholder="Fakülte"
-                                        value={editedInfo.faculty}
-                                        onChangeText={(text) => updateEditedInfo('faculty', text)}
-                                        placeholderTextColor="#aaa"
-                                    />
-                                </View>
+                    <CommonInput
+                        icon="book-outline"
+                        placeholder="Bölüm"
+                        value={editedInfo.department}
+                        onChangeText={(text) => updateEditedInfo('department', text)}
+                        placeholderTextColor="#aaa"
+                        style={styles.modalInput}
+                    />
+                </View>
 
-                                <View style={styles.inputWrapper}>
-                                    <Ionicons name="book-outline" size={24} color="#4ECDC4" style={styles.inputIcon} />
-                                    <TextInput
-                                        style={styles.modalInput}
-                                        placeholder="Bölüm"
-                                        value={editedInfo.department}
-                                        onChangeText={(text) => updateEditedInfo('department', text)}
-                                        placeholderTextColor="#aaa"
-                                    />
-                                </View>
-                            </View>
-
-                            <TouchableOpacity 
-                                style={[styles.modalSaveButton, !isFormValid() && styles.modalSaveButtonDisabled]} 
-                                onPress={updateUserData}
-                                disabled={!isFormValid() || isSubmitting}
-                            >
-                                <LinearGradient
-                                    colors={['#4ECDC4', '#45B7AF']}
-                                    style={styles.saveButtonGradient}
-                                >
-                                    <Text style={styles.modalSaveButtonText}>
-                                        {isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}
-                                    </Text>
-                                </LinearGradient>
-                            </TouchableOpacity>
-                        </LinearGradient>
-                    </BlurView>
-                </Modal>
-            )}
+                <CommonButton
+                    title={isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}
+                    onPress={updateUserData}
+                    disabled={!isFormValid() || isSubmitting}
+                    loading={isSubmitting}
+                    variant="primary"
+                    style={styles.modalSaveButton}
+                />
+            </CommonModal>
 
             <AboutScreen modalVisible={aboutModalVisible} setModalVisible={setAboutModalVisible} />
             <AppAdd modalVisible={addModalVisible} setModalVisible={setAddModalVisible} />
@@ -630,6 +520,12 @@ const InfoItem = ({ icon, title, value }) => (
 );
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.9)',
+    },
     safeContainer: {
         flex: 1,
     },
@@ -773,39 +669,10 @@ const styles = StyleSheet.create({
         borderColor: '#4ECDC4',
         borderRadius: screenWidth * 0.075,
     },
-    aboutModalContainer: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.9)',
-    },
     aboutModalContent: {
         flex: 1,
         padding: screenWidth * 0.05,
         paddingTop: Platform.OS === 'ios' ? screenWidth * 0.1 : screenWidth * 0.05,
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: screenWidth * 0.05,
-    },
-    modalTitleContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    modalTitleIcon: {
-        marginRight: screenWidth * 0.02,
-    },
-    aboutModalTitle: {
-        fontSize: screenWidth * 0.06,
-        fontWeight: 'bold',
-        color: '#4ECDC4',
-    },
-    modalCloseButton: {
-        padding: screenWidth * 0.01,
-    },
-    modalScrollView: {
-        flex: 1,
-        padding: screenWidth * 0.05,
     },
     welcomeSection: {
         borderRadius: 15,
@@ -873,87 +740,20 @@ const styles = StyleSheet.create({
         opacity: 0.9,
         lineHeight: screenWidth * 0.05,
     },
-    modalBottomButton: {
-        borderRadius: 10,
-        overflow: 'hidden',
-        marginTop: 10,
-    },
-    bottomButtonGradient: {
-        padding: 15,
-        alignItems: 'center',
-    },
-    modalBottomButtonText: {
-        color: '#000',
-        fontSize: screenWidth * 0.04,
-        fontWeight: '600',
-    },
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-    },
     modalContent: {
         width: screenWidth * 0.9,
         borderRadius: 20,
         padding: 20,
         backgroundColor: 'rgba(0,0,0,0.9)',
     },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20,
-        paddingBottom: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(78,205,196,0.2)',
-    },
-    modalTitle: {
-        fontSize: screenWidth * 0.06,
-        fontWeight: 'bold',
-        color: '#4ECDC4',
-    },
-    modalCloseButton: {
-        padding: 5,
-    },
     inputContainer: {
         marginBottom: 20,
     },
-    inputWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        borderRadius: 12,
-        marginBottom: 15,
-        paddingHorizontal: 15,
-        borderWidth: 1,
-        borderColor: 'rgba(78,205,196,0.2)',
-    },
-    inputIcon: {
-        marginRight: 10,
-    },
     modalInput: {
-        flex: 1,
-        paddingVertical: 15,
-        fontSize: screenWidth * 0.04,
-        color: '#fff',
+        marginBottom: 15,
     },
     modalSaveButton: {
-        borderRadius: 12,
-        overflow: 'hidden',
         marginTop: 10,
-    },
-    modalSaveButtonDisabled: {
-        opacity: 0.5,
-    },
-    saveButtonGradient: {
-        paddingVertical: 15,
-        alignItems: 'center',
-    },
-    modalSaveButtonText: {
-        color: '#000',
-        fontSize: screenWidth * 0.045,
-        fontWeight: '600',
     },
     chatbotButton: {
         width: screenWidth * 0.15,
@@ -987,33 +787,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         overflow: 'hidden',
     },
-    chatbotGradient: {
-        flex: 1,
-        padding: 20,
-    },
-    chatbotModalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    chatbotTitleContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    chatbotIconBg: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 15,
-    },
-    chatbotModalTitle: {
-        fontSize: screenWidth * 0.06,
-        fontWeight: 'bold',
-        color: '#4ECDC4',
-    },
+
     chatbotWelcomeSection: {
         borderRadius: 15,
         padding: 20,
@@ -1081,21 +855,5 @@ const styles = StyleSheet.create({
         marginLeft: 10,
         opacity: 0.9,
     },
-    addButton: {
-        position: 'absolute',
-        right: screenWidth * 0.05,
-        bottom: Platform.OS === 'ios' ? screenHeight * 0.2 : screenHeight * 0.12,
-        backgroundColor: '#4ECDC4',
-        width: screenWidth * 0.15,
-        height: screenWidth * 0.15,
-        borderRadius: screenWidth * 0.075,
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 8,
-        zIndex: 999,
-    },
+
 });
