@@ -147,11 +147,11 @@ export default function LoginScreen({ onLogin }) {
                                 <Text style={styles.label}>İsim ve Soyisim</Text>
                                 <CommonInput
                                     icon="person-outline"
-                                    placeholder="İsim ve soyisminizi giriniz"
-                                    value={fullName}
-                                    onChangeText={setFullName}
-                                    editable={!isSubmitted}
-                                />
+                                        placeholder="İsim ve soyisminizi giriniz"
+                                        value={fullName}
+                                        onChangeText={setFullName}
+                                        editable={!isSubmitted}
+                                    />
                             </View>
 
                             <View style={styles.inputGroup}>
@@ -159,13 +159,13 @@ export default function LoginScreen({ onLogin }) {
                                 <CommonPicker
                                     icon="school-outline"
                                     placeholder="Fakülte Seçin"
-                                    selectedValue={faculty}
-                                    onValueChange={(itemValue) => {
-                                        if (!isSubmitted) {
-                                            setFaculty(itemValue);
-                                            setDepartment('');
-                                        }
-                                    }}
+                                            selectedValue={faculty}
+                                            onValueChange={(itemValue) => {
+                                                if (!isSubmitted) {
+                                                    setFaculty(itemValue);
+                                                    setDepartment('');
+                                                }
+                                            }}
                                     items={[
                                         { label: 'Fakülte Seçin', value: '' },
                                         ...Object.entries(facultiesData).map(([key, value]) => ({
@@ -173,7 +173,7 @@ export default function LoginScreen({ onLogin }) {
                                             value: key
                                         }))
                                     ]}
-                                    enabled={!isSubmitted}
+                                            enabled={!isSubmitted}
                                     editable={!isSubmitted}
                                 />
                             </View>
@@ -183,8 +183,8 @@ export default function LoginScreen({ onLogin }) {
                                 <CommonPicker
                                     icon="book-outline"
                                     placeholder="Bölüm Seçin"
-                                    selectedValue={department}
-                                    onValueChange={(itemValue) => !isSubmitted && setDepartment(itemValue)}
+                                            selectedValue={department}
+                                            onValueChange={(itemValue) => !isSubmitted && setDepartment(itemValue)}
                                     items={[
                                         { label: 'Bölüm Seçin', value: '' },
                                         ...(facultiesData[faculty]?.departments.map((dept, index) => ({
@@ -192,7 +192,7 @@ export default function LoginScreen({ onLogin }) {
                                             value: dept
                                         })) || [])
                                     ]}
-                                    enabled={!!faculty && !isSubmitted}
+                                            enabled={!!faculty && !isSubmitted}
                                     editable={!isSubmitted}
                                 />
                             </View>

@@ -21,11 +21,11 @@ const CommonButton = ({
       case 'danger':
         return ['#dc3545', '#c82333'];
       case 'success':
-        return ['#28a745', '#218838'];
+        return ['#00C896', '#00B386'];
       case 'warning':
         return ['#ffc107', '#e0a800'];
       default:
-        return ['#4ECDC4', '#45B7AF'];
+        return ['#005BAC', '#004A8C'];
     }
   };
 

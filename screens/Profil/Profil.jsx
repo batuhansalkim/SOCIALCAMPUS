@@ -6,7 +6,8 @@ import {
     Image, 
     ScrollView, 
     Alert,
-    TouchableOpacity
+    TouchableOpacity,
+    Switch
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,74 +27,13 @@ import { styles } from './Profil.styles';
 
 const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 saat
 
-const AboutAppModal = ({ visible, onClose }) => (
-  <CommonModal
-    visible={visible}
-    onClose={onClose}
-    title="Uygulama Hakkında Genel Bilgiler"
-    closeButtonText="Kapat"
-    containerStyle={styles.aboutModalContent}
-  >
-    <LinearGradient
-      colors={['rgba(78,205,196,0.15)', 'rgba(78,205,196,0.05)']}
-      style={styles.welcomeSection}
-    >
-      <Text style={styles.aboutModalSubtitle}>SocialCampus'e Hoş Geldiniz</Text>
-      
-      <Text style={styles.aboutModalText}>
-        SocialCampus, Kırklareli Üniversitesi öğrencilerinin kampüs deneyimini zenginleştirmek ve günlük yaşamlarını 
-        kolaylaştırmak amacıyla özel olarak tasarlanmış yenilikçi bir mobil platformdur. Modern arayüzü ve kullanıcı 
-        dostu özellikleriyle, öğrencilerin akademik ve sosyal hayatlarını daha verimli bir şekilde yönetmelerine 
-        olanak sağlar.
-      </Text>
-    </LinearGradient>
-    
-    <View style={styles.developerSection}>
-      <Text style={styles.aboutModalText}>
-        Bu platform, Kırklareli Üniversitesi Yazılım Mühendisliği bölümü öğrencisi tarafından, öğrenci topluluğunun 
-        ihtiyaçları göz önünde bulundurularak geliştirilmiştir. Amacımız, teknoloji ile öğrenci deneyimini 
-        iyileştirerek, kampüs yaşamını daha etkileşimli ve erişilebilir hale getirmektir.
-      </Text>
-    </View>
-
-    <Text style={styles.featuresTitle}>
-      <Ionicons name="star" size={24} color="#4ECDC4" /> Temel Özellikler
-    </Text>
-    
-    <View style={styles.featuresContainer}>
-      <FeatureCard
-        title="Yemekhane Bilgi Sistemi"
-        icon="restaurant-outline"
-        description="Günlük yemek menülerini anlık olarak görüntüleyebilir, haftalık menüleri inceleyebilir ve 
-        beslenme planlamanızı buna göre yapabilirsiniz."
-      />
-
-      <FeatureCard
-        title="Öğrenci Kulüpleri Portalı"
-        icon="people-outline"
-        description="Üniversitemizdeki tüm öğrenci kulüplerinin detaylı bilgilerine, 
-        yönetim kadrosuna ve iletişim bilgilerine tek bir platformdan erişebilirsiniz."
-      />
-
-      <FeatureCard
-        title="Öğrenci Alışveriş Platformu"
-        icon="cart-outline"
-        description="Kampüs içi alışveriş deneyimini kolaylaştıran bu platformda, diğer öğrencilerin paylaştığı 
-        ders kitapları, kırtasiye malzemeleri ve çeşitli ürünlere göz atabilirsiniz. İlgilendiğiniz ürünün 
-        satıcısıyla Instagram üzerinden doğrudan iletişime geçebilir, detayları görüşebilirsiniz. Ayrıca kendi 
-        ürünlerinizi de platforma ekleyerek diğer öğrencilerle güvenli bir şekilde alışveriş yapabilirsiniz."
-      />
-    </View>
-  </CommonModal>
-);
-
 const FeatureCard = ({ title, icon, description }) => (
   <LinearGradient
-    colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+    colors={['rgba(0,200,150,0.15)', 'rgba(0,200,150,0.08)']}
     style={styles.featureCard}
   >
     <View style={styles.featureIconContainer}>
-      <Ionicons name={icon} size={24} color="#4ECDC4" />
+      <Ionicons name={icon} size={24} color="#00C896" />
     </View>
     <View style={styles.featureTextContainer}>
       <Text style={styles.featureTitle}>{title}</Text>
@@ -106,6 +46,7 @@ export default function Profil() {
     const [modalVisible, setModalVisible] = useState(false);
     const [aboutModalVisible, setAboutModalVisible] = useState(false);
     const [addModalVisible, setAddModalVisible] = useState(false);
+    const [settingsModalVisible, setSettingsModalVisible] = useState(false);
     const [loading, setLoading] = useState(true);
     const [userInfo, setUserInfo] = useState({
         isimSoyisim: "Yükleniyor...",
@@ -121,7 +62,11 @@ export default function Profil() {
 
     const [aboutAppModalVisible, setAboutAppModalVisible] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showChatbotModal, setShowChatbotModal] = useState(false);
+    const [settings, setSettings] = useState({
+        darkMode: true,
+        notifications: true,
+        language: 'tr'
+    });
 
     useEffect(() => {
         fetchUserData();
@@ -223,8 +168,6 @@ export default function Profil() {
                 updatedAt: Timestamp.now()
             });
 
-
-
             // Tüm güncellemeleri tek seferde yap
             await batch.commit();
 
@@ -267,126 +210,45 @@ export default function Profil() {
         }));
     };
 
-
-
-    const renderChatbotModal = () => (
-      <CommonModal
-        visible={showChatbotModal}
-        onClose={() => setShowChatbotModal(false)}
-        title="AI Asistan"
-        closeButtonText="Kapat"
-        containerStyle={styles.chatbotModalContent}
-      >
-        <Text style={{color:"red",fontSize:18,fontWeight:"bold",fontFamily:"Arial",textAlign:"center",marginVertical:10}}>YAKINDA EKLENECEK...</Text>
-
-        <LinearGradient
-          colors={['rgba(78,205,196,0.15)', 'rgba(78,205,196,0.05)']}
-          style={styles.chatbotWelcomeSection}
-        >
-          <Text style={{color:"white"}}>Yapay Zeka Destekli Asistanınız</Text>
-          <Text style={{color:"white"}}>
-            SOCİALCAMPUS AI Asistan, üniversite yaşamınızı kolaylaştırmak için tasarlanmış akıllı bir yardımcıdır. 
-            Anlık sorularınıza hızlı ve doğru yanıtlar sunar, kampüs hayatınızı daha verimli hale getirir.
-          </Text>
-        </LinearGradient>
-
-        <View style={styles.chatbotFeatureGrid}>
-          <View style={styles.chatbotFeatureRow}>
-            <View style={styles.chatbotFeatureCard}>
-              <View style={styles.chatbotFeatureIconContainer}>
-                <Ionicons name="flash" size={24} color="#4ECDC4" />
-              </View>
-              <Text style={styles.chatbotFeatureTitle}>Anlık Yanıtlar</Text>
-              <Text style={styles.chatbotFeatureText}>
-                Saniyeler içinde bilgiye erişin
-              </Text>
-            </View>
-
-            <View style={styles.chatbotFeatureCard}>
-              <View style={styles.chatbotFeatureIconContainer}>
-                <Ionicons name="school" size={24} color="#4ECDC4" />
-              </View>
-              <Text style={styles.chatbotFeatureTitle}>Akademik Destek</Text>
-              <Text style={styles.chatbotFeatureText}>
-                Eğitim süreçlerinizde yanınızda
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.chatbotFeatureRow}>
-            <View style={styles.chatbotFeatureCard}>
-              <View style={styles.chatbotFeatureIconContainer}>
-                <Ionicons name="time" size={24} color="#4ECDC4" />
-              </View>
-              <Text style={styles.chatbotFeatureTitle}>7/24 Hizmet</Text>
-              <Text style={styles.chatbotFeatureText}>
-                Her an erişilebilir asistan
-              </Text>
-            </View>
-
-            <View style={styles.chatbotFeatureCard}>
-              <View style={styles.chatbotFeatureIconContainer}>
-                <Ionicons name="information" size={24} color="#4ECDC4" />
-              </View>
-              <Text style={styles.chatbotFeatureTitle}>Güncel Bilgi</Text>
-              <Text style={styles.chatbotFeatureText}>
-                Sürekli güncellenen veritabanı
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <LinearGradient
-          colors={['rgba(78,205,196,0.1)', 'rgba(78,205,196,0.05)']}
-          style={styles.chatbotCapabilitiesSection}
-        >
-          <Text style={styles.chatbotSectionTitle}>Neler Yapabilir?</Text>
-          <View style={styles.chatbotCapabilitiesList}>
-            <View style={styles.chatbotCapabilityItem}>
-              <Ionicons name="checkmark-circle" size={20} color="#4ECDC4" />
-              <Text style={styles.chatbotCapabilityText}>Akademik süreçler hakkında bilgilendirme</Text>
-            </View>
-            <View style={styles.chatbotCapabilityItem}>
-              <Ionicons name="checkmark-circle" size={20} color="#4ECDC4" />
-              <Text style={styles.chatbotCapabilityText}>Kampüs yaşamı ve etkinlikler hakkında rehberlik</Text>
-            </View>
-            <View style={styles.chatbotCapabilityItem}>
-              <Ionicons name="checkmark-circle" size={20} color="#4ECDC4" />
-              <Text style={styles.chatbotCapabilityText}>Öğrenci kulüpleri ve sosyal aktiviteler</Text>
-            </View>
-            <View style={styles.chatbotCapabilityItem}>
-              <Ionicons name="checkmark-circle" size={20} color="#4ECDC4" />
-              <Text style={styles.chatbotCapabilityText}>Kırklareli şehir rehberi ve yaşam bilgileri</Text>
-            </View>
-          </View>
-        </LinearGradient>
-      </CommonModal>
-    );
-
-
+    const onSettingChange = (key, value) => {
+        setSettings(prev => ({
+            ...prev,
+            [key]: value
+        }));
+    };
 
     if (loading) {
         return (
-            <View style={styles.container}>
-                <LoadingSpinner size="large" color="#4ECDC4" />
+            <View style={styles.loadingContainer}>
+                <LoadingSpinner size="large" color="#005BAC" />
             </View>
         );
     }
 
     return (
         <SafeAreaView style={styles.safeContainer}>
-            <LinearGradient
-                colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0.7)']}
-                style={styles.gradient}
-            >
+            <View style={styles.gradient}>
+                <ScrollView 
+                    contentContainerStyle={styles.scrollContent} 
+                    showsVerticalScrollIndicator={false}
+                    bounces={true}
+                >
+                    {/* Header Section */}
                 <View style={styles.header}>
+                        <View style={styles.profileImageContainer}>
                     <Image
                         source={require('../../assets/logo.png')}
                         style={styles.profileImage}
                     />
+                            <TouchableOpacity style={styles.editImageButton}>
+                                <Ionicons name="camera" size={20} color="#FFFFFF" />
+                            </TouchableOpacity>
+                        </View>
+                        <Text style={styles.userName}>{userInfo.isimSoyisim}</Text>
+                        <Text style={styles.userStatus}>Kırklareli Üniversitesi</Text>
                 </View>
 
-                <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                    {/* Info Cards */}
                     <View style={styles.infoContainer}>
                         <InfoItem
                             icon="person-outline"
@@ -405,100 +267,206 @@ export default function Profil() {
                         />
 
                         <TouchableOpacity style={styles.editButton} onPress={() => setModalVisible(true)}>
-                            <Ionicons name="pencil" size={20} color="#4ECDC4" />
-                            <Text style={styles.editButtonText}>Düzenle</Text>
+                            <Ionicons name="pencil" size={20} color="#005BAC" />
+                            <Text style={styles.editButtonText}>Profili Düzenle</Text>
                         </TouchableOpacity>
                     </View>
 
+                    {/* Action Buttons */}
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity 
                             style={styles.actionButton} 
                             onPress={() => Linking.openURL('https://www.linkedin.com/in/batuhanslkmm/')}
                         >
-                            <Ionicons name="logo-linkedin" size={24} color="#4ECDC4" />
-                            <Text style={styles.actionButtonText}>İletişime Geç</Text>
+                            <Ionicons name="logo-linkedin" size={24} color="#005BAC" />
+                            <Text style={styles.actionButtonText}>İletişim</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity 
                             style={styles.actionButton}
                             onPress={() => setAboutAppModalVisible(true)}
                         >
-                            <Ionicons name="information-circle-outline" size={24} color="#4ECDC4" />
-                            <Text style={styles.actionButtonText}>Uygulama Hakkında</Text>
+                            <Ionicons name="information-circle-outline" size={24} color="#005BAC" />
+                            <Text style={styles.actionButtonText}>Hakkında</Text>
                         </TouchableOpacity>
                     </View>
 
-                    <TouchableOpacity style={styles.longButton} onPress={() => setAddModalVisible(true)}>
-                        <Text style={styles.longButtonText}>Uygulamaya Eklenecekler</Text>
+                    {/* Settings Button */}
+                    <TouchableOpacity style={styles.longButton} onPress={() => setSettingsModalVisible(true)}>
+                        <Text style={styles.longButtonText}>Ayarlar</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity 
-                        style={[styles.chatbotButton]} 
-                        onPress={() => setShowChatbotModal(true)}
-                    >
-                        <LinearGradient
-                            colors={['#1a1a1a', '#2d2d2d']}
-                            style={styles.chatbotButtonGradient}
-                        >
-                            <Ionicons name="logo-android" size={32} color="#4ECDC4" />
-                        </LinearGradient>
+                    {/* Roadmap Button */}
+                    <TouchableOpacity style={styles.longButton} onPress={() => setAddModalVisible(true)}>
+                        <Text style={styles.longButtonText}>Gelecek Özellikler</Text>
                     </TouchableOpacity>
                 </ScrollView>
-            </LinearGradient>
+                            </View>
 
+            {/* Edit Profile Modal */}
             <CommonModal
                 visible={modalVisible}
                 onClose={() => setModalVisible(false)}
                 title="Profili Düzenle"
-                closeButtonText="Kapat"
-                containerStyle={styles.modalContent}
+                closeButtonText="Kaydet"
+                fullScreen={true}
             >
-                <View style={styles.inputContainer}>
+                            <View style={styles.inputContainer}>
                     <CommonInput
                         icon="person-outline"
-                        placeholder="İsim Soyisim"
-                        value={editedInfo.fullName}
-                        onChangeText={(text) => updateEditedInfo('fullName', text)}
-                        placeholderTextColor="#aaa"
+                                        placeholder="İsim Soyisim"
+                                        value={editedInfo.fullName}
+                                        onChangeText={(text) => updateEditedInfo('fullName', text)}
+                                        placeholderTextColor="#aaa"
                         style={styles.modalInput}
                     />
 
                     <CommonInput
                         icon="school-outline"
-                        placeholder="Fakülte"
-                        value={editedInfo.faculty}
-                        onChangeText={(text) => updateEditedInfo('faculty', text)}
-                        placeholderTextColor="#aaa"
+                                        placeholder="Fakülte"
+                                        value={editedInfo.faculty}
+                                        onChangeText={(text) => updateEditedInfo('faculty', text)}
+                                        placeholderTextColor="#aaa"
                         style={styles.modalInput}
                     />
 
                     <CommonInput
                         icon="book-outline"
-                        placeholder="Bölüm"
-                        value={editedInfo.department}
-                        onChangeText={(text) => updateEditedInfo('department', text)}
-                        placeholderTextColor="#aaa"
+                                        placeholder="Bölüm"
+                                        value={editedInfo.department}
+                                        onChangeText={(text) => updateEditedInfo('department', text)}
+                                        placeholderTextColor="#aaa"
                         style={styles.modalInput}
-                    />
-                </View>
+                                    />
+                            </View>
 
                 <CommonButton
                     title={isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}
-                    onPress={updateUserData}
-                    disabled={!isFormValid() || isSubmitting}
+                                onPress={updateUserData}
+                                disabled={!isFormValid() || isSubmitting}
                     loading={isSubmitting}
                     variant="primary"
                     style={styles.modalSaveButton}
                 />
             </CommonModal>
 
-            <AboutScreen modalVisible={aboutModalVisible} setModalVisible={setAboutModalVisible} />
+            {/* Settings Modal */}
+            <CommonModal
+                visible={settingsModalVisible}
+                onClose={() => setSettingsModalVisible(false)}
+                title="Ayarlar"
+                closeButtonText="Kapat"
+                fullScreen={true}
+            >
+                <View style={styles.settingsContainer}>
+                    <Text style={styles.settingsTitle}>Uygulama Ayarları</Text>
+                    
+                    <View style={styles.settingsItem}>
+                        <View style={styles.row}>
+                            <Ionicons name="moon-outline" size={24} color="#005BAC" />
+                            <Text style={styles.settingsItemText}>Karanlık Tema</Text>
+                        </View>
+                        <Switch
+                            value={settings.darkMode}
+                            onValueChange={(value) => onSettingChange('darkMode', value)}
+                            trackColor={{ false: "#E0E0E0", true: "#005BAC" }}
+                            thumbColor={settings.darkMode ? "#FFFFFF" : "#F5F5F5"}
+                        />
+                    </View>
+
+                    <View style={styles.settingsItem}>
+                        <View style={styles.row}>
+                            <Ionicons name="notifications-outline" size={24} color="#005BAC" />
+                            <Text style={styles.settingsItemText}>Bildirimler</Text>
+                        </View>
+                        <Switch
+                            value={settings.notifications}
+                            onValueChange={(value) => onSettingChange('notifications', value)}
+                            trackColor={{ false: "#E0E0E0", true: "#005BAC" }}
+                            thumbColor={settings.notifications ? "#FFFFFF" : "#F5F5F5"}
+                        />
+                    </View>
+
+                    <View style={styles.settingsItem}>
+                        <View style={styles.row}>
+                            <Ionicons name="language-outline" size={24} color="#005BAC" />
+                            <Text style={styles.settingsItemText}>Türkçe</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={24} color="#005BAC" />
+                    </View>
+
+                    <View style={styles.settingsItem}>
+                        <View style={styles.row}>
+                            <Ionicons name="shield-checkmark-outline" size={24} color="#005BAC" />
+                            <Text style={styles.settingsItemText}>Gizlilik</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={24} color="#005BAC" />
+                    </View>
+                </View>
+            </CommonModal>
+
+            {/* About App Modal */}
+            <CommonModal
+                visible={aboutAppModalVisible}
+                onClose={() => setAboutAppModalVisible(false)}
+                title="Uygulama Hakkında"
+                closeButtonText="Kapat"
+                fullScreen={true}
+            >
+                <LinearGradient
+                    colors={['rgba(0,91,172,0.2)', 'rgba(0,91,172,0.1)']}
+                    style={styles.welcomeSection}
+                >
+                    <Text style={styles.aboutModalSubtitle}>SocialCampus'e Hoş Geldiniz</Text>
+                    
+                    <Text style={styles.aboutModalText}>
+                        SocialCampus, Kırklareli Üniversitesi öğrencilerinin kampüs deneyimini zenginleştirmek ve günlük yaşamlarını 
+                        kolaylaştırmak amacıyla özel olarak tasarlanmış yenilikçi bir mobil platformdur. Modern arayüzü ve kullanıcı 
+                        dostu özellikleriyle, öğrencilerin akademik ve sosyal hayatlarını daha verimli bir şekilde yönetmelerine 
+                        olanak sağlar.
+                    </Text>
+                </LinearGradient>
+                
+                <View style={styles.developerSection}>
+                    <Text style={styles.aboutModalText}>
+                        Bu platform, Kırklareli Üniversitesi Yazılım Mühendisliği bölümü öğrencisi tarafından, öğrenci topluluğunun 
+                        ihtiyaçları göz önünde bulundurularak geliştirilmiştir. Amacımız, teknoloji ile öğrenci deneyimini 
+                        iyileştirerek, kampüs yaşamını daha etkileşimli ve erişilebilir hale getirmektir.
+                    </Text>
+                </View>
+
+                <Text style={styles.featuresTitle}>
+                    <Ionicons name="star" size={24} color="#005BAC" /> Temel Özellikler
+                </Text>
+                
+                <View style={styles.featuresContainer}>
+                    <FeatureCard
+                        title="Yemekhane Bilgi Sistemi"
+                        icon="restaurant-outline"
+                        description="Günlük yemek menülerini anlık olarak görüntüleyebilir, haftalık menüleri inceleyebilir ve 
+                        beslenme planlamanızı buna göre yapabilirsiniz."
+                    />
+
+                    <FeatureCard
+                        title="Öğrenci Kulüpleri Portalı"
+                        icon="people-outline"
+                        description="Üniversitemizdeki tüm öğrenci kulüplerinin detaylı bilgilerine, 
+                        yönetim kadrosuna ve iletişim bilgilerine tek bir platformdan erişebilirsiniz."
+                    />
+
+                    <FeatureCard
+                        title="Öğrenci Alışveriş Platformu"
+                        icon="cart-outline"
+                        description="Kampüs içi alışveriş deneyimini kolaylaştıran bu platformda, diğer öğrencilerin paylaştığı 
+                        ders kitapları, kırtasiye malzemeleri ve çeşitli ürünlere göz atabilirsiniz. İlgilendiğiniz ürünün 
+                        satıcısıyla Instagram üzerinden doğrudan iletişime geçebilir, detayları görüşebilirsiniz. Ayrıca kendi 
+                        ürünlerinizi de platforma ekleyerek diğer öğrencilerle güvenli bir şekilde alışveriş yapabilirsiniz."
+                    />
+                </View>
+            </CommonModal>
+
+            {/* Roadmap Modal */}
             <AppAdd modalVisible={addModalVisible} setModalVisible={setAddModalVisible} />
-            <AboutAppModal 
-                visible={aboutAppModalVisible} 
-                onClose={() => setAboutAppModalVisible(false)} 
-            />
-            {renderChatbotModal()}
         </SafeAreaView>
     );
 }
@@ -506,7 +474,7 @@ export default function Profil() {
 const InfoItem = ({ icon, title, value }) => (
     <View style={styles.infoItem}>
         <View style={styles.infoIconContainer}>
-            <Ionicons name={icon} size={24} color="#4ECDC4" />
+            <Ionicons name={icon} size={24} color="#005BAC" />
         </View>
         <View style={styles.infoTextContainer}>
             <Text style={styles.infoTitle}>{title}</Text>

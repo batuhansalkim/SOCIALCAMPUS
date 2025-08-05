@@ -1,10 +1,11 @@
 import React from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Platform, StatusBar } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const CommonModal = ({
   visible,
@@ -18,6 +19,7 @@ const CommonModal = ({
   headerStyle,
   titleStyle,
   scrollable = true,
+  fullScreen = true,
   ...props
 }) => {
   const ContentWrapper = scrollable ? ScrollView : View;
@@ -31,15 +33,17 @@ const CommonModal = ({
   return (
     <Modal
       visible={visible}
-      transparent={true}
+      transparent={false}
       animationType="slide"
       onRequestClose={onClose}
+      statusBarTranslucent={true}
       {...props}
     >
-      <BlurView intensity={100} tint="dark" style={styles.modalContainer}>
+      <StatusBar barStyle="light-content" backgroundColor="#0F0F0F" />
+      <SafeAreaView style={styles.safeArea}>
         <LinearGradient
-          colors={['rgba(0,0,0,0.95)', 'rgba(0,0,0,0.9)']}
-          style={[styles.modalContent, containerStyle]}
+          colors={['#0F0F0F', '#1A1A1A', '#0F0F0F']}
+          style={[styles.modalContainer, fullScreen && styles.fullScreenContainer]}
         >
           {(title || showCloseButton) && (
             <View style={[styles.modalHeader, headerStyle]}>
@@ -52,8 +56,14 @@ const CommonModal = ({
                 <TouchableOpacity 
                   style={styles.modalCloseButton} 
                   onPress={onClose}
+                  activeOpacity={0.7}
                 >
-                  <Ionicons name="close-circle" size={32} color="#4ECDC4" />
+                  <LinearGradient
+                    colors={['#005BAC', '#004A8C']}
+                    style={styles.closeButtonGradient}
+                  >
+                    <Ionicons name="close" size={24} color="#FFFFFF" />
+                  </LinearGradient>
                 </TouchableOpacity>
               )}
             </View>
@@ -64,76 +74,129 @@ const CommonModal = ({
           </ContentWrapper>
 
           {closeButtonText && (
-            <TouchableOpacity style={styles.modalBottomButton} onPress={onClose}>
-              <LinearGradient
-                colors={['#4ECDC4', '#45B7AF']}
-                style={styles.bottomButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
+            <View style={styles.bottomButtonContainer}>
+              <TouchableOpacity 
+                style={styles.modalBottomButton} 
+                onPress={onClose}
+                activeOpacity={0.8}
               >
-                <Text style={styles.modalBottomButtonText}>
-                  {closeButtonText}
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
+                <LinearGradient
+                  colors={['#005BAC', '#004A8C']}
+                  style={styles.bottomButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={styles.modalBottomButtonText}>
+                    {closeButtonText}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           )}
         </LinearGradient>
-      </BlurView>
+      </SafeAreaView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#0F0F0F',
+  },
   modalContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: '#0F0F0F',
   },
-  modalContent: {
-    width: screenWidth * 0.9,
-    maxHeight: '80%',
-    borderRadius: 20,
-    padding: 20,
-    backgroundColor: 'rgba(0,0,0,0.9)',
+  fullScreenContainer: {
+    width: screenWidth,
+    height: screenHeight,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
-    paddingBottom: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(78,205,196,0.2)',
+    borderBottomColor: 'rgba(0, 91, 172, 0.2)',
+    backgroundColor: 'rgba(26, 26, 26, 0.95)',
   },
   modalTitle: {
     fontSize: screenWidth * 0.06,
-    fontWeight: 'bold',
-    color: '#4ECDC4',
+    fontWeight: '700',
+    color: '#005BAC',
     flex: 1,
+    fontFamily: Platform.OS === 'ios' ? 'Poppins-Bold' : 'Poppins-Bold',
+    letterSpacing: -0.3,
   },
   modalCloseButton: {
-    padding: 5,
+    borderRadius: 20,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#005BAC',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  closeButtonGradient: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     flex: 1,
+    paddingHorizontal: 20,
   },
   scrollContent: {
     flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  bottomButtonContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+    paddingTop: 10,
+    backgroundColor: 'rgba(26, 26, 26, 0.95)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 91, 172, 0.1)',
   },
   modalBottomButton: {
-    borderRadius: 10,
+    borderRadius: 15,
     overflow: 'hidden',
-    marginTop: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#005BAC',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
   },
   bottomButtonGradient: {
-    padding: 15,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   modalBottomButtonText: {
-    color: '#000',
-    fontSize: screenWidth * 0.04,
+    color: '#FFFFFF',
+    fontSize: screenWidth * 0.045,
     fontWeight: '600',
+    fontFamily: Platform.OS === 'ios' ? 'Montserrat-SemiBold' : 'Montserrat-SemiBold',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
 });
 

@@ -1,314 +1,498 @@
 import { StyleSheet, Dimensions, Platform } from 'react-native';
 
 const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
+
+// Minimal Koyu Tema Renk Paleti
+const colors = {
+    // Ana Renkler
+    primary: '#005BAC',        // KLU Mavi - Ana vurgu rengi
+    secondary: '#00C896',       // Yeşil - İkincil vurgu
+    accent: '#FFD700',          // Sarı - Özel durumlar
+    
+    // Koyu Tema Renkleri
+    background: '#0F0F0F',      // Ana arka plan - Koyu
+    surface: '#1A1A1A',         // Kart arka planı - Orta koyu
+    surfaceLight: '#2A2A2A',    // Hafif koyu
+    surfaceDark: '#0A0A0A',     // Çok koyu
+    
+    // Metin Renkleri
+    white: '#FFFFFF',
+    lightGray: '#E0E0E0',
+    gray: '#9E9E9E',
+    darkGray: '#424242',
+    black: '#000000',
+    
+    // Şeffaf Renkler
+    primaryTransparent: 'rgba(0, 91, 172, 0.15)',
+    secondaryTransparent: 'rgba(0, 200, 150, 0.15)',
+    whiteTransparent: 'rgba(255, 255, 255, 0.08)',
+    whiteTransparentLight: 'rgba(255, 255, 255, 0.04)',
+    
+    // Durum Renkleri
+    success: '#00C896',
+    warning: '#FFD700',
+    danger: '#DC3545',
+    info: '#005BAC',
+};
+
+// Profesyonel Font Sistemi
+const typography = {
+    // Başlıklar - Poppins (Genç, yuvarlak hatlı)
+    h1: { 
+        fontSize: screenWidth * 0.08, 
+        fontWeight: '700',
+        fontFamily: Platform.OS === 'ios' ? 'Poppins-Bold' : 'Poppins-Bold',
+        letterSpacing: -0.5,
+    },
+    h2: { 
+        fontSize: screenWidth * 0.06, 
+        fontWeight: '600',
+        fontFamily: Platform.OS === 'ios' ? 'Poppins-SemiBold' : 'Poppins-SemiBold',
+        letterSpacing: -0.3,
+    },
+    h3: { 
+        fontSize: screenWidth * 0.05, 
+        fontWeight: '600',
+        fontFamily: Platform.OS === 'ios' ? 'Poppins-SemiBold' : 'Poppins-SemiBold',
+        letterSpacing: -0.2,
+    },
+    h4: { 
+        fontSize: screenWidth * 0.045, 
+        fontWeight: '500',
+        fontFamily: Platform.OS === 'ios' ? 'Poppins-Medium' : 'Poppins-Medium',
+        letterSpacing: -0.1,
+    },
+    
+    // Genel Metinler - Inter (Modern, sade, okunabilir)
+    body: { 
+        fontSize: screenWidth * 0.04, 
+        fontWeight: '400',
+        fontFamily: Platform.OS === 'ios' ? 'Inter-Regular' : 'Inter-Regular',
+        lineHeight: screenWidth * 0.06,
+    },
+    bodySmall: { 
+        fontSize: screenWidth * 0.035, 
+        fontWeight: '400',
+        fontFamily: Platform.OS === 'ios' ? 'Inter-Regular' : 'Inter-Regular',
+        lineHeight: screenWidth * 0.05,
+    },
+    bodyBold: { 
+        fontSize: screenWidth * 0.04, 
+        fontWeight: '600',
+        fontFamily: Platform.OS === 'ios' ? 'Inter-SemiBold' : 'Inter-SemiBold',
+        lineHeight: screenWidth * 0.06,
+    },
+    
+    // Navigasyon - Montserrat (Güçlü, net)
+    nav: { 
+        fontSize: screenWidth * 0.035, 
+        fontWeight: '600',
+        fontFamily: Platform.OS === 'ios' ? 'Montserrat-SemiBold' : 'Montserrat-SemiBold',
+        letterSpacing: 0.5,
+    },
+    
+    // Premium İçerikler - Raleway (Premium hissi)
+    premium: { 
+        fontSize: screenWidth * 0.04, 
+        fontWeight: '500',
+        fontFamily: Platform.OS === 'ios' ? 'Raleway-Medium' : 'Raleway-Medium',
+        letterSpacing: 0.3,
+    },
+    
+    // Küçük Metinler
+    caption: { 
+        fontSize: screenWidth * 0.03, 
+        fontWeight: '400',
+        fontFamily: Platform.OS === 'ios' ? 'Inter-Regular' : 'Inter-Regular',
+        lineHeight: screenWidth * 0.04,
+    },
+};
+
+// Profesyonel Spacing Sistemi
+const spacing = {
+    xs: screenWidth * 0.01,    // 4px
+    sm: screenWidth * 0.02,    // 8px
+    md: screenWidth * 0.03,    // 12px
+    lg: screenWidth * 0.04,    // 16px
+    xl: screenWidth * 0.05,    // 20px
+    xxl: screenWidth * 0.08,   // 32px
+    xxxl: screenWidth * 0.12,  // 48px
+};
+
+// Profesyonel Shadow Sistemi
+const shadows = {
+    small: {
+        shadowColor: colors.black,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    medium: {
+        shadowColor: colors.black,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        elevation: 6,
+    },
+    large: {
+        shadowColor: colors.black,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.5,
+        shadowRadius: 16,
+        elevation: 12,
+    },
+};
 
 export const styles = StyleSheet.create({
+    // Container Styles
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.9)',
+        backgroundColor: colors.background,
     },
     safeContainer: {
         flex: 1,
+        backgroundColor: colors.background,
     },
     gradient: {
         flex: 1,
+        backgroundColor: colors.background,
         paddingBottom: Platform.OS === 'ios' ? 85 : 60,
     },
+
+    // Header Section
     header: {
         alignItems: 'center',
-        paddingTop: Platform.OS === 'ios' ? 60 : screenWidth * 0.08,
-        paddingBottom: screenWidth * 0.05,
+        paddingTop: Platform.OS === 'ios' ? 20 : screenWidth * 0.04,
+        paddingBottom: spacing.xl,
+        paddingHorizontal: spacing.lg,
+        backgroundColor: colors.surface,
+        borderRadius: 25,
+        marginBottom: spacing.lg,
+        ...shadows.medium,
+        borderWidth: 1,
+        borderColor: colors.whiteTransparent,
+    },
+    profileImageContainer: {
+        position: 'relative',
+        marginBottom: spacing.lg,
     },
     profileImage: {
         width: screenWidth * 0.25,
         height: screenWidth * 0.25,
         borderRadius: screenWidth * 0.125,
-        borderWidth: 2,
-        borderColor: '#4ECDC4',
+        borderWidth: 4,
+        borderColor: colors.primary,
+        ...shadows.large,
     },
+    editImageButton: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        backgroundColor: colors.secondary,
+        borderRadius: 18,
+        width: 36,
+        height: 36,
+        justifyContent: 'center',
+        alignItems: 'center',
+        ...shadows.medium,
+    },
+    userName: {
+        ...typography.h3,
+        color: colors.white,
+        marginBottom: spacing.xs,
+        textAlign: 'center',
+    },
+    userStatus: {
+        ...typography.caption,
+        color: colors.gray,
+        textAlign: 'center',
+        opacity: 0.9,
+    },
+
+    // Content Section
     scrollContent: {
         flexGrow: 1,
-        alignItems: "center",
-        paddingHorizontal: screenWidth * 0.05,
-        paddingBottom: Platform.OS === 'ios' ? 20 : 0,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.md,
     },
+
+    // Info Cards
     infoContainer: {
-        width: '100%',
-        backgroundColor: 'rgba(255,255,255,0.03)',
-        borderRadius: 15,
-        padding: screenWidth * 0.04,
-        marginTop: screenWidth * 0.03,
+        backgroundColor: colors.surface,
+        borderRadius: 20,
+        padding: spacing.lg,
+        marginBottom: spacing.lg,
+        ...shadows.medium,
+        borderWidth: 1,
+        borderColor: colors.whiteTransparent,
     },
     infoItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: screenWidth * 0.03,
-        backgroundColor: 'rgba(255,255,255,0.03)',
-        borderRadius: 12,
-        padding: screenWidth * 0.035,
+        marginBottom: spacing.md,
+        backgroundColor: colors.surfaceLight,
+        borderRadius: 15,
+        padding: spacing.md,
+        ...shadows.small,
+        borderWidth: 1,
+        borderColor: colors.whiteTransparentLight,
     },
     infoIconContainer: {
-        width: screenWidth * 0.11,
-        height: screenWidth * 0.11,
-        borderRadius: screenWidth * 0.055,
-        backgroundColor: 'rgba(78, 205, 196, 0.1)',
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: colors.primaryTransparent,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: screenWidth * 0.03,
+        marginRight: spacing.md,
     },
     infoTextContainer: {
         flex: 1,
     },
     infoTitle: {
-        fontSize: screenWidth * 0.035,
+        ...typography.bodySmall,
+        color: colors.primary,
+        marginBottom: spacing.xs,
         fontWeight: '600',
-        color: '#4ECDC4',
-        marginBottom: screenWidth * 0.01,
     },
     infoText: {
-        fontSize: screenWidth * 0.042,
-        color: '#fff',
+        ...typography.body,
+        color: colors.white,
         fontWeight: '500',
     },
     editButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'rgba(78,205,196,0.15)',
-        borderRadius: 12,
-        padding: screenWidth * 0.035,
-        marginTop: screenWidth * 0.03,
+        backgroundColor: colors.primaryTransparent,
+        borderRadius: 15,
+        padding: spacing.md,
+        marginTop: spacing.md,
+        borderWidth: 1,
+        borderColor: colors.primary,
     },
     editButtonText: {
-        color: '#4ECDC4',
-        fontSize: screenWidth * 0.04,
-        fontWeight: '600',
-        marginLeft: screenWidth * 0.02,
+        color: colors.white,
+        ...typography.bodyBold,
+        marginLeft: spacing.sm,
     },
+
+    // Action Buttons
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        width: '100%',
-        marginTop: screenWidth * 0.04,
+        marginBottom: spacing.lg,
     },
     actionButton: {
-        backgroundColor: 'rgba(78,205,196,0.15)',
-        borderRadius: 12,
-        padding: screenWidth * 0.035,
+        backgroundColor: colors.surface,
+        borderRadius: 15,
+        padding: spacing.md,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         width: '48%',
+        ...shadows.medium,
+        borderWidth: 1,
+        borderColor: colors.whiteTransparent,
     },
     actionButtonText: {
-        color: '#4ECDC4',
-        fontSize: screenWidth * 0.035,
-        fontWeight: '600',
-        marginLeft: screenWidth * 0.02,
+        color: colors.white,
+        ...typography.nav,
+        marginLeft: spacing.sm,
     },
     longButton: {
-        backgroundColor: '#4ECDC4',
-        borderRadius: 12,
-        padding: screenWidth * 0.04,
-        marginTop: screenWidth * 0.04,
+        backgroundColor: colors.primary,
+        borderRadius: 15,
+        padding: spacing.lg,
+        marginBottom: spacing.lg,
         width: '100%',
         justifyContent: 'center',
         alignItems: 'center',
+        ...shadows.medium,
     },
     longButtonText: {
-        fontSize: screenWidth * 0.04,
-        fontWeight: '700',
-        color: '#000',
+        ...typography.nav,
+        color: colors.white,
         textTransform: 'uppercase',
         letterSpacing: 1,
         textAlign: 'center',
-        fontStyle: 'italic',
     },
-    chatbotButton: {
-        width: screenWidth * 0.15,
-        height: screenWidth * 0.15,
-        borderRadius: screenWidth * 0.075,
-        alignSelf: 'center',
-        marginTop: screenWidth * 0.04,
-        marginBottom: Platform.OS === 'ios' ? 10 : screenWidth * 0.05,
-        overflow: 'hidden',
-        elevation: 8,
-        shadowColor: '#4ECDC4',
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.3,
-        shadowRadius: 4.65,
+
+    // Settings Section
+    settingsContainer: {
+        backgroundColor: colors.surface,
+        borderRadius: 20,
+        padding: spacing.lg,
+        marginBottom: spacing.lg,
+        ...shadows.medium,
+        borderWidth: 1,
+        borderColor: colors.whiteTransparent,
     },
-    chatbotButtonGradient: {
-        width: '100%',
-        height: '100%',
+    settingsTitle: {
+        ...typography.h4,
+        color: colors.primary,
+        marginBottom: spacing.md,
+        textAlign: 'center',
+    },
+    settingsItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.whiteTransparentLight,
+    },
+    settingsItemText: {
+        ...typography.body,
+        color: colors.white,
+        flex: 1,
+        marginLeft: spacing.md,
+    },
+
+    // Modal Styles - Artık kullanılmıyor, CommonModal kullanılıyor
+    modalContent: {
+        flex: 1,
+        backgroundColor: colors.background,
+    },
+    // Modal Header - Artık CommonModal içinde
+    modalHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: spacing.lg,
+        paddingBottom: spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.whiteTransparentLight,
+    },
+    modalTitle: {
+        ...typography.h3,
+        color: colors.primary,
+        flex: 1,
+    },
+    modalCloseButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 1.5,
-        borderColor: '#4ECDC4',
-        borderRadius: screenWidth * 0.075,
     },
+    inputContainer: {
+        marginBottom: spacing.lg,
+    },
+    modalInput: {
+        marginBottom: spacing.md,
+    },
+    modalSaveButton: {
+        marginTop: spacing.lg,
+        marginBottom: spacing.md,
+    },
+
+    // About App Modal
     aboutModalContent: {
         flex: 1,
-        padding: screenWidth * 0.05,
-        paddingTop: Platform.OS === 'ios' ? screenWidth * 0.1 : screenWidth * 0.05,
+        padding: spacing.lg,
+        paddingTop: Platform.OS === 'ios' ? spacing.xxl : spacing.lg,
+        backgroundColor: colors.background,
     },
     welcomeSection: {
-        borderRadius: 15,
-        padding: screenWidth * 0.05,
-        marginBottom: screenWidth * 0.05,
+        borderRadius: 20,
+        padding: spacing.lg,
+        marginBottom: spacing.lg,
+        backgroundColor: colors.primaryTransparent,
+        ...shadows.medium,
+        borderWidth: 1,
+        borderColor: colors.primaryTransparent,
     },
     aboutModalSubtitle: {
-        fontSize: screenWidth * 0.045,
-        fontWeight: '600',
-        color: '#4ECDC4',
-        marginBottom: screenWidth * 0.04,
+        ...typography.h4,
+        color: colors.primary,
+        marginBottom: spacing.md,
         textAlign: 'center',
     },
     aboutModalText: {
-        fontSize: screenWidth * 0.035,
-        color: '#fff',
-        lineHeight: screenWidth * 0.05,
-        marginBottom: screenWidth * 0.04,
+        ...typography.body,
+        color: colors.white,
+        lineHeight: screenWidth * 0.06,
+        marginBottom: spacing.md,
+        opacity: 0.9,
     },
     developerSection: {
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        borderRadius: 15,
-        padding: 20,
-        marginBottom: 20,
+        backgroundColor: colors.surface,
+        borderRadius: 20,
+        padding: spacing.lg,
+        marginBottom: spacing.lg,
+        ...shadows.medium,
+        borderWidth: 1,
+        borderColor: colors.whiteTransparent,
     },
     featuresTitle: {
-        fontSize: screenWidth * 0.05,
-        fontWeight: 'bold',
-        color: '#4ECDC4',
-        marginBottom: 20,
-        marginTop: 10,
+        ...typography.h3,
+        color: colors.primary,
+        marginBottom: spacing.lg,
+        marginTop: spacing.md,
         textAlign: 'center',
     },
     featuresContainer: {
-        marginBottom: 20,
+        marginBottom: spacing.lg,
     },
     featureCard: {
         flexDirection: 'row',
         borderRadius: 15,
-        padding: 15,
-        marginBottom: 15,
+        padding: spacing.md,
+        marginBottom: spacing.md,
         alignItems: 'flex-start',
+        backgroundColor: colors.surfaceLight,
+        ...shadows.small,
+        borderWidth: 1,
+        borderColor: colors.whiteTransparentLight,
     },
     featureIconContainer: {
-        width: 45,
-        height: 45,
-        borderRadius: 22.5,
-        backgroundColor: 'rgba(78,205,196,0.1)',
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: colors.secondaryTransparent,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 15,
+        marginRight: spacing.md,
     },
     featureTextContainer: {
         flex: 1,
     },
     featureTitle: {
-        fontSize: screenWidth * 0.04,
-        fontWeight: 'bold',
-        color: '#4ECDC4',
-        marginBottom: 8,
+        ...typography.bodyBold,
+        color: colors.secondary,
+        marginBottom: spacing.xs,
     },
     featureDescription: {
-        fontSize: screenWidth * 0.035,
-        color: '#fff',
-        opacity: 0.9,
+        ...typography.bodySmall,
+        color: colors.gray,
         lineHeight: screenWidth * 0.05,
     },
-    modalContent: {
-        width: screenWidth * 0.9,
-        borderRadius: 20,
-        padding: 20,
-        backgroundColor: 'rgba(0,0,0,0.9)',
-    },
-    inputContainer: {
-        marginBottom: 20,
-    },
-    modalInput: {
-        marginBottom: 15,
-    },
-    modalSaveButton: {
-        marginTop: 10,
-    },
-    chatbotModalContent: {
+
+    // Loading States
+    loadingContainer: {
         flex: 1,
-        margin: 20,
-        borderRadius: 20,
-        overflow: 'hidden',
-    },
-    chatbotWelcomeSection: {
-        borderRadius: 15,
-        padding: 20,
-        marginBottom: 20,
-    },
-    chatbotFeatureGrid: {
-        marginBottom: 20,
-    },
-    chatbotFeatureRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 15,
-    },
-    chatbotFeatureCard: {
-        width: '48%',
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        borderRadius: 15,
-        padding: 15,
-        alignItems: 'center',
-    },
-    chatbotFeatureIconContainer: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        backgroundColor: 'rgba(78,205,196,0.1)',
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 10,
+        backgroundColor: colors.background,
     },
-    chatbotFeatureTitle: {
-        fontSize: screenWidth * 0.04,
-        fontWeight: 'bold',
-        color: '#4ECDC4',
-        marginBottom: 8,
-        textAlign: 'center',
+
+    // Utility Classes
+    centerContent: {
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    chatbotFeatureText: {
-        fontSize: screenWidth * 0.035,
-        color: '#fff',
-        textAlign: 'center',
-        opacity: 0.9,
-    },
-    chatbotCapabilitiesSection: {
-        borderRadius: 15,
-        padding: 20,
-    },
-    chatbotSectionTitle: {
-        fontSize: screenWidth * 0.045,
-        fontWeight: 'bold',
-        color: '#4ECDC4',
-        marginBottom: 15,
-        textAlign: 'center',
-    },
-    chatbotCapabilitiesList: {
-        marginTop: 10,
-    },
-    chatbotCapabilityItem: {
+    row: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 12,
     },
-    chatbotCapabilityText: {
-        fontSize: screenWidth * 0.035,
-        color: '#fff',
-        marginLeft: 10,
-        opacity: 0.9,
+    spaceBetween: {
+        justifyContent: 'space-between',
+    },
+    flex1: {
+        flex: 1,
     },
 }); 
