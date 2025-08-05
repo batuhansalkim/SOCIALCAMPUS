@@ -40,7 +40,7 @@ const AboutAppModal = ({ visible, onClose }) => (
         <View style={styles.modalHeader}>
           <View style={styles.modalTitleContainer}>
             <Ionicons name="information-circle" size={32} color="#4ECDC4" style={styles.modalTitleIcon} />
-            <Text style={styles.aboutModalTitle}>Uygulama Hakkında</Text>
+            <Text style={styles.aboutModalTitle}>Uygulama Hakkında Genel Bilgiler</Text>
           </View>
           <TouchableOpacity style={styles.modalCloseButton} onPress={onClose}>
             <Ionicons name="close-circle" size={35} color="#4ECDC4" />
