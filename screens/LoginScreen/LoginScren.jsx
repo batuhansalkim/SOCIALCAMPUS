@@ -2,16 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { 
     View, 
     Text, 
-    StyleSheet, 
     ScrollView, 
     Switch, 
     SafeAreaView,
-    Platform,
     StatusBar,
     Alert,
     KeyboardAvoidingView,
     Image,
-    Dimensions,
+    Modal,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -24,6 +22,7 @@ import CommonInput from '../../components/CommonInput';
 import CommonButton from '../../components/CommonButton';
 import CommonPicker from '../../components/CommonPicker';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import { styles } from './LoginScreen.styles';
 
 export default function LoginScreen({ onLogin }) {
     const [fullName, setFullName] = useState('');
@@ -251,82 +250,4 @@ export default function LoginScreen({ onLogin }) {
     );
 }
 
-const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-        backgroundColor: '#4c669f',
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-    },
-    gradient: {
-        flex: 1,
-    },
-    container: {
-        flex: 1,
-        paddingHorizontal: 20,
-    },
-    scrollViewContent: {
-        flexGrow: 1,
-        justifyContent: 'center',
-        paddingBottom: Platform.OS === 'ios' ? 50 : 20,
-    },
-    headerContainer: {
-        marginBottom: 8,
-        alignItems: 'center'
-    },
-    logo: {
-        width: 150,
-        height: 150,
-        marginTop: 30,
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#FFF',
-        marginBottom: 8,
-        marginTop:-30,
-    },
-    subtitle: {
-        fontSize: 14,
-        color: '#E0E0E0'
-    },
-    formContainer: {
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        borderRadius: 10,
-        padding: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-        marginHorizontal: Platform.OS === 'ios' ? 10 : 0,
-    },
-    inputGroup: {
-        marginBottom: 15,
-    },
-    label: {
-        fontSize: 14,
-        marginBottom: 6,
-        fontWeight: '500',
-        color: '#333'
-    },
-
-    termsContainer: {
-        marginVertical: 10
-    },
-    switchContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10
-    },
-    switchLabel: {
-        marginLeft: 8,
-        color: '#333',
-        flex: 1,
-        fontSize: 14
-    },
-    underlinedText: {
-        textDecorationLine: 'underline',
-        fontSize: 14
-    },
-
-}); 
+ 
