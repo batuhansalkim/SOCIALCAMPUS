@@ -513,7 +513,7 @@ export default function MealSchedule() {
           style={styles.header}
         >
           <Ionicons name="restaurant" size={40} color="#FFD700" style={styles.headerIcon} />
-          <Text style={styles.headerText}>Okul Yemek Listesi</Text>
+          <Text style={styles.headerText}>Okul Yemek Listesi Güncel</Text>
           <Text style={styles.subHeaderText}>
             {formatDate(mealList[0]?.start)} - {formatDate(mealList[mealList.length - 1]?.start)}
           </Text>
