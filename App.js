@@ -62,7 +62,7 @@ export default function App() {
       if (!lastCleanup || now - parseInt(lastCleanup) > 72 * 60 * 60 * 1000) {
         await AsyncStorage.setItem('last_cache_cleanup', now.toString());
         // Eski cache'leri temizle
-        const keys = ['cached_meals', 'cached_messages', 'cached_books'];
+        const keys = ['cached_meals'];
         for (const key of keys) {
           const lastUpdate = await AsyncStorage.getItem(`${key}_last_update`);
           // 3 günden eski cache'leri temizle

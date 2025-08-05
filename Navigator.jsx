@@ -5,9 +5,7 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { LinearGradient } from "expo-linear-gradient";
 
 import Kulup from "./screens/Kulup/Kulup";
-import Mesaj from "./screens/Mesaj/Mesaj";
 import Profil from "./screens/Profil/Profil";
-import Satis from "./screens/Satis/Satis";
 import YemekListesi from "./screens/YemekListesi/YemekListesi";
 
 const Tab = createBottomTabNavigator();
@@ -151,16 +149,7 @@ export default function Navigator() {
         ),
       }}
     >
-      <Tab.Screen
-        name="Satis"
-        component={Satis}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="sale" color={color} size={size} />
-          ),
-          tabBarLabel: null,
-        }}
-      />
+
       <Tab.Screen
         name="Kulup"
         component={Kulup}
@@ -181,16 +170,7 @@ export default function Navigator() {
           tabBarLabel: null,
         }}
       />
-      <Tab.Screen
-        name="Mesaj"
-        component={Mesaj}
-        options={{
-          tabBarIcon: ({ size, color }) => (
-            <Icon size={size} color={color} name="message" />
-          ),
-          tabBarLabel: null,
-        }}
-      />
+
       <Tab.Screen
         name="Profil"
         component={Profil}

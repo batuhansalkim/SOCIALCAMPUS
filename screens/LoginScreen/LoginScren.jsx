@@ -23,7 +23,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import TermsScreen from "../../components/TermsScreen";
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
-import { FIRESTORE_DB } from "../../FirebaseConfig";
+import { FIRESTORE_DB } from "../../configs/FirebaseConfig";
 import facultiesData from '../../data/faculties.json';
 
 export default function LoginScreen({ onLogin }) {

@@ -19,7 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { collection, query, getDocs, doc, updateDoc, Timestamp, getDoc, writeBatch, where } from 'firebase/firestore';
-import { FIRESTORE_DB } from '../../FirebaseConfig';
+import { FIRESTORE_DB } from '../../configs/FirebaseConfig';
 import AboutScreen from '../About/About';
 import AppAdd from "../AppAdd/AppAdd";
 import facultiesData from '../../data/faculties.json';
@@ -92,13 +92,7 @@ const AboutAppModal = ({ visible, onClose }) => (
               yönetim kadrosuna ve iletişim bilgilerine tek bir platformdan erişebilirsiniz."
             />
 
-            <FeatureCard
-              title="Kampüs Sosyal Ağı"
-              icon="chatbubbles-outline"
-              description="Kampüs içi etkinlikleri, duyuruları ve güncel haberleri takip edebilir, diğer öğrencilerle 
-              etkileşime geçebilirsiniz. Sosyal ağımız, öğrenci topluluğunu bir araya getirerek bilgi paylaşımını ve 
-              iletişimi güçlendirir."
-            />
+
 
             <FeatureCard
               title="Öğrenci Alışveriş Platformu"
@@ -262,27 +256,7 @@ export default function Profil() {
                 updatedAt: Timestamp.now()
             });
 
-            // Mesajları ve kitapları tek seferde güncelle
-            const [messagesSnapshot, booksSnapshot] = await Promise.all([
-                getDocs(query(collection(FIRESTORE_DB, 'messages'), where('userId', '==', userData.id))),
-                getDocs(query(collection(FIRESTORE_DB, 'books'), where('sellerId', '==', userData.id)))
-            ]);
 
-            // Mesajları güncelle
-            messagesSnapshot.docs.forEach(doc => {
-                batch.update(doc.ref, {
-                    userName: editedInfo.fullName.trim()
-                });
-            });
-
-            // Kitapları güncelle
-            booksSnapshot.docs.forEach(doc => {
-                batch.update(doc.ref, {
-                    sellerName: editedInfo.fullName.trim(),
-                    sellerFaculty: editedInfo.faculty.trim(),
-                    sellerDepartment: editedInfo.department.trim()
-                });
-            });
 
             // Tüm güncellemeleri tek seferde yap
             await batch.commit();
