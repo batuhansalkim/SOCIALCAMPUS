@@ -23,14 +23,7 @@ const data = [
         textColor: '#ffffff',
         backgroundColor: '#283593',
     },
-    {
-        id: 4,
-        image: require("../assets/worker.png"), // Üniversite bölümlerini temsil eden görsel
-        title: "Üniversite Gündemi",
-        text: 'Güncel gelişmeleri ve etkinlikleri takip edin, fikirlerinizi paylaşarak üniversiteye katkıda bulunun.',
-        textColor: '#ffffff',
-        backgroundColor: '#6a1b9a',
-    },
+
     {
         id: 5,
         image: { uri: 'https://cdn-icons-png.flaticon.com/512/3145/3145765.png' },

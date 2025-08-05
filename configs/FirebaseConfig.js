@@ -1,21 +1,18 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { getFirestore } from "firebase/firestore";
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-    apiKey: "AIzaSyBGCqIMp2W_MSEXSNwS6fBXCOTcf3SVnQ8",
-    authDomain: "campusapp-5a7ee.firebaseapp.com",
-    projectId: "campusapp-5a7ee",
-    storageBucket: "campusapp-5a7ee.firebasestorage.app",
-    messagingSenderId: "881456151340",
-    appId: "1:881456151340:web:96bcb3de17f644bb150a89",
-    measurementId: "G-QDFNQW62PB"
+  apiKey: "AIzaSyCBrvCS3PWGNxn1oZLaVvW43K082_oO5bM",
+  authDomain: "socailcampus-f9720.firebaseapp.com",
+  projectId: "socailcampus-f9720",
+  storageBucket: "socailcampus-f9720.firebasestorage.app",
+  messagingSenderId: "192303260110",
+  appId: "1:192303260110:web:d4aafc093a3726137e8b9f",
+  measurementId: "G-Z5PML2M962"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
+export const FIRESTORE_DB = getFirestore(app);
+
+export default app;
