@@ -18,8 +18,8 @@ const CommonInput = ({
       {icon && (
         <Ionicons 
           name={icon} 
-          size={20} 
-          color="#7a8ca3" 
+          size={22} 
+          color="#666" 
           style={styles.inputIcon} 
         />
       )}
@@ -41,28 +41,35 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderColor: '#e3e8f0',
+    borderColor: '#E0E0E0',
     borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    backgroundColor: '#FFF',
-    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
-    minHeight: Platform.OS === 'ios' ? 52 : 48,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 10,
+    minHeight: 52,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 3,
+    elevation: 1,
+    zIndex: 1,
   },
   inputIcon: {
-    marginRight: 12,
+    marginRight: 8,
+    color: '#666',
+    fontSize: 16,
+    zIndex: 2,
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14,
     color: '#333',
     paddingVertical: 0,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
+    textAlignVertical: 'center',
+    lineHeight: 45,
+    zIndex: 1,
   },
   disabledInput: {
     opacity: 0.7,
@@ -70,22 +77,6 @@ const styles = StyleSheet.create({
   },
   disabledInputText: {
     color: '#999',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    minHeight: 55,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
 });
 
