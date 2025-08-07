@@ -25,20 +25,20 @@ const CustomIcon = ({ name, color, size, isFocused }) => {
 
   const animatedStyles = {
     transform: [{ scale }],
-    backgroundColor: isFocused ? "rgba(0, 91, 172, 0.2)" : "rgba(255, 255, 255, 0)",
+    backgroundColor: isFocused ? "rgba(0, 91, 172, 0.15)" : "rgba(255, 255, 255, 0.2)",
   };
 
   return (
     <Animated.View style={[styles.iconContainer, animatedStyles]}>
-      <LinearGradient
-        colors={isFocused ? ["rgba(0, 91, 172, 0.9)", "rgba(0, 91, 172, 0.8)"] : ["rgba(142, 142, 147, 0.6)", "rgba(169, 169, 169, 0.6)"]}
-        style={styles.iconBackground}
-      >
-        <Icon
-          name={name}
-          color={isFocused ? "#FFFFFF" : "rgba(240, 240, 240, 0.8)"}
-          size={size}
-        />
+             <LinearGradient
+         colors={isFocused ? ["rgba(0, 91, 172, 0.9)", "rgba(0, 91, 172, 0.8)"] : ["rgba(255, 255, 255, 0.5)", "rgba(255, 255, 255, 0.25)"]}
+         style={styles.iconBackground}
+       >
+                 <Icon
+           name={name}
+           color={isFocused ? "#FFFFFF" : "#FFFFFF"}
+           size={size}
+         />
       </LinearGradient>
     </Animated.View>
   );
@@ -47,10 +47,10 @@ const CustomIcon = ({ name, color, size, isFocused }) => {
 const CustomTabBar = ({ state, descriptors, navigation }) => {
   return (
     <View style={styles.tabBarContainer}>
-      <LinearGradient
-        colors={["rgba(26,26,26,0.9)", "rgba(42,42,42,0.7)", "rgba(26,26,26,0.5)"]}
-        style={styles.tabBar}
-      >
+             <LinearGradient
+         colors={["rgba(15,23,42,0.95)", "rgba(30,41,59,0.9)", "rgba(51,65,85,0.85)"]}
+         style={styles.tabBar}
+       >
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
           const isFocused = state.index === index;
@@ -100,7 +100,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
                       size: 24,
                     }).props.name
                   }
-                  color={isFocused ? "#005BAC" : "rgba(142, 142, 147, 0.7)"}
+                                     color={isFocused ? "#005BAC" : "#FFFFFF"}
                   size={24}
                   isFocused={isFocused}
                 />
@@ -126,7 +126,7 @@ export default function Navigator() {
           left: 0,
           right: 0,
           height: Platform.OS === "ios" ? 160 : 60,
-          backgroundColor: "rgba(26,26,26,0.5)",
+          backgroundColor: "rgba(15,23,42,0.85)",
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
@@ -136,7 +136,7 @@ export default function Navigator() {
         },
         tabBarBackground: () => (
           <LinearGradient
-            colors={["rgba(26,26,26,0.9)", "rgba(42,42,42,0.7)", "rgba(26,26,26,0.5)"]}
+            colors={["rgba(15,23,42,0.95)", "rgba(30,41,59,0.9)", "rgba(51,65,85,0.85)"]}
             style={{
               flex: 1,
               height: Platform.OS === "ios" ? 160 : "100%",
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "rgba(26,26,26,0.5)",
+    backgroundColor: "rgba(15,23,42,0.85)",
     zIndex: 99999,
     elevation: Platform.OS === "android" ? 0 : 24,
     height: Platform.OS === "ios" ? 160 : 60,
@@ -218,6 +218,6 @@ const styles = StyleSheet.create({
   },
   iconBackground: {
     borderRadius: 12,
-    padding: 6,
+    padding: 6, 
   },
 });

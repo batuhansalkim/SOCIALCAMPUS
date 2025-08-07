@@ -21,7 +21,7 @@ const CommonButton = ({
       case 'danger':
         return ['#dc3545', '#c82333'];
       case 'success':
-        return ['#00C896', '#00B386'];
+        return disabled ? ['#2E8B57', '#2E8B57'] : ['#2E8B57', '#228B22'];
       case 'warning':
         return ['#ffc107', '#e0a800'];
       default:
@@ -32,11 +32,11 @@ const CommonButton = ({
   const getButtonSize = () => {
     switch (size) {
       case 'small':
-        return { paddingVertical: 8, fontSize: 12 };
+        return { paddingVertical: 10, fontSize: 14 };
       case 'large':
-        return { paddingVertical: 16, fontSize: 18 };
+        return { paddingVertical: 20, fontSize: 20 };
       default:
-        return { paddingVertical: 12, fontSize: 14 };
+        return { paddingVertical: 16, fontSize: 16 };
     }
   };
 
@@ -98,15 +98,17 @@ const CommonButton = ({
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: 8,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    elevation: 2,
+    elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    paddingVertical: 20,
+    paddingHorizontal: 40,
   },
   gradient: {
     width: '100%',
@@ -115,16 +117,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   buttonText: {
-    fontWeight: '600',
+    fontWeight: '800',
     color: '#FFFFFF',
+    fontSize: 18,
+    
+    
   },
   disabledButton: {
-    opacity: 0.5,
-    elevation: 0,
-    shadowOpacity: 0,
+    opacity: 0.7,
+    elevation: 2,
+    shadowOpacity: 0.2,
   },
   disabledButtonText: {
-    color: '#ccc',
+    color: '#FFFFFF',
   },
 });
 

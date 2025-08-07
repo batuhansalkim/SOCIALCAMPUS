@@ -216,6 +216,7 @@ export const styles = StyleSheet.create({
         flexGrow: 1,
         paddingHorizontal: spacing.lg,
         paddingTop: spacing.md,
+        paddingBottom: spacing.xxl,
     },
 
     // Info Cards
@@ -481,10 +482,6 @@ export const styles = StyleSheet.create({
     },
 
     // Utility Classes
-    centerContent: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
     row: {
         flexDirection: 'row',
         alignItems: 'center',

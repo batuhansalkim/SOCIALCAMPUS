@@ -41,13 +41,19 @@ const CommonPicker = ({
             <Ionicons 
               name={icon} 
               size={20} 
-              color="#4c669f" 
+              color="#7a8ca3" 
               style={styles.inputIcon} 
             />
           )}
           <Text style={[styles.pickerText, !selectedValue && styles.placeholderText]}>
             {getSelectedLabel()}
           </Text>
+          <Ionicons 
+            name="chevron-down" 
+            size={16} 
+            color="#7a8ca3" 
+            style={styles.chevronIcon} 
+          />
         </TouchableOpacity>
 
         <Modal
@@ -99,7 +105,7 @@ const CommonPicker = ({
         <Ionicons 
           name={icon} 
           size={20} 
-          color="#4c669f" 
+          color="#7a8ca3" 
           style={styles.inputIcon} 
         />
       )}
@@ -126,41 +132,56 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderColor: '#4c669f',
+    borderColor: '#e3e8f0',
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 8,
+    borderRadius: 10,
+    paddingHorizontal: 14,
     backgroundColor: '#FFF',
-    paddingVertical: Platform.OS === 'ios' ? 8 : 4,
-    minHeight: Platform.OS === 'ios' ? 50 : 47,
+    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
+    minHeight: Platform.OS === 'ios' ? 52 : 48,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   pickerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderColor: '#4c669f',
     borderWidth: 1,
-    borderRadius: 8,
-    backgroundColor: '#FFF',
-    paddingVertical: Platform.OS === 'ios' ? 8 : 4,
-    paddingHorizontal: 8,
-    minHeight: Platform.OS === 'ios' ? 50 : 47,
+    borderColor: '#E0E0E0',
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    minHeight: 50,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   inputIcon: {
-    marginRight: 8,
+    marginRight: 12,
+  },
+  chevronIcon: {
+    marginLeft: 8,
   },
   pickerText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 15,
     color: '#333',
+    paddingVertical: 0,
+    paddingHorizontal: 8,
   },
   placeholderText: {
     color: '#999',
   },
   picker: {
     flex: 1,
-    height: Platform.OS === 'ios' ? 180 : 50,
+    height: Platform.OS === 'ios' ? 180 : 52,
     color: '#333',
-    fontSize: 14,
+    fontSize: 15,
   },
   disabledInput: {
     opacity: 0.7,

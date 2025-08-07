@@ -10,6 +10,8 @@ import {
     KeyboardAvoidingView,
     Image,
     Modal,
+    TouchableOpacity,
+    Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -151,7 +153,7 @@ export default function LoginScreen({ onLogin }) {
                                         value={fullName}
                                         onChangeText={setFullName}
                                         editable={!isSubmitted}
-                                    />
+                                />
                             </View>
 
                             <View style={styles.inputGroup}>
@@ -159,13 +161,13 @@ export default function LoginScreen({ onLogin }) {
                                 <CommonPicker
                                     icon="school-outline"
                                     placeholder="Fakülte Seçin"
-                                            selectedValue={faculty}
-                                            onValueChange={(itemValue) => {
-                                                if (!isSubmitted) {
-                                                    setFaculty(itemValue);
-                                                    setDepartment('');
-                                                }
-                                            }}
+                                    selectedValue={faculty}
+                                    onValueChange={(itemValue) => {
+                                        if (!isSubmitted) {
+                                            setFaculty(itemValue);
+                                            setDepartment('');
+                                        }
+                                    }}
                                     items={[
                                         { label: 'Fakülte Seçin', value: '' },
                                         ...Object.entries(facultiesData).map(([key, value]) => ({
@@ -173,7 +175,7 @@ export default function LoginScreen({ onLogin }) {
                                             value: key
                                         }))
                                     ]}
-                                            enabled={!isSubmitted}
+                                    enabled={!isSubmitted}
                                     editable={!isSubmitted}
                                 />
                             </View>
@@ -183,8 +185,8 @@ export default function LoginScreen({ onLogin }) {
                                 <CommonPicker
                                     icon="book-outline"
                                     placeholder="Bölüm Seçin"
-                                            selectedValue={department}
-                                            onValueChange={(itemValue) => !isSubmitted && setDepartment(itemValue)}
+                                    selectedValue={department}
+                                    onValueChange={(itemValue) => !isSubmitted && setDepartment(itemValue)}
                                     items={[
                                         { label: 'Bölüm Seçin', value: '' },
                                         ...(facultiesData[faculty]?.departments.map((dept, index) => ({
@@ -192,7 +194,7 @@ export default function LoginScreen({ onLogin }) {
                                             value: dept
                                         })) || [])
                                     ]}
-                                            enabled={!!faculty && !isSubmitted}
+                                    enabled={!!faculty && !isSubmitted}
                                     editable={!isSubmitted}
                                 />
                             </View>
@@ -202,12 +204,12 @@ export default function LoginScreen({ onLogin }) {
                                     <Switch
                                         value={termsAccepted}
                                         onValueChange={setTermsAccepted}
-                                        trackColor={{ false: "#E0E0E0", true: "#4CAF50" }}
+                                        trackColor={{ false: "#E0E0E0", true: "#2E8B57" }}
                                         thumbColor={termsAccepted ? "#FFFFFF" : "#F5F5F5"}
                                         ios_backgroundColor="#E0E0E0"
                                     />
                                     <TouchableOpacity onPress={() => setShowTerms(true)} style={styles.switchLabel}>
-                                        <Text style={styles.underlinedText}>
+                                        <Text style={[styles.underlinedText, { color: '#000000' }]}>
                                             Şartlar ve Koşulları Kabul Ediyorum
                                         </Text>
                                     </TouchableOpacity>
@@ -216,7 +218,7 @@ export default function LoginScreen({ onLogin }) {
                                     <Switch
                                         value={eulaAccepted}
                                         onValueChange={setEulaAccepted}
-                                        trackColor={{ false: "#E0E0E0", true: "#4CAF50" }}
+                                        trackColor={{ false: "#E0E0E0", true: "#2E8B57" }}
                                         thumbColor={eulaAccepted ? "#FFFFFF" : "#F5F5F5"}
                                         ios_backgroundColor="#E0E0E0"
                                     />
@@ -226,13 +228,16 @@ export default function LoginScreen({ onLogin }) {
                                 </View>
                             </View>
                             
-                            <CommonButton
-                                title={isSubmitted ? 'Gönderildi' : 'Gönder'}
-                                onPress={handleLogin}
-                                disabled={!isFormValid || isSubmitted}
-                                variant="success"
-                                style={{ marginTop: 15 }}
-                            />
+                            <View style={styles.buttonContainer}>
+                                <CommonButton
+                                    title={isSubmitted ? 'Gönderildi' : 'Gönder'}
+                                    onPress={handleLogin}
+                                    disabled={!isFormValid || isSubmitted}
+                                    variant="success"
+                                    size="large"
+                                    gradient={false}
+                                />
+                            </View>
                         </View>
                     </ScrollView>
                 </KeyboardAvoidingView>
