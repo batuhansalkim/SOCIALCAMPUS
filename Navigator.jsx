@@ -218,6 +218,6 @@ const styles = StyleSheet.create({
   },
   iconBackground: {
     borderRadius: 12,
-    padding: 6,
+    padding: 6, 
   },
 });
