@@ -40,9 +40,9 @@ const CommonPicker = ({
           {icon && (
             <Ionicons 
               name={icon} 
-              size={20} 
-              color="#7a8ca3" 
-              style={styles.inputIcon} 
+              size={18} 
+              color="#666" 
+              style={styles.pickerIcon} 
             />
           )}
           <Text style={[styles.pickerText, !selectedValue && styles.placeholderText]}>
@@ -50,8 +50,8 @@ const CommonPicker = ({
           </Text>
           <Ionicons 
             name="chevron-down" 
-            size={16} 
-            color="#7a8ca3" 
+            size={18} 
+            color="#666" 
             style={styles.chevronIcon} 
           />
         </TouchableOpacity>
@@ -104,9 +104,9 @@ const CommonPicker = ({
       {icon && (
         <Ionicons 
           name={icon} 
-          size={20} 
-          color="#7a8ca3" 
-          style={styles.inputIcon} 
+          size={18} 
+          color="#666" 
+          style={styles.pickerIcon} 
         />
       )}
       <Picker
@@ -132,47 +132,61 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderColor: '#e3e8f0',
+    borderColor: '#E0E0E0',
     borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    backgroundColor: '#FFF',
-    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
-    minHeight: Platform.OS === 'ios' ? 52 : 48,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 10,
+    minHeight: 52,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 3,
+    elevation: 1,
+    zIndex: 1,
   },
   pickerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    borderRadius: 12,
+    borderRadius: 8,
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    minHeight: 50,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minHeight: 52,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 1,
+    zIndex: 1,
   },
   inputIcon: {
     marginRight: 12,
   },
+  pickerIcon: {
+    marginRight: 8,
+    color: '#666',
+    fontSize: 16,
+    zIndex: 2,
+  },
   chevronIcon: {
     marginLeft: 8,
+    color: '#666',
+    fontSize: 16,
+    zIndex: 2,
   },
   pickerText: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     color: '#333',
     paddingVertical: 0,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
+    textAlignVertical: 'center',
+    lineHeight: 36,
+    zIndex: 1,
   },
   placeholderText: {
     color: '#999',
@@ -181,7 +195,9 @@ const styles = StyleSheet.create({
     flex: 1,
     height: Platform.OS === 'ios' ? 180 : 52,
     color: '#333',
-    fontSize: 15,
+    fontSize: 14,
+    textAlignVertical: 'center',
+    zIndex: 1,
   },
   disabledInput: {
     opacity: 0.7,

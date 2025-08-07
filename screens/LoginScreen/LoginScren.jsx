@@ -136,16 +136,19 @@ export default function LoginScreen({ onLogin }) {
                         bounces={false}
                     >
                         <View style={styles.headerContainer}>
-                            <Image
-                                source={require('../../assets/logo.png')}
-                                style={styles.logo}
-                            />
-                            <Text style={styles.title}>Hoşgeldiniz</Text>
+                            <View style={styles.logoTitleContainer}>
+                                <Image
+                                    source={require('../../assets/logo.png')}
+                                    style={styles.logo}
+                                />
+                                <Text style={styles.title}>Hoşgeldiniz</Text>
+                            </View>
                             <Text style={styles.subtitle}>Bilgilerinizi doldurunuz.</Text>
                         </View>
                         
                         <View style={styles.formContainer}>
                             <View style={styles.inputGroup}>
+                                
                                 <Text style={styles.label}>İsim ve Soyisim</Text>
                                 <CommonInput
                                     icon="person-outline"
@@ -209,7 +212,7 @@ export default function LoginScreen({ onLogin }) {
                                         ios_backgroundColor="#E0E0E0"
                                     />
                                     <TouchableOpacity onPress={() => setShowTerms(true)} style={styles.switchLabel}>
-                                        <Text style={[styles.underlinedText, { color: '#000000' }]}>
+                                        <Text style={styles.termsText}>
                                             Şartlar ve Koşulları Kabul Ediyorum
                                         </Text>
                                     </TouchableOpacity>
