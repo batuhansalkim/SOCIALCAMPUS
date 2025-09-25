@@ -12,44 +12,124 @@ const AppAdd = ({ modalVisible, setModalVisible }) => {
 
   const features = [
     {
-      title: "Etkinlik Takvimi",
-      description: "Üniversite etkinliklerini takip edebileceğiniz, kendi etkinliklerinizi ekleyebileceğiniz interaktif bir takvim.",
-      icon: "calendar-outline"
+      title: "KLU Gündemi",
+      description: "Kampüs haberleri ve bildirimler. Yemekhanede değişiklik, hocaların grevi, final tarihi, otobüs saati değişikliği gibi gelişmelerin bildirimi.",
+      icon: "newspaper-outline"
     },
     {
-      title: "Duyuru Sistemi",
-      description: "Fakülte ve bölüm duyurularını anlık bildirimlerle takip edebilme özelliği.",
-      icon: "notifications-outline"
+      title: "Söz Kırklareli'de",
+      description: "Anket ve oylama platformu. 'En iyi hoca kim?', 'En kötü ders hangisi?' gibi anketler. Premium kullanıcılar yeni anket açabilir.",
+      icon: "chatbox-outline"
     },
     {
-      title: "Öğrenci Forumu",
-      description: "Öğrencilerin ders notları paylaşabileceği, sorular sorabileceği ve tartışabileceği bir platform.",
-      icon: "chatbubbles-outline"
+      title: "Kampüs Yardım Ağı",
+      description: "Eşya paylaşımı ve destek sistemi. 'Fotokopi kartı lazım', 'Fazla kalem var' gibi yardımlaşma platformu.",
+      icon: "hand-left-outline"
     },
     {
-      title: "Ders Programı",
-      description: "Kişiselleştirilmiş ders programı oluşturma ve yönetme özelliği.",
-      icon: "time-outline"
+      title: "K39AI Asistanı",
+      description: "Kırklareli odaklı yapay zeka asistanı. Üniversite yapısı, otobüs saatleri, öğrenci mekanları hakkında her soruya cevap verir.",
+      icon: "bulb-outline"
     },
     {
-      title: "Yemek Değerlendirme",
-      description: "Yemekleri değerlendirme, puan verme ve yorum yapabilme özelliği ile daha iyi bir yemekhane deneyimi.",
-      icon: "star-outline"
+      title: "Eşleşme Sistemi",
+      description: "İlgi alanına göre kişi eşleştirme ve sohbet başlatma. Aynı bölüm, kulüp filtreleri ile tanışma imkanı.",
+      icon: "heart-outline"
     },
     {
-      title: "Kulüp Etkinlikleri",
-      description: "Kulüplerin geçmiş etkinliklerini ve yeni yapılacak etkinliklerini görüntüleme imkanı.",
-      icon: "people-outline"
+      title: "Kahve Ismarlama",
+      description: "Sanal hediye gönderme veya QR kodla fiziksel kafelerde kullanma. Arkadaşlarınıza kahve ısmarlayın!",
+      icon: "cafe-outline"
     },
     {
-      title: "Gelişmiş Profil Sistemi",
-      description: "Sohbet kısmında, istediğiniz kişinin profil sayfasını görüntüleyebilirsiniz.",
-      icon: "person-circle-outline"
+      title: "Spor Takımı Oluşturma",
+      description: "Takım kurma, yer-saat belirleme ve otomatik eşleşme sistemi. Basketbol, futbol, voleybol takımları kurun.",
+      icon: "football-outline"
     },
     {
-      title: "Kırklareli Yaşam",
-      description: "Kırklareli'de yaşamı kolaylaştıracak birçok bilgi, reklamlar, kampanyalar ve indirimlerin bulunduğu özel sayfa.",
-      icon: "gift-outline"
+      title: "Bölüme Özel Forumlar",
+      description: "Akademik tartışmalar ve yardım alanları. Bölümünüze özel sohbet odaları ve ders notu paylaşımı.",
+      icon: "school-outline"
+    },
+    {
+      title: "Mini Günlük Görevler",
+      description: "Campus Challenge sistemi. '3 kahve ısmarla', 'bir kulübe katıl' gibi günlük görevler ve rozet kazanma.",
+      icon: "trophy-outline"
+    },
+    {
+      title: "Kampüs Kimliği",
+      description: "Dijital öğrenci kartı. Profilde QR kodlu kimlik görünümü ve kampüs içi kullanım.",
+      icon: "card-outline"
+    },
+    {
+      title: "Kampüs Rehberi",
+      description: "Kantinler, fotokopi yerleri, kütüphane rehberi. Öğrenci yorumları ve puanlamaları ile en iyi yerleri keşfedin.",
+      icon: "map-outline"
+    },
+    {
+      title: "Meme & Mizah Alanı",
+      description: "Kampüs caps'leri ve komik içerikler. En beğenilenler haftalık öne çıkarılır.",
+      icon: "happy-outline"
+    },
+    {
+      title: "Anonim İtiraf Alanı",
+      description: "Moderatörlü içerik ve upvote sistemi. Günün en çok beğenilen postu öne çıkarılır.",
+      icon: "chatbubble-ellipses-outline"
+    },
+    {
+      title: "Yakındakiler",
+      description: "Konum tabanlı bildirimler. 'Yakında 4 kişi daha var' gibi sosyal temayı artıran özellik.",
+      icon: "location-outline"
+    },
+    {
+      title: "Rastgele Tanış",
+      description: "Tanımadığın biriyle sohbet başlat. Aynı bölüm, kulüp filtreleri ile güvenli tanışma.",
+      icon: "shuffle-outline"
+    },
+    {
+      title: "Kampüs Sıralamaları",
+      description: "En çok katkı yapanlar için profil rozetleri. Not paylaşan, kahve ısmarlayan, quiz şampiyonu kategorileri.",
+      icon: "medal-outline"
+    },
+    {
+      title: "Mini Anketler",
+      description: "'Bugünkü yemek nasıldı?' gibi kısa anketler. Topluluk hissini artıran hızlı oylamalar.",
+      icon: "checkmark-circle-outline"
+    },
+    {
+      title: "Hoca Rehberi",
+      description: "Öğrencilerden anonim yorum ve puanlar. Ders seçerken rehberlik eden değerlendirme sistemi.",
+      icon: "person-outline"
+    },
+    {
+      title: "Kampüs Pazarı",
+      description: "2. el kitap, kırtasiye, eşya ilanları. Güvenli mesajlaşma ve kullanıcı puanı sistemi.",
+      icon: "storefront-outline"
+    },
+    {
+      title: "Mentorluk Sistemi",
+      description: "Üst sınıf-alt sınıf eşleştirme. 1-2. sınıflar, bölümden 3-4. sınıflarla eşleşir ve rehberlik alır.",
+      icon: "people-circle-outline"
+    },
+    {
+      title: "Quiz Battle",
+      description: "Bilgi yarışması odaları. Kategori seç, rastgele ya da arkadaşla yarış. Haftalık sıralama ve rozetler.",
+      icon: "game-controller-outline"
+    },
+    {
+      title: "Kırklareli Gezi Rehberi",
+      description: "Kahvaltıcılar, piknik alanları, sahil köyleri, kafeler rehberi. Haftalık 'Gizli Yer Önerisi' ile keşfedilmemiş alanlar.",
+      icon: "camera-outline"
+    },
+    {
+      title: "Mezunlar Ağı",
+      description: "Mezunlar, akademisyenler ve öğrenciler arasında köprü. Kariyer sohbetleri, mentorluk, iş ilanları.",
+      icon: "business-outline"
+    },
+    {
+      title: "İş İlanları",
+      description: "Üniversite destekli, sponsorlu iş ve staj ilanları. Kampüs içi özel fırsatlar ve kampanyalar.",
+      icon: "briefcase-outline"
     }
   ];
 
@@ -68,7 +148,7 @@ const AppAdd = ({ modalVisible, setModalVisible }) => {
               style={styles.closeButton} 
               onPress={() => setModalVisible(false)}
             >
-              <Ionicons name="close-circle" size={32} color="#4ECDC4" />
+              <Ionicons name="close-circle" size={32} color="#00BFFF" />
             </TouchableOpacity>
           </View>
 
@@ -83,7 +163,7 @@ const AppAdd = ({ modalVisible, setModalVisible }) => {
             {features.map((feature, index) => (
               <View key={index} style={styles.featureCard}>
                 <View style={styles.featureIconContainer}>
-                  <Ionicons name={feature.icon} size={24} color="#4ECDC4" />
+                  <Ionicons name={feature.icon} size={24} color="#00BFFF" />
                 </View>
                 <View style={styles.featureContent}>
                   <Text style={styles.featureTitle}>{feature.title}</Text>
@@ -92,18 +172,14 @@ const AppAdd = ({ modalVisible, setModalVisible }) => {
               </View>
             ))}
 
-            <Text style={styles.noteText}>
-              Bu özellikler geliştirme aşamasındadır ve yakında kullanıma sunulacaktır.
-              Önerileriniz için iletişime geçebilirsiniz.
-            </Text>
 
-            <TouchableOpacity 
-              style={styles.emailButton}
-              onPress={handleEmailPress}
-            >
-              <Ionicons name="mail-outline" size={24} color="#000" style={styles.emailIcon} />
-              <Text style={styles.emailButtonText}>Mail Gönder</Text>
-            </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.emailButton}
+                onPress={handleEmailPress}
+              >
+                <Ionicons name="mail-outline" size={28} color="#00BFFF" style={styles.emailIcon} />
+                <Text style={styles.emailButtonText}>Mail Gönder</Text>
+              </TouchableOpacity>
           </ScrollView>
 
           <TouchableOpacity 
@@ -137,7 +213,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: SCREEN_WIDTH * 0.06,
     fontWeight: 'bold',
-    color: '#4ECDC4',
+    color: '#00BFFF',
     flex: 1,
   },
   closeButton: {
@@ -165,7 +241,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: 'rgba(78,205,196,0.1)',
+    backgroundColor: 'rgba(0,191,255,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
@@ -176,7 +252,7 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: SCREEN_WIDTH * 0.04,
     fontWeight: 'bold',
-    color: '#4ECDC4',
+    color: '#00BFFF',
     marginBottom: 5,
   },
   featureDescription: {
@@ -195,7 +271,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   closeModalButton: {
-    backgroundColor: '#4ECDC4',
+    backgroundColor: '#00BFFF',
     borderRadius: 10,
     padding: 15,
     alignItems: 'center',
@@ -207,20 +283,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   emailButton: {
-    backgroundColor: '#4ECDC4',
-    borderRadius: 10,
-    padding: 12,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 8,
+    padding: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
-    marginHorizontal: 20,
+    marginHorizontal: 40,
   },
   emailIcon: {
     marginRight: 8,
   },
   emailButtonText: {
-    color: '#000',
+    color: '#FFFFFF',
     fontSize: SCREEN_WIDTH * 0.04,
     fontWeight: '600',
   },

@@ -286,7 +286,7 @@ const Kulüp = ({ navigation }) => {
         >
           <View style={styles.innerContainer}>
             <BlurView intensity={100} tint="dark" style={styles.searchContainer}>
-              <Ionicons name="search" size={24} color="#4ECDC4" style={styles.searchIcon} />
+              <Ionicons name="search" size={24} color="#00BFFF" style={styles.searchIcon} />
               <TextInput
                 style={styles.searchInput}
                 placeholder="Kulüp Ara..."
@@ -350,6 +350,7 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
+    backgroundColor: '#0F0F0F',
     paddingTop: Platform.OS === 'ios' ? screenHeight * 0.06 : screenHeight * 0.04,
   },
   innerContainer: {
@@ -366,6 +367,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     height: screenHeight * 0.06,
     zIndex: 1,
+    backgroundColor: 'rgba(26, 26, 26, 0.8)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   searchIcon: {
     marginRight: screenWidth * 0.02,
@@ -390,6 +394,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     overflow: 'hidden',
     minHeight: screenHeight * 0.15,
+    borderWidth: 0.5,
+    borderColor: '#00BFFF',
+    backgroundColor: 'rgba(26, 26, 26, 0.8)',
   },
   image: {
     width: screenWidth * 0.25,
@@ -397,7 +404,7 @@ const styles = StyleSheet.create({
     borderRadius: screenWidth * 0.125,
     marginBottom: screenHeight * 0.01,
     borderWidth: 2,
-    borderColor: '#4ECDC4',
+    borderColor: '#00BFFF',
   },
   name: {
     fontSize: screenWidth * 0.045,
@@ -410,13 +417,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: '#0F0F0F',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: '#0F0F0F',
     padding: screenWidth * 0.04,
   },
   errorText: {

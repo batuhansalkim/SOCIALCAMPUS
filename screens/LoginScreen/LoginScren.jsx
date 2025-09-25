@@ -17,8 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import TermsScreen from "../../components/TermsScreen";
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
-import { FIRESTORE_DB } from "../../configs/FirebaseConfig";
+import { useFirebase } from '../../contexts/FirebaseContext';
 import facultiesData from '../../data/faculties.json';
 import CommonInput from '../../components/CommonInput';
 import CommonButton from '../../components/CommonButton';
@@ -27,6 +26,7 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import { styles } from './LoginScreen.styles';
 
 export default function LoginScreen({ onLogin }) {
+    const { userService } = useFirebase();
     const [fullName, setFullName] = useState('');
     const [faculty, setFaculty] = useState('');
     const [department, setDepartment] = useState('');
@@ -49,28 +49,26 @@ export default function LoginScreen({ onLogin }) {
         }
 
         setIsSubmitted(true);
+        setLoading(true);
 
         try {
-            const timestamp = Timestamp.now();
             const facultyName = facultiesData[faculty]?.name || '';
 
-            // Firestore'da kullanıcı koleksiyonuna veri ekleme
-            const docRef = await addDoc(collection(FIRESTORE_DB, 'users'), {
-                fullName,
-                faculty,
-                facultyName,
-                department,
-                termsAccepted,
-                eulaAccepted,
-                createdAt: timestamp,
-                updatedAt: timestamp
-            });
+            // Firebase'e kaydetmeden önce anonim giriş yap ve uid al
+            let userId = null;
+            try {
+                const { signInAnonymously } = await import('firebase/auth');
+                const { AUTH } = await import('../../configs/FirebaseConfig');
+                const cred = await signInAnonymously(AUTH);
+                userId = cred.user?.uid || AUTH.currentUser?.uid;
+                console.log('Anonymous user signed in with uid:', userId);
+            } catch (firebaseAuthError) {
+                console.log('Anonymous auth failed, proceeding with local storage only:', firebaseAuthError?.message);
+            }
 
-            console.log('Firestore doc created with ID:', docRef.id);
-
-            // Kullanıcı verilerini AsyncStorage'a kaydet
+            // Kullanıcı verilerini AsyncStorage'a kaydet (uid varsa onu kullan)
             const userData = {
-                id: docRef.id,
+                id: userId || `local_${Date.now()}`,
                 fullName,
                 faculty,
                 facultyName,
@@ -85,6 +83,25 @@ export default function LoginScreen({ onLogin }) {
             // Yeni verileri kaydet
             await AsyncStorage.setItem('userData', JSON.stringify(userData));
             await AsyncStorage.setItem('userLoggedIn', 'true');
+            await AsyncStorage.setItem('savedUserId', userData.id);
+
+            // Firebase'e kaydetmeyi dene (uid mevcutsa)
+            try {
+                if (userId) {
+                    await userService.createUser(userId, {
+                        fullName,
+                        faculty,
+                        facultyName,
+                        department,
+                        termsAccepted,
+                        eulaAccepted
+                    });
+                    console.log('Firebase user created with ID:', userId);
+                }
+            } catch (firebaseError) {
+                console.log('Firebase error (ignored):', firebaseError.message);
+                // Firebase hatası varsa görmezden gel, AsyncStorage yeterli
+            }
             await AsyncStorage.setItem('hasLaunched', 'true');
 
             // Kaydedilen verileri kontrol et
@@ -92,6 +109,9 @@ export default function LoginScreen({ onLogin }) {
             const savedLoginStatus = await AsyncStorage.getItem('userLoggedIn');
             console.log('Saved user data:', savedUserData);
             console.log('Saved login status:', savedLoginStatus);
+
+            // Loading'i durdur
+            setLoading(false);
 
             Alert.alert(
                 '✅ Kayıt Başarılı',
@@ -109,8 +129,11 @@ export default function LoginScreen({ onLogin }) {
             );
         } catch (error) {
             setIsSubmitted(false);
+            setLoading(false);
             console.error('Kayıt sırasında bir hata oluştu:', error);
             Alert.alert('Hata', 'Bilgiler kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -155,7 +178,9 @@ export default function LoginScreen({ onLogin }) {
                                         placeholder="İsim ve soyisminizi giriniz"
                                         value={fullName}
                                         onChangeText={setFullName}
-                                        editable={!isSubmitted}
+                                    editable={!isSubmitted}
+                                    iconColor="#666"
+                                    borderColor="#E0E0E0"
                                 />
                             </View>
 
@@ -180,6 +205,8 @@ export default function LoginScreen({ onLogin }) {
                                     ]}
                                     enabled={!isSubmitted}
                                     editable={!isSubmitted}
+                                    iconColor="#666"
+                                    borderColor="#E0E0E0"
                                 />
                             </View>
 
@@ -199,6 +226,8 @@ export default function LoginScreen({ onLogin }) {
                                     ]}
                                     enabled={!!faculty && !isSubmitted}
                                     editable={!isSubmitted}
+                                    iconColor="#666"
+                                    borderColor="#E0E0E0"
                                 />
                             </View>
 

@@ -10,16 +10,18 @@ const CommonInput = ({
   secureTextEntry = false,
   editable = true,
   style,
-  placeholderTextColor = "#999",
+  placeholderTextColor = "#000000",
+  iconColor = "#00BFFF",
+  borderColor = "#00BFFF",
   ...props
 }) => {
   return (
-    <View style={[styles.inputWrapper, !editable && styles.disabledInput, style]}>
+    <View style={[styles.inputWrapper, { borderColor }, !editable && styles.disabledInput, style]}>
       {icon && (
         <Ionicons 
           name={icon} 
           size={22} 
-          color="#666" 
+          color={iconColor} 
           style={styles.inputIcon} 
         />
       )}
@@ -41,8 +43,8 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderColor: '#E0E0E0',
-    borderWidth: 1,
+    borderColor: '#00BFFF',
+    borderWidth: 2,
     borderRadius: 8,
     paddingHorizontal: 12,
     backgroundColor: '#FFFFFF',
@@ -57,7 +59,7 @@ const styles = StyleSheet.create({
   },
   inputIcon: {
     marginRight: 8,
-    color: '#666',
+    color: '#00BFFF',
     fontSize: 16,
     zIndex: 2,
   },

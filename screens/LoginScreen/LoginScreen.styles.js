@@ -52,7 +52,7 @@ export const styles = StyleSheet.create({
     },
     formContainer: {
         width: screenWidth * 0.92,
-        backgroundColor: 'rgba(255,255,255,0.95)',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
         borderRadius: 16,
         padding: screenWidth * 0.04,
         marginTop: screenWidth * 0.01,
@@ -69,7 +69,7 @@ export const styles = StyleSheet.create({
         fontSize: 14,
         marginBottom: screenWidth * 0.015,
         fontWeight: '600',
-        color: '#333',
+        color: '#333333',
     },
     termsContainer: {
         marginVertical: screenWidth * 0.02,
@@ -82,7 +82,7 @@ export const styles = StyleSheet.create({
     },
     switchLabel: {
         marginLeft: screenWidth * 0.02,
-        color: '#000000',
+        color: '#333333',
         flex: 1,
         fontSize: 13,
         lineHeight: 18,

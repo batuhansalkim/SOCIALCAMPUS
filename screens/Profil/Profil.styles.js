@@ -6,7 +6,7 @@ const screenHeight = Dimensions.get('window').height;
 // Minimal Koyu Tema Renk Paleti
 const colors = {
     // Ana Renkler
-    primary: '#005BAC',        // KLU Mavi - Ana vurgu rengi
+    primary: '#00BFFF',        // Parlak Mavi - Ana vurgu rengi
     secondary: '#00C896',       // Yeşil - İkincil vurgu
     accent: '#FFD700',          // Sarı - Özel durumlar
     
@@ -24,7 +24,7 @@ const colors = {
     black: '#000000',
     
     // Şeffaf Renkler
-    primaryTransparent: 'rgba(0, 91, 172, 0.15)',
+    primaryTransparent: 'rgba(0, 191, 255, 0.15)',
     secondaryTransparent: 'rgba(0, 200, 150, 0.15)',
     whiteTransparent: 'rgba(255, 255, 255, 0.08)',
     whiteTransparentLight: 'rgba(255, 255, 255, 0.04)',
@@ -33,7 +33,7 @@ const colors = {
     success: '#00C896',
     warning: '#FFD700',
     danger: '#DC3545',
-    info: '#005BAC',
+    info: '#00BFFF',
 };
 
 // Profesyonel Font Sistemi
@@ -169,6 +169,8 @@ export const styles = StyleSheet.create({
         paddingHorizontal: spacing.lg,
         backgroundColor: colors.surface,
         borderRadius: 25,
+        marginTop: 5,
+        marginTop: 10,
         marginBottom: spacing.lg,
         ...shadows.medium,
         borderWidth: 1,
@@ -176,6 +178,8 @@ export const styles = StyleSheet.create({
     },
     profileImageContainer: {
         position: 'relative',
+        marginTop: 5,
+        marginTop: 10,
         marginBottom: spacing.lg,
     },
     profileImage: {
@@ -224,6 +228,8 @@ export const styles = StyleSheet.create({
         backgroundColor: colors.surface,
         borderRadius: 20,
         padding: spacing.lg,
+        marginTop: 5,
+        marginTop: 10,
         marginBottom: spacing.lg,
         ...shadows.medium,
         borderWidth: 1,
@@ -284,6 +290,8 @@ export const styles = StyleSheet.create({
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        marginTop: 5,
+        marginTop: 10,
         marginBottom: spacing.lg,
     },
     actionButton: {
@@ -304,9 +312,11 @@ export const styles = StyleSheet.create({
         marginLeft: spacing.sm,
     },
     longButton: {
-        backgroundColor: colors.primary,
+        backgroundColor: '#0088BB',
         borderRadius: 15,
         padding: spacing.lg,
+        marginTop: 5,
+        marginTop: 10,
         marginBottom: spacing.lg,
         width: '100%',
         justifyContent: 'center',
@@ -326,6 +336,8 @@ export const styles = StyleSheet.create({
         backgroundColor: colors.surface,
         borderRadius: 20,
         padding: spacing.lg,
+        marginTop: 5,
+        marginTop: 10,
         marginBottom: spacing.lg,
         ...shadows.medium,
         borderWidth: 1,
@@ -362,6 +374,8 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        marginTop: 5,
+        marginTop: 10,
         marginBottom: spacing.lg,
         paddingBottom: spacing.md,
         borderBottomWidth: 1,
@@ -381,10 +395,50 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
     },
     inputContainer: {
+        marginTop: 5,
+        marginTop: 10,
         marginBottom: spacing.lg,
+    },
+    sectionCard: {
+        backgroundColor: colors.surface,
+        borderRadius: 16,
+        padding: spacing.lg,
+        ...shadows.medium,
+        borderWidth: 1,
+        borderColor: colors.whiteTransparent,
+    },
+    formGroup: {
+        marginBottom: spacing.lg,
+    },
+    label: {
+        ...typography.bodySmall,
+        color: colors.lightGray,
+        marginBottom: spacing.sm,
+    },
+    helperText: {
+        ...typography.caption,
+        color: colors.gray,
+        marginTop: spacing.xs,
     },
     modalInput: {
         marginBottom: spacing.md,
+    },
+    footerInfoContainer: {
+        marginTop: spacing.lg,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.md,
+        borderRadius: 12,
+        backgroundColor: colors.whiteTransparent,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: colors.whiteTransparentLight,
+    },
+    footerInfoText: {
+        ...typography.bodySmall,
+        color: colors.lightGray,
+        marginLeft: spacing.sm,
+        flex: 1,
     },
     modalSaveButton: {
         marginTop: spacing.lg,
@@ -401,11 +455,13 @@ export const styles = StyleSheet.create({
     welcomeSection: {
         borderRadius: 20,
         padding: spacing.lg,
+        marginTop: 5,
+        marginTop: 10,
         marginBottom: spacing.lg,
-        backgroundColor: colors.primaryTransparent,
-        ...shadows.medium,
+        backgroundColor: 'rgba(26, 26, 26, 0.8)',
         borderWidth: 1,
-        borderColor: colors.primaryTransparent,
+        borderColor: '#00BFFF',
+        overflow: 'hidden',
     },
     aboutModalSubtitle: {
         ...typography.h4,
@@ -421,22 +477,29 @@ export const styles = StyleSheet.create({
         opacity: 0.9,
     },
     developerSection: {
-        backgroundColor: colors.surface,
+        backgroundColor: 'rgba(26, 26, 26, 0.8)',
         borderRadius: 20,
         padding: spacing.lg,
+        marginTop: 5,
+        marginTop: 10,
         marginBottom: spacing.lg,
-        ...shadows.medium,
         borderWidth: 1,
-        borderColor: colors.whiteTransparent,
+        borderColor: '#00BFFF',
+        overflow: 'hidden',
     },
     featuresTitle: {
         ...typography.h3,
         color: colors.primary,
+        marginTop: 5,
+        marginTop: 10,
         marginBottom: spacing.lg,
         marginTop: spacing.md,
         textAlign: 'center',
     },
     featuresContainer: {
+        paddingTop: 50,
+        marginTop: 5,
+        marginTop: 10,
         marginBottom: spacing.lg,
     },
     featureCard: {
@@ -445,16 +508,16 @@ export const styles = StyleSheet.create({
         padding: spacing.md,
         marginBottom: spacing.md,
         alignItems: 'flex-start',
-        backgroundColor: colors.surfaceLight,
-        ...shadows.small,
+        backgroundColor: 'rgba(26, 26, 26, 0.8)',
         borderWidth: 1,
-        borderColor: colors.whiteTransparentLight,
+        borderColor: '#00BFFF',
+        overflow: 'hidden',
     },
     featureIconContainer: {
         width: 48,
         height: 48,
         borderRadius: 24,
-        backgroundColor: colors.secondaryTransparent,
+        backgroundColor: 'rgba(0, 191, 255, 0.2)',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: spacing.md,
@@ -464,12 +527,12 @@ export const styles = StyleSheet.create({
     },
     featureTitle: {
         ...typography.bodyBold,
-        color: colors.secondary,
+        color: '#00BFFF',
         marginBottom: spacing.xs,
     },
     featureDescription: {
         ...typography.bodySmall,
-        color: colors.gray,
+        color: '#F0F0F0',
         lineHeight: screenWidth * 0.05,
     },
 
@@ -491,5 +554,64 @@ export const styles = StyleSheet.create({
     },
     flex1: {
         flex: 1,
+    },
+
+    // Contact card modal styles
+    contactOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    contactCard: {
+        width: '88%',
+        backgroundColor: colors.surface,
+        borderRadius: 16,
+        padding: spacing.lg,
+        borderWidth: 1,
+        borderColor: colors.whiteTransparent,
+        ...shadows.medium,
+    },
+    contactCloseButton: {
+        position: 'absolute',
+        top: spacing.md,
+        right: spacing.md,
+        backgroundColor: '#005BAC',
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    contactTitle: {
+        ...typography.h4,
+        color: colors.primary,
+        textAlign: 'center',
+        marginBottom: spacing.lg,
+    },
+    contactItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.md,
+        backgroundColor: colors.surfaceLight,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: colors.whiteTransparentLight,
+        marginBottom: spacing.md,
+        ...shadows.small,
+    },
+    contactTextWrap: {
+        marginLeft: spacing.md,
+    },
+    contactName: {
+        ...typography.bodyBold,
+        color: colors.white,
+    },
+    contactSubtitle: {
+        ...typography.caption,
+        color: colors.gray,
+        marginTop: 2,
     },
 }); 

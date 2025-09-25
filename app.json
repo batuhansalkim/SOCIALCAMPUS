@@ -10,7 +10,9 @@
     "updates": {
       "enabled": false
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -18,9 +20,26 @@
       },
       "package": "com.klucampus.app",
       "versionCode": 2,
-      "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"]
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ]
     },
     "newArchEnabled": true,
-    "jsEngine": "hermes"
+    "jsEngine": "hermes",
+    "extra": {
+      "eas": {
+        "projectId": "88cb5a10-92d3-4df4-b000-7aa2ea4a92ee"
+      }
+    },
+    "plugins": [
+      "expo-font",
+      "expo-asset"
+    ],
+    "build": {
+      "android": {
+        "buildType": "apk"
+      }
+    }
   }
 }
