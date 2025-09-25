@@ -1,18 +1,32 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, enableNetwork, disableNetwork, connectFirestoreEmulator } from "firebase/firestore";
+import { initializeAuth, getReactNativePersistence } from "firebase/auth";
+import { getStorage } from "firebase/storage";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCBrvCS3PWGNxn1oZLaVvW43K082_oO5bM",
-  authDomain: "socailcampus-f9720.firebaseapp.com",
-  projectId: "socailcampus-f9720",
-  storageBucket: "socailcampus-f9720.firebasestorage.app",
-  messagingSenderId: "192303260110",
-  appId: "1:192303260110:web:d4aafc093a3726137e8b9f",
-  measurementId: "G-Z5PML2M962"
+  apiKey: "AIzaSyDLKRTo0Eg760LmRSvkE3kVEyYbgKgSmEY",
+  authDomain: "socialcampus-app.firebaseapp.com",
+  projectId: "socialcampus-app",
+  storageBucket: "socialcampus-app.firebasestorage.app",
+  messagingSenderId: "186488986629",
+  appId: "1:186488986629:web:ed9f6e3370c39a60ad906c"
 };
 
 const app = initializeApp(firebaseConfig);
 
+// Firestore'u offline-first modda başlat
 export const FIRESTORE_DB = getFirestore(app);
+
+// Firebase online mode - production ready
+console.log('Firestore online mode enabled');
+
+export const AUTH = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage)
+});
+export const STORAGE = getStorage(app);
+
+// Analytics'i React Native için devre dışı bırak
+export const ANALYTICS = null;
 
 export default app;

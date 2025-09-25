@@ -3,7 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Navigator from './Navigator';
 import OnboardingScreens from "./screens/onBoardingScren/onBoarding";
-import LoginScreen from "./screens/LoginScreen/LoginScren"
+import LoginScreen from "./screens/LoginScreen/LoginScren";
+import { FirebaseProvider } from './contexts/FirebaseContext';
 
 export default function App() {
   const [showOnboarding, setShowOnboarding] = useState(true);
@@ -86,14 +87,16 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      {showOnboarding ? (
-        <OnboardingScreens onDone={handleDone} />
-      ) : !isLoggedIn ? (
-        <LoginScreen onLogin={handleLogin} />
-      ) : (
-        <Navigator />
-      )}
-    </NavigationContainer>
+    <FirebaseProvider>
+      <NavigationContainer>
+        {showOnboarding ? (
+          <OnboardingScreens onDone={handleDone} />
+        ) : !isLoggedIn ? (
+          <LoginScreen onLogin={handleLogin} />
+        ) : (
+          <Navigator />
+        )}
+      </NavigationContainer>
+    </FirebaseProvider>
   );
 }

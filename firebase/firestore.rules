@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Kullanıcılar koleksiyonu
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Yemek reaksiyonları koleksiyonu
+    match /meal_reactions/{reactionId} {
+      allow read: if request.auth != null;
+      // Create/Update için request.resource.data, Delete için resource.data kontrol edilir
+      allow create, update: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    
+    // Genel erişim kuralları
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+} 

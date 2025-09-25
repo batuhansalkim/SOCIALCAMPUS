@@ -1,0 +1,266 @@
+# DijitalBahcemTekno Projesi - Expo ve Android Geliştirme Ortamı Detayları
+
+## 📱 KULLANILAN VERSİYONLAR
+
+### Ana Framework Versiyonları:
+- **Expo SDK:** ~52.0.40 (En güncel Expo SDK)
+- **React Native:** 0.76.9 (En güncel React Native)
+- **React:** 18.3.1
+- **React DOM:** 18.3.1
+- **Expo CLI:** 0.22.26
+- **Node.js:** v22.16.0
+- **npm:** 10.9.2
+
+### Android Geliştirme Ortamı:
+- **Android SDK:** 35 (compileSdkVersion)
+- **Min SDK:** 24 (Android 7.0+)
+- **Target SDK:** 34 (Android 14)
+- **Build Tools:** 35.0.0
+- **Gradle:** 8.10.2
+- **Kotlin:** 1.9.25
+- **NDK:** 29.0.14033849
+- **JDK:** 17.0.16.8-hotspot (Eclipse Adoptium)
+
+## 🛠️ KURULAN PAKETLER VE BAĞIMLILIKLAR
+
+### Expo Paketleri:
+- @expo/vector-icons: ~14.0.4
+- expo-blur: ~14.0.3
+- expo-constants: ~17.0.8
+- expo-font: ~13.0.4
+- expo-haptics: ~14.0.1
+- expo-image-picker: ~16.0.6
+- expo-linear-gradient: ~14.0.2
+- expo-linking: ~7.0.5
+- expo-location: ~18.0.10
+- expo-print: ~14.0.3
+- expo-router: ~4.0.19
+- expo-sharing: ~13.0.1
+- expo-splash-screen: ~0.29.22
+- expo-status-bar: ~2.0.1
+- expo-symbols: ~0.2.2
+- expo-system-ui: ~4.0.8
+- expo-web-browser: ~14.0.2
+
+### React Native Paketleri:
+- @react-native-async-storage/async-storage: 1.23.1
+- @react-navigation/bottom-tabs: ^7.2.0
+- @react-navigation/native: ^7.0.14
+- @react-navigation/native-stack: ^7.2.0
+- react-native-ble-manager: ^12.2.0
+- react-native-gesture-handler: ~2.20.2
+- react-native-maps: 1.18.0
+- react-native-nfc-manager: ^3.14.8
+- react-native-paper: ^5.13.1
+- react-native-reanimated: ~3.16.1
+- react-native-safe-area-context: 4.12.0
+- react-native-screens: ~4.4.0
+- react-native-svg-charts: ^5.4.0
+- react-native-vector-icons: ^10.2.0
+- react-native-web: ~0.19.13
+- react-native-webview: 13.12.5
+
+### Blockchain ve Web3 Paketleri:
+- ethers: ^6.15.0
+- @walletconnect/modal: ^2.7.0
+- @walletconnect/react-native-compat: ^2.21.8
+- @walletconnect/universal-provider: ^2.21.8
+- @pinata/sdk: ^2.1.0
+
+### Development Dependencies:
+- @babel/core: ^7.25.2
+- @types/jest: ^29.5.12
+- @types/node: ^24.3.1
+- @types/react: ~18.3.12
+- @types/react-native: ^0.72.8
+- @types/react-test-renderer: ^18.3.0
+- jest: ^29.2.1
+- jest-expo: ~52.0.6
+- react-test-renderer: 18.3.1
+- typescript: ^5.3.3
+
+## 📁 ÖNEMLİ KONFIGÜRASYON DOSYALARI
+
+### 1. package.json
+- Proje adı: "dijitalbahcem"
+- Ana entry: "expo-router/entry"
+- Scripts: start, android, ios, web, test, lint
+- Jest konfigürasyonu: jest-expo preset
+
+### 2. app.json
+- **Proje Bilgileri:**
+  - Name: "DijitalBahcem"
+  - Slug: "DijitalBahcem"
+  - Version: "1.0.0"
+  - Orientation: "portrait"
+  - Scheme: "myapp"
+  - UserInterfaceStyle: "automatic"
+  - NewArchEnabled: true
+
+- **iOS Konfigürasyonu:**
+  - SupportsTablet: true
+  - Location permission açıklaması
+
+- **Android Konfigürasyonu:**
+  - Package: "com.ahmetsoftware3281.DijitalBahcem"
+  - Permissions: NFC, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION
+  - Adaptive icon konfigürasyonu
+
+- **Plugins:**
+  - expo-router
+  - expo-splash-screen (200px width, contain resize mode)
+  - react-native-nfc-manager (NFC permission)
+
+- **Extra Konfigürasyon:**
+  - EAS Project ID: "40702638-ac3f-4714-bc2a-ed42b1214813"
+  - Pinata API keys (boş)
+  - Registry, Verifier, AccessControl contracts (boş)
+  - Infura key (boş)
+  - DevMode: true
+
+### 3. eas.json
+- **CLI Version:** >= 5.9.0
+- **Build Profiles:**
+  - Development: developmentClient, internal distribution
+  - Preview: internal distribution, APK build
+  - Production: app-bundle build
+
+### 4. android/build.gradle
+- **Build Tools:** 35.0.0
+- **SDK Versions:** minSdk 24, compileSdk 35, targetSdk 34
+- **Kotlin:** 1.9.25
+- **NDK:** 29.0.14033849
+- **Compose Compiler:** 1.5.15 (Kotlin 1.9.25 ile uyumlu)
+- **Repositories:** Google, Maven Central, JitPack
+- **Dependencies:** Android Gradle Plugin, React Native Gradle Plugin, Kotlin Gradle Plugin
+
+### 5. android/app/build.gradle
+- **Namespace:** com.ahmetsoftware3281.DijitalBahcem
+- **Application ID:** com.ahmetsoftware3281.DijitalBahcem
+- **Version:** 1.0.0 (versionCode: 1, versionName: "1.0.0")
+- **Signing:** Debug keystore konfigürasyonu
+- **React Native Konfigürasyonu:**
+  - Entry file: Expo CLI ile resolve edilir
+  - Hermes command: React Native'den alınır
+  - Bundle command: "export:embed"
+  - Autolinking: Aktif
+
+### 6. android/gradle.properties
+- **JVM Args:** -Xmx2048m -XX:MaxMetaspaceSize=512m
+- **AndroidX:** true
+- **PNG Crunching:** Release builds'de aktif
+- **React Native Architectures:** armeabi-v7a,arm64-v8a,x86,x86_64
+- **New Architecture:** true
+- **Hermes:** true
+- **Expo Features:**
+  - GIF support: true
+  - WebP support: true
+  - Animated WebP: false
+- **Network Inspector:** true
+- **Legacy Packaging:** false
+- **JDK Home:** C:\Program Files\Eclipse Adoptium\jdk-17.0.16.8-hotspot
+- **Kotlin Version:** 1.9.25
+- **Compose Compiler:** Metrics ve reports kapalı
+
+### 7. android/gradle/wrapper/gradle-wrapper.properties
+- **Gradle Version:** 8.10.2
+- **Distribution URL:** https://services.gradle.org/distributions/gradle-8.10.2-all.zip
+- **Network Timeout:** 10000ms
+
+## 🚀 KURULUM ADIMLARI
+
+### 1. Temel Sistem Gereksinimleri:
+- Node.js v22.16.0+
+- npm 10.9.2+
+- JDK 17 (Eclipse Adoptium önerilen)
+- Android Studio
+- Android SDK 35
+- Android Build Tools 35.0.0
+
+### 2. Expo CLI Kurulumu:
+```bash
+npm install -g @expo/cli
+```
+
+### 3. Proje Oluşturma:
+```bash
+npx create-expo-app@latest ProjeAdi --template
+cd ProjeAdi
+```
+
+### 4. Gerekli Paketlerin Kurulumu:
+```bash
+# Temel Expo paketleri
+npx expo install expo-router expo-location expo-image-picker
+npx expo install expo-splash-screen expo-linear-gradient
+npx expo install expo-haptics expo-font expo-constants
+
+# React Native paketleri
+npx expo install react-native-maps react-native-paper
+npx expo install react-native-nfc-manager react-native-ble-manager
+npx expo install react-native-gesture-handler react-native-reanimated
+npx expo install react-native-safe-area-context react-native-screens
+
+# Blockchain paketleri
+npm install ethers @walletconnect/modal @pinata/sdk
+```
+
+### 5. Android Konfigürasyonu:
+- android/build.gradle dosyasında versiyonları ayarla
+- android/gradle.properties dosyasında özellikleri yapılandır
+- android/app/build.gradle dosyasında app konfigürasyonunu düzenle
+
+## 📱 ÇALIŞTIRMA YÖNTEMLERİ
+
+### 1. Expo Go ile Çalıştırma:
+```bash
+npx expo start
+# QR kodu Expo Go uygulamasıyla tarayın
+```
+
+### 2. Android Emulator ile Çalıştırma:
+```bash
+npx expo run:android
+# Android Studio emulator otomatik başlar
+```
+
+### 3. Development Build:
+```bash
+npx expo install expo-dev-client
+npx expo run:android --variant debug
+```
+
+### 4. Web ile Çalıştırma:
+```bash
+npx expo start --web
+```
+
+## 🔧 ÖNEMLİ NOTLAR
+
+### Android Geliştirme:
+- New Architecture aktif (TurboModules ve Fabric render)
+- Hermes JavaScript engine aktif
+- Kotlin 1.9.25 React Native ile tam uyumlu
+- Compose Compiler 1.5.15 versiyonu kullanılıyor
+- Gradle 8.10.2 modern versiyon
+
+### Expo Özellikleri:
+- Expo Router dosya tabanlı routing
+- Typed routes aktif
+- Development client desteği
+- EAS Build entegrasyonu
+- Splash screen özelleştirilebilir
+
+### Blockchain Entegrasyonu:
+- Ethereum blockchain desteği (ethers.js)
+- WalletConnect entegrasyonu
+- IPFS desteği (Pinata)
+- Smart contract bağlantıları hazır
+
+### NFC ve Hardware:
+- NFC/RFID okuma desteği
+- Bluetooth Low Energy desteği
+- Konum servisleri
+- Kamera ve galeri erişimi
+
+Bu konfigürasyon modern React Native ve Expo geliştirme için optimize edilmiş, production-ready bir ortam sağlar.

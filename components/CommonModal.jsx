@@ -14,6 +14,7 @@ const CommonModal = ({
   children,
   showCloseButton = true,
   closeButtonText = 'Kapat',
+  bottomButtonOnPress,
   containerStyle,
   contentStyle,
   headerStyle,
@@ -59,7 +60,7 @@ const CommonModal = ({
                   activeOpacity={0.7}
                 >
                   <LinearGradient
-                    colors={['#005BAC', '#004A8C']}
+                    colors={['#00BFFF', '#0099CC']}
                     style={styles.closeButtonGradient}
                   >
                     <Ionicons name="close" size={24} color="#FFFFFF" />
@@ -77,7 +78,7 @@ const CommonModal = ({
             <View style={styles.bottomButtonContainer}>
               <TouchableOpacity 
                 style={styles.modalBottomButton} 
-                onPress={onClose}
+                onPress={bottomButtonOnPress || onClose}
                 activeOpacity={0.8}
               >
                 <LinearGradient
@@ -119,13 +120,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 91, 172, 0.2)',
+    borderBottomColor: 'rgba(0, 191, 255, 0.4)',
     backgroundColor: 'rgba(26, 26, 26, 0.95)',
   },
   modalTitle: {
     fontSize: screenWidth * 0.06,
     fontWeight: '700',
-    color: '#005BAC',
+    color: '#00BFFF',
     flex: 1,
     fontFamily: Platform.OS === 'ios' ? 'Poppins-Bold' : 'Poppins-Bold',
     letterSpacing: -0.3,
@@ -135,7 +136,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...Platform.select({
       ios: {
-        shadowColor: '#005BAC',
+        shadowColor: '#00BFFF',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 4,

@@ -12,6 +12,8 @@ const CommonPicker = ({
   enabled = true,
   editable = true,
   style,
+  iconColor = "#00BFFF",
+  borderColor = "#00BFFF",
   ...props
 }) => {
   const [showPicker, setShowPicker] = useState(false);
@@ -33,7 +35,7 @@ const CommonPicker = ({
     return (
       <>
         <TouchableOpacity 
-          style={[styles.inputWrapper, !editable && styles.disabledInput, style]}
+          style={[styles.inputWrapper, { borderColor }, !editable && styles.disabledInput, style]}
           onPress={() => editable && enabled && setShowPicker(true)}
           disabled={!editable || !enabled}
         >
@@ -41,7 +43,7 @@ const CommonPicker = ({
             <Ionicons 
               name={icon} 
               size={18} 
-              color="#666" 
+              color={iconColor} 
               style={styles.pickerIcon} 
             />
           )}
@@ -51,7 +53,7 @@ const CommonPicker = ({
           <Ionicons 
             name="chevron-down" 
             size={18} 
-            color="#666" 
+            color={iconColor} 
             style={styles.chevronIcon} 
           />
         </TouchableOpacity>
@@ -100,12 +102,12 @@ const CommonPicker = ({
   }
 
   return (
-    <View style={[styles.pickerContainer, !editable && styles.disabledInput, style]}>
+    <View style={[styles.pickerContainer, { borderColor }, !editable && styles.disabledInput, style]}>
       {icon && (
         <Ionicons 
           name={icon} 
           size={18} 
-          color="#666" 
+          color={iconColor} 
           style={styles.pickerIcon} 
         />
       )}
@@ -132,8 +134,8 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderColor: '#E0E0E0',
-    borderWidth: 1,
+    borderColor: '#00BFFF',
+    borderWidth: 2,
     borderRadius: 8,
     paddingHorizontal: 12,
     backgroundColor: '#FFFFFF',
@@ -149,8 +151,8 @@ const styles = StyleSheet.create({
   pickerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderWidth: 2,
+    borderColor: '#00BFFF',
     borderRadius: 8,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 12,
@@ -168,13 +170,13 @@ const styles = StyleSheet.create({
   },
   pickerIcon: {
     marginRight: 8,
-    color: '#666',
+    color: '#00BFFF',
     fontSize: 16,
     zIndex: 2,
   },
   chevronIcon: {
     marginLeft: 8,
-    color: '#666',
+    color: '#00BFFF',
     fontSize: 16,
     zIndex: 2,
   },
@@ -189,7 +191,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   placeholderText: {
-    color: '#999',
+    color: '#000000',
   },
   picker: {
     flex: 1,

@@ -27,7 +27,7 @@ const ClubDetailsModal = ({ visible, club, onClose }) => {
         >
           <BlurView intensity={100} tint="dark" style={styles.modalContent}>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color="#4ECDC4" />
+              <Ionicons name="close" size={24} color="#00BFFF" />
             </TouchableOpacity>
             <ScrollView contentContainerStyle={styles.scrollContent}>
               {isDefaultImage ? (
@@ -42,14 +42,14 @@ const ClubDetailsModal = ({ visible, club, onClose }) => {
               <Text style={styles.name}>{club.name}</Text>
               <View style={styles.detailsContainer}>
                 <View style={styles.detailRow}>
-                  <Ionicons name="person" size={24} color="#4ECDC4" />
+                  <Ionicons name="person" size={24} color="#00BFFF" />
                   <Text style={styles.detail}>
                     <Text style={styles.detailLabel}>Başkan: </Text>
                     {club.president}
                   </Text>
                 </View>
                 <View style={styles.detailRow}>
-                  <Ionicons name="school" size={24} color="#4ECDC4" />
+                  <Ionicons name="school" size={24} color="#00BFFF" />
                   <Text style={styles.detail}>
                     <Text style={styles.detailLabel}>Danışman: </Text>
                     {club.advisor}
@@ -62,9 +62,9 @@ const ClubDetailsModal = ({ visible, club, onClose }) => {
                   onPress={handleInstagramPress}
                 >
                   <LinearGradient
-                    colors={['#405DE6', '#5851DB', '#833AB4', '#C13584', '#E1306C', '#FD1D1D']}
-                    start={{x: 0, y: 0}}
-                    end={{x: 1, y: 1}}
+                    colors={['#f09433', '#e6683c', '#dc2743', '#cc2366', '#bc1888']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                     style={styles.instagramGradient}
                   >
                     <Ionicons name="logo-instagram" size={24} color="#fff" />
@@ -117,13 +117,13 @@ const styles = StyleSheet.create({
     borderRadius: screenWidth * 0.2,
     marginBottom: screenHeight * 0.02,
     borderWidth: 4,
-    borderColor: '#4ECDC4',
+    borderColor: '#00BFFF',
   },
   name: {
     fontSize: screenWidth * 0.06,
     fontWeight: 'bold',
     marginBottom: screenHeight * 0.02,
-    color: '#4ECDC4',
+    color: '#00BFFF',
     textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: {width: -1, height: 1},
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: screenHeight * 0.015,
-    backgroundColor: 'rgba(78,205,196,0.1)',
+    backgroundColor: 'rgba(200, 200, 200, 0.2)',
     borderRadius: 15,
     padding: screenWidth * 0.04,
   },
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontWeight: 'bold',
-    color: '#4ECDC4',
+    color: '#00BFFF',
   },
   instagramButton: {
     width: '100%',

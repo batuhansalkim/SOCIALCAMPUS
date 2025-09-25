@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,10 +15,11 @@ import {
   Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
-import { collection, addDoc, query, where, getDocs, updateDoc, doc, deleteDoc, Timestamp, onSnapshot, setDoc } from 'firebase/firestore';
-import { FIRESTORE_DB } from "../../configs/FirebaseConfig";
+import { useFirebase } from '../../contexts/FirebaseContext';
+import { mealService } from '../../services/firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
@@ -26,6 +27,7 @@ const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 export default function MealSchedule() {
+  const { user } = useFirebase();
   const [mealList, setMealList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,7 +35,6 @@ export default function MealSchedule() {
   const [userReactions, setUserReactions] = useState({});
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef(null);
-  const [currentUser, setCurrentUser] = useState(null);
 
   // Bugünün tarihini al
   const today = new Date().getDate();
@@ -43,24 +44,43 @@ export default function MealSchedule() {
     loadInitialData();
   }, []);
 
-  useEffect(() => {
-    // Yemek listesi yüklendiğinde bugünün yemeğine scroll yap
-    if (mealList.length > 0) {
-      const todayIndex = mealList.findIndex(item => {
-        const itemDate = new Date(item.start);
-        return itemDate.getDate() === today;
-      });
-      
-      if (todayIndex !== -1) {
-        setInitialIndex(todayIndex);
-        // FlatList'i bugünün pozisyonuna kaydır
-        flatListRef.current?.scrollToIndex({
-          index: todayIndex,
-          animated: true
-        });
-      }
-    }
+  // Bugünün öğesinin indexini bul
+  const getTodayIndex = useCallback(() => {
+    if (mealList.length === 0) return -1;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return mealList.findIndex(item => {
+      const itemDate = new Date(item.start);
+      itemDate.setHours(0, 0, 0, 0);
+      return itemDate.getTime() === now.getTime();
+    });
   }, [mealList]);
+
+  const scrollToToday = useCallback((animated = true) => {
+    const index = getTodayIndex();
+    if (index !== -1) {
+      setInitialIndex(index);
+      // Küçük bir gecikme, liste mount olduğunda referans hazır olsun
+      setTimeout(() => {
+        try {
+          flatListRef.current?.scrollToIndex({ index, animated });
+        } catch (_) {}
+      }, 100);
+    }
+  }, [getTodayIndex]);
+
+  useEffect(() => {
+    if (mealList.length > 0) {
+      scrollToToday(true);
+    }
+  }, [mealList, scrollToToday]);
+
+  // Ekran odaklandığında bugüne kaydır (tab değişimi / giriş-çıkış)
+  useFocusEffect(
+    useCallback(() => {
+      scrollToToday(false);
+    }, [scrollToToday])
+  );
 
   const loadInitialData = async () => {
     try {
@@ -196,43 +216,27 @@ export default function MealSchedule() {
 
   // Reaksiyonları yükle - batch işlemi ekleyelim
   const loadReactions = async () => {
-    if (!currentUser || mealList.length === 0) return;
+    if (!user || mealList.length === 0) return;
     
     try {
       const usedCache = await loadReactionsFromCache();
       if (usedCache) return;
 
-      // Sadece bugün ve sonraki günlerin reaksiyonlarını çek
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const reactionQuery = query(
-        collection(FIRESTORE_DB, 'mealReactions'),
-        where('mealId', '>=', today.toISOString())
-      );
-
-      const querySnapshot = await getDocs(reactionQuery);
       const reactionData = {};
       const userReactionData = {};
 
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        if (mealList.some(meal => meal.start === data.mealId)) { // Sadece gösterilen günleri işle
-          if (!reactionData[data.mealId]) {
-            reactionData[data.mealId] = { likes: 0, dislikes: 0 };
-          }
-          
-          if (data.type === 'like') {
-            reactionData[data.mealId].likes++;
-          } else {
-            reactionData[data.mealId].dislikes++;
-          }
+      for (const meal of mealList) {
+        const reactions = await mealService.getMealReactions(meal.start);
+        reactionData[meal.start] = {
+          likes: reactions.like,
+          dislikes: reactions.dislike
+        };
 
-          if (data.userId === currentUser.id) {
-            userReactionData[data.mealId] = data.type;
-          }
+        const userReaction = await mealService.getUserReaction(meal.start, user.uid);
+        if (userReaction) {
+          userReactionData[meal.start] = userReaction.reactionType;
         }
-      });
+      }
 
       setReactions(reactionData);
       setUserReactions(userReactionData);
@@ -248,44 +252,91 @@ export default function MealSchedule() {
     }
   };
 
-  // Real-time listener yerine manuel yükleme kullan
   useEffect(() => {
-    loadReactions();
-  }, [mealList, currentUser]);
-
-  const getCurrentUser = async () => {
-    try {
-      const userDataStr = await AsyncStorage.getItem('userData');
-      if (userDataStr) {
-        const userData = JSON.parse(userDataStr);
-        setCurrentUser(userData);
-      }
-    } catch (error) {
-      console.error('Error getting user data:', error);
+    if (user && mealList.length > 0) {
+      loadReactions();
     }
-  };
+  }, [mealList, user]);
 
+  // Her öğün için gerçek zamanlı dinleme kur ve sayıları canlı güncelle
   useEffect(() => {
-    getCurrentUser();
-  }, []);
+    if (!user || mealList.length === 0) return;
 
-  // handleReaction fonksiyonunu optimize edelim
+    const unsubscribers = mealList.map((meal) => {
+      return mealService.onMealReactionsChange(meal.start, (liveReactions) => {
+        setReactions((prev) => ({
+          ...prev,
+          [meal.start]: {
+            likes: liveReactions.like,
+            dislikes: liveReactions.dislike,
+          },
+        }));
+
+        // Önbelleği de güncel tut
+        (async () => {
+          try {
+            const cachedData = await AsyncStorage.getItem('mealReactionsCache');
+            const cached = cachedData ? JSON.parse(cachedData) : { reactions: {}, userReactions: {}, timestamp: Date.now() };
+            cached.reactions[meal.start] = {
+              likes: liveReactions.like,
+              dislikes: liveReactions.dislike,
+            };
+            cached.timestamp = Date.now();
+            await AsyncStorage.setItem('mealReactionsCache', JSON.stringify(cached));
+          } catch (_) {}
+        })();
+      });
+    });
+
+    return () => {
+      unsubscribers.forEach((unsub) => {
+        try { unsub && unsub(); } catch (_) {}
+      });
+    };
+  }, [user, mealList]);
+
   const handleReaction = async (mealId, type) => {
     try {
-      if (!currentUser) {
+      if (!user) {
         Alert.alert('Uyarı', 'Beğeni/beğenmeme için giriş yapmalısınız.');
         return;
       }
 
-      const userId = currentUser.id;
+      const userId = user.uid;
       const oldReaction = userReactions[mealId];
 
-      // Aynı reaksiyona tıklandıysa işlemi iptal et
+      // Aynı tepkiye basılırsa kaldır (toggle off)
       if (oldReaction === type) {
+        // Optimistic update: sayacı düşür, kullanıcı tepkisini temizle
+        setReactions(prev => {
+          const next = { ...prev };
+          if (!next[mealId]) {
+            next[mealId] = { likes: 0, dislikes: 0 };
+          }
+          next[mealId][type === 'like' ? 'likes' : 'dislikes'] = Math.max(0, (next[mealId][type === 'like' ? 'likes' : 'dislikes'] || 0) - 1);
+          return next;
+        });
+        setUserReactions(prev => {
+          const next = { ...prev };
+          delete next[mealId];
+          return next;
+        });
+
+        await mealService.removeReaction(mealId, userId);
+
+        // Önbelleği senkronize et
+        const cachedData = await AsyncStorage.getItem('mealReactionsCache');
+        if (cachedData) {
+          const { reactions, userReactions, timestamp } = JSON.parse(cachedData);
+          if (reactions[mealId]) {
+            reactions[mealId][type === 'like' ? 'likes' : 'dislikes'] = Math.max(0, (reactions[mealId][type === 'like' ? 'likes' : 'dislikes'] || 0) - 1);
+          }
+          delete userReactions[mealId];
+          await AsyncStorage.setItem('mealReactionsCache', JSON.stringify({ reactions, userReactions, timestamp }));
+        }
         return;
       }
 
-      // Optimistik güncelleme
       setReactions(prev => {
         const newReactions = { ...prev };
         if (!newReactions[mealId]) {
@@ -305,16 +356,8 @@ export default function MealSchedule() {
         [mealId]: type
       }));
 
-      // Firebase işlemini yap
-      const reactionRef = doc(FIRESTORE_DB, 'mealReactions', `${userId}_${mealId}`);
-      await setDoc(reactionRef, {
-        mealId,
-        userId,
-        type,
-        updatedAt: Timestamp.now()
-      });
+      await mealService.addReaction(mealId, userId, type);
 
-      // Cache'i güncelle
       const cachedData = await AsyncStorage.getItem('mealReactionsCache');
       if (cachedData) {
         const { reactions, userReactions, timestamp } = JSON.parse(cachedData);
@@ -337,7 +380,7 @@ export default function MealSchedule() {
     } catch (error) {
       console.error('Error handling reaction:', error);
       Alert.alert('Hata', 'İşlem gerçekleştirilemedi.');
-      await loadReactions(); // Hata durumunda güncel verileri yükle
+      await loadReactions();
     }
   };
 
@@ -369,19 +412,21 @@ export default function MealSchedule() {
     return (
       <Animated.View style={[styles.cardContainer, { transform: [{ scale }], opacity }]}>
         <LinearGradient
-          colors={isCurrentDay ? ['#FF6B6B', '#FF8E53', '#FFAF40'] : isPastDay ? ['#A9A9A9', '#808080', '#696969'] : ['#4ECDC4', '#45B7AF', '#2C7873']}
-          style={styles.card}
+          colors={['#00BFFF', '#0099CC', '#0077AA']}
+          style={[styles.card, isCurrentDay ? styles.cardToday : null]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
         >
           <View style={styles.dateContainer}>
             <View>
               <Text style={styles.dateText}>{formatDate(item.start)}</Text>
               <View style={styles.mealHoursContainer}>
                 <View style={styles.mealHourBox}>
-                  <Ionicons name="time" size={16} color="#FFD700" style={styles.timeIcon} />
+                  <Ionicons name="time" size={16} color="#FFFFFF" style={styles.timeIcon} />
                   <Text style={styles.mealHoursText}>Öğle: 11:00 - 14:00</Text>
                 </View>
                 <View style={styles.mealHourBox}>
-                  <Ionicons name="time" size={16} color="#FFD700" style={styles.timeIcon} />
+                  <Ionicons name="time" size={16} color="#FFFFFF" style={styles.timeIcon} />
                   <Text style={styles.mealHoursText}>Akşam: 16:00 - 18:00</Text>
                 </View>
               </View>
@@ -394,7 +439,7 @@ export default function MealSchedule() {
           >
             {item.aciklama.split(/[,،]+/).filter(meal => meal.trim()).map((meal, idx) => (
               <View key={idx} style={styles.yemekContainer}>
-                <Ionicons name={getIconForMeal(idx)} size={28} color="#FFF" style={styles.yemekIcon} />
+                <Ionicons name={getIconForMeal(idx)} size={28} color="#FFFFFF" style={styles.yemekIcon} />
                 <View style={styles.yemekDetails}>
                   <Text style={styles.yemekText}>{meal.trim()}</Text>
                 </View>
@@ -407,14 +452,16 @@ export default function MealSchedule() {
                 style={[
                   styles.reactionButton, 
                   styles.likeButton,
-                  userReactions[item.start] === 'like' && styles.activeReactionButton
+                  userReactions[item.start] === 'like' && styles.activeReactionButton,
+                  !isCurrentDay && styles.reactionButtonDisabled
                 ]}
-                onPress={() => handleReaction(item.start, 'like')}
+                disabled={!isCurrentDay}
+                onPress={() => isCurrentDay && handleReaction(item.start, 'like')}
               >
                 <Ionicons 
                   name={userReactions[item.start] === 'like' ? "thumbs-up" : "thumbs-up-outline"} 
                   size={24} 
-                  color="#fff" 
+                  color={isCurrentDay ? "#fff" : "rgba(255,255,255,0.6)"} 
                 />
                 <Text style={styles.reactionCount}>
                   {reactions[item.start]?.likes || 0}
@@ -425,14 +472,16 @@ export default function MealSchedule() {
                 style={[
                   styles.reactionButton, 
                   styles.dislikeButton,
-                  userReactions[item.start] === 'dislike' && styles.activeReactionButton
+                  userReactions[item.start] === 'dislike' && styles.activeReactionButton,
+                  !isCurrentDay && styles.reactionButtonDisabled
                 ]}
-                onPress={() => handleReaction(item.start, 'dislike')}
+                disabled={!isCurrentDay}
+                onPress={() => isCurrentDay && handleReaction(item.start, 'dislike')}
               >
                 <Ionicons 
                   name={userReactions[item.start] === 'dislike' ? "thumbs-down" : "thumbs-down-outline"} 
                   size={24} 
-                  color="#fff" 
+                  color={isCurrentDay ? "#fff" : "rgba(255,255,255,0.6)"} 
                 />
                 <Text style={styles.reactionCount}>
                   {reactions[item.start]?.dislikes || 0}
@@ -512,7 +561,7 @@ export default function MealSchedule() {
           colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']} 
           style={styles.header}
         >
-          <Ionicons name="restaurant" size={40} color="#FFD700" style={styles.headerIcon} />
+          <Ionicons name="restaurant" size={40} color="#00BFFF" style={styles.headerIcon} />
           <Text style={styles.headerText}>Okul Yemek Listesi Güncel</Text>
           <Text style={styles.subHeaderText}>
             {formatDate(mealList[0]?.start)} - {formatDate(mealList[mealList.length - 1]?.start)}
@@ -583,7 +632,7 @@ export default function MealSchedule() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#0F0F0F',
   },
   header: {
     padding: screenWidth * 0.04,
@@ -622,7 +671,7 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   card: {
-    borderRadius: 15,
+    borderRadius: 20,
     padding: screenWidth * 0.04,
     marginVertical: screenHeight * 0.01,
     alignItems: 'flex-start',
@@ -630,6 +679,18 @@ const styles = StyleSheet.create({
     maxHeight: screenHeight * 0.6,
     zIndex: 0,
     elevation: 0,
+    borderWidth: 2,
+    borderColor: '#fff',
+    overflow: 'hidden',
+  },
+  cardToday: {
+    borderColor: '#DAA520',
+    borderWidth: 4,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.7,
+    shadowRadius: 10,
+    elevation: 8,
   },
   dateContainer: {
     flexDirection: 'row',
@@ -749,7 +810,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: '#0F0F0F',
   },
   loadingText: {
     color: '#fff',
@@ -762,6 +823,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: screenWidth * 0.04,
     gap: screenHeight * 0.02,
+    backgroundColor: '#0F0F0F',
   },
   errorText: {
     color: '#fff',
@@ -802,6 +864,9 @@ const styles = StyleSheet.create({
     padding: screenWidth * 0.03,
     borderRadius: 8,
     gap: screenWidth * 0.02,
+  },
+  reactionButtonDisabled: {
+    opacity: 0.5,
   },
   likeButton: {
     backgroundColor: '#4CAF50',
