@@ -25,7 +25,7 @@
         "ACCESS_NETWORK_STATE"
       ]
     },
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "jsEngine": "hermes",
     "extra": {
       "eas": {
